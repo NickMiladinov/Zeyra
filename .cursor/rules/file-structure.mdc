@@ -1,0 +1,64 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Please follow this file structure when making new files or changing them, specifically for the app itself.
+
+lib/
+│
+├── main.dart                         # App entry point
+├── app.dart                          # Root widget & app-level setup
+│
+├── core/                             # Core utilities used across the app
+│   ├── constants/                    # App-wide constants (e.g., colors, spacing)
+│   ├── helpers/                      # Helpers/util functions (e.g. date formatter)
+│   ├── services/                     # Global services (API, Auth, OCR, AI, etc.)
+│   ├── widgets/                      # Reusable/shared widgets (buttons, modals)
+│   └── config/                       # Env config, routing, themes, etc.
+│
+├── features/                         # Feature-based folders (main app logic)
+│   ├── auth/                         # Authentication
+│   │   ├── data/                     # Auth API calls, models
+│   │   ├── logic/                    # State (BLoC, Riverpod)
+│   │   └── ui/                       # Login, signup, forgot password screens
+│
+│   ├── file_upload/                  # File picker, preview, upload, OCR
+│   │   ├── data/                     # File models, services
+│   │   ├── logic/                    # State (upload status, OCR result)
+│   │   └── ui/                       # UI to select, upload, view files
+│
+│   ├── biomarkers/                   # Biomarker data and organ UI
+│   │   ├── data/                     # Data models and API
+│   │   ├── logic/                    # State for biomarker lists, updates
+│   │   └── ui/                       # Organ/part view, biomarker cards
+│
+│   ├── timeline/                     # Timeline view and health progression
+│   │   ├── data/
+│   │   ├── logic/
+│   │   └── ui/
+│
+│   ├── sharing/                      # Share with doctors, parents, etc.
+│   │   ├── data/
+│   │   ├── logic/
+│   │   └── ui/
+│
+│   ├── doctor_notes/                # Visit notes, prescriptions
+│   │   ├── data/
+│   │   ├── logic/
+│   │   └── ui/
+│
+│   ├── labs/                         # Lab API integration & kit orders
+│   │   ├── data/
+│   │   ├── logic/
+│   │   └── ui/
+│
+│   ├── ai_chat/                      # AI assistant
+│   │   ├── data/
+│   │   ├── logic/
+│   │   └── ui/
+│
+│   └── dashboard/                    # Home, nav, profile
+│       ├── logic/
+
+│       └── ui/
