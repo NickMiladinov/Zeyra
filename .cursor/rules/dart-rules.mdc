@@ -1,0 +1,33 @@
+---
+description: 
+globs: *.dart
+alwaysApply: false
+---
+Applies Flutter best practices and coding guidelines, focusing on constants, themes, utilities, and widgets.
+- Adapt to existing project architecture while maintaining clean code principles.
+- Implement proper null safety practices.
+- Follow proper naming conventions.
+- Use proper widget composition and keys.
+- Keep widgets small and focused.
+- Use const constructors when possible.
+- Follow proper layout principles.
+
+- Implement proper routing using GoRouter.
+- Use proper form validation.
+- Implement proper error boundaries.
+- Follow proper accessibility guidelines.
+
+- Implement clean architecture with BLoC pattern.
+- Follow proper state management principles.
+- Use proper dependency injection.
+- Implement proper error handling.
+- Follow proper state management with BLoC.
+- Implement proper dependency injection using GetIt.
+
+- Use proper image caching.
+- Implement proper list view optimization.
+- Use proper build methods optimization.
+- Implement proper memory management.
+- Use proper platform channels when needed.
+
+- Follow proper compilation optimization techniques.
