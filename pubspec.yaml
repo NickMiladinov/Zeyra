@@ -34,6 +34,15 @@ dependencies:
   flutter_dotenv: ^5.0.0 # Check for the latest version
   logger: ^2.0.0 # Check for the latest version
 
+  # File handling and security
+  file_picker: ^8.0.0 # Check for the latest version
+  flutter_secure_storage: ^9.0.0 # Check for the latest version
+  path_provider: ^2.0.0 # Check for the latest version
+  pointycastle: ^3.0.0 # Check for the latest version, ensure it supports null safety
+  uuid: ^4.0.0 # Check for the latest version
+  sqflite: ^2.0.0 # Check for the latest version - For SQLite database
+  path: ^1.9.0 # Check for the latest version - For path manipulation
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -41,6 +50,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  sqflite_common_ffi: ^2.0.0 # For testing sqflite on desktop/VM
+  mockito: ^5.4.4 # Check for the latest version - For mocking
+  build_runner: ^2.4.9 # Check for the latest version - For code generation
+  plugin_platform_interface: ^2.0.0 # For MockPlatformInterfaceMixin
+  path_provider_platform_interface: ^2.0.0 # ADDED - For PathProviderPlatform
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
