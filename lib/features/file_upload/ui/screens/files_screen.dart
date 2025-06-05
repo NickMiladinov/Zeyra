@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:logger/logger.dart'; // Import for Logger type
 
+import 'package:zeyra/core/helpers/exceptions.dart'; // Use package-relative import
 import '../../logic/files_provider.dart';
 import '../../data/models/medical_file_model.dart';
 // import '../widgets/file_list_item.dart'; // To be created
@@ -59,7 +60,13 @@ class FilesScreen extends ConsumerWidget {
                       "Type: ${file.fileType?.toUpperCase() ?? 'UNKNOWN'}${file.fileSize != null ? ' - ${_formatFileSize(file.fileSize!)}' : ''}",
                       style: TextStyle(color: Colors.grey[700])),
                   isThreeLine: true,
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete_outline, color: Colors.red[700]),
+                    tooltip: 'Delete File',
+                    onPressed: () {
+                      _confirmDeleteFileDialog(context, ref, file, logger);
+                    },
+                  ),
                   onTap: () {
                     _showFileViewDialog(context, ref, file, logger);
                   },
@@ -97,25 +104,32 @@ class FilesScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          final bool success = await ref.read(medicalFilesProvider.notifier).pickAndSecureFile();
+          final notifier = ref.read(medicalFilesProvider.notifier);
+          final bool success = await notifier.pickAndSecureFile();
+          
           if (context.mounted) { // Check if the widget is still in the tree
             if (success) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("File added successfully!"), backgroundColor: Colors.green),
               );
             } else {
-               // Check if the provider state has an error to display a more specific message
               final currentState = ref.read(medicalFilesProvider);
-              String errorMessage = "File addition cancelled or failed.";
+              String errorMessage = "File addition cancelled or failed."; // Default message
+
               if (currentState.hasError && currentState.error != null) {
-                // Attempt to give a cleaner error message
-                String specificError = currentState.error.toString();
-                if (specificError.contains("FileSystemException")) {
-                    errorMessage = "Storage permission denied or error accessing file system.";
-                } else if (specificError.length > 100) { // Avoid overly long technical errors
-                    errorMessage = "An unexpected error occurred while adding the file.";
+                final error = currentState.error;
+                if (error is DuplicateFileException) {
+                  errorMessage = error.message; // Use message from DuplicateFileException
                 } else {
-                    errorMessage = "Failed to add file: $specificError";
+                  // Attempt to give a cleaner error message for other types
+                  String specificError = error.toString();
+                  if (specificError.contains("FileSystemException")) {
+                      errorMessage = "Storage permission denied or error accessing file system.";
+                  } else if (specificError.length > 100) { // Avoid overly long technical errors
+                      errorMessage = "An unexpected error occurred while adding the file.";
+                  } else {
+                      errorMessage = "Failed to add file: $specificError";
+                  }
                 }
               }
               ScaffoldMessenger.of(context).showSnackBar(
@@ -164,6 +178,49 @@ class FilesScreen extends ConsumerWidget {
         // Pass the medicalFile to the FileViewDialog.
         // FileViewDialog is a ConsumerStatefulWidget and will handle its own state and provider interactions.
         return FileViewDialog(medicalFile: file);
+      },
+    );
+  }
+
+  // Method to show a confirmation dialog before deleting a file
+  void _confirmDeleteFileDialog(BuildContext context, WidgetRef ref, MedicalFile file, Logger logger) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text("Confirm Deletion"),
+          content: Text("Are you sure you want to delete '${file.originalFilename}'?\n\nThis action cannot be undone and will permanently delete the file and its metadata."),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancel"),
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Colors.red[700]),
+              child: const Text("Delete"),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop(); // Close the dialog
+                logger.i("Deletion confirmed for file: ${file.originalFilename} (ID: ${file.id})");
+                
+                final bool success = await ref.read(medicalFilesProvider.notifier).deleteMedicalFile(file);
+                
+                if (context.mounted) {
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("'${file.originalFilename}' deleted successfully!"), backgroundColor: Colors.green),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Failed to delete '${file.originalFilename}'. Check logs for details."), backgroundColor: Colors.red),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
       },
     );
   }

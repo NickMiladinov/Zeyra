@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 import 'dart:math'; // For Random.secure()
 
 import '../helpers/crypto_utils.dart'; // Import crypto utils
+import '../helpers/exceptions.dart'; // Import custom exceptions
 import './database_helper.dart'; // Import DatabaseHelper
 import './file_system_operations.dart'; // Import the new abstraction
 
@@ -80,13 +81,27 @@ class SecureFileStorageService {
   }
 
   // Public method to orchestrate picking and storing
+  // Throws DuplicateFileException if a file with the same name and size already exists.
   Future<Map<String, String>?> pickAndSecureFile() async {
     final PlatformFile? pickedFile = await _pickFile();
     if (pickedFile == null) {
       _logger.i('File picking cancelled by user or failed.');
       return null; // User cancelled or error occurred
     }
-    _logger.i('File picked: ${pickedFile.name}');
+    _logger.i('File picked: ${pickedFile.name}, Size: ${pickedFile.size}');
+
+    // Check for duplicates before attempting encryption and storage
+    final existingFileMeta = await _dbHelper.getMedicalFileMetadataByFilenameAndSize(
+        pickedFile.name,
+        pickedFile.size,
+    );
+
+    if (existingFileMeta != null) {
+      _logger.w('Duplicate file detected: ${pickedFile.name} (Size: ${pickedFile.size}) already exists with ID: ${existingFileMeta[DatabaseHelper.colId]}.');
+      throw DuplicateFileException("File '${pickedFile.name}' (Size: ${pickedFile.size} bytes) already exists.");
+    }
+
+    _logger.i('No duplicate found for ${pickedFile.name}. Proceeding with encryption and storage.');
     return await _encryptAndStoreFile(pickedFile);
   }
 
@@ -176,7 +191,15 @@ class SecureFileStorageService {
           _logger.e('Failed to cleanup encrypted file $encryptedFilePathForCleanup: $cleanupErr', error: cleanupErr, stackTrace: cleanupST);
         }
       }
-      return null;
+      // Re-throw the original error if it's not a DuplicateFileException, so it can be handled upstream.
+      // DuplicateFileException is handled by the caller of pickAndSecureFile.
+      if (e is! DuplicateFileException) {
+        // If we want to pass it up as is:
+        // throw e;
+        // Or return null to indicate a general failure if pickAndSecureFile is expected to return null on error:
+        return null; 
+      }
+      return null; // Should have been caught by specific exception if it was DuplicateFileException
     }
   }
 
@@ -249,6 +272,59 @@ class SecureFileStorageService {
     } catch (e, s) {
       _logger.e('Generic error decrypting file with fileId $fileId: $e', error: e, stackTrace: s);
       return null;
+    }
+  }
+
+  /// Deletes the encrypted file from disk and its corresponding key/IV from secure storage.
+  ///
+  /// Returns `true` if all deletion steps were successful or resources were already gone.
+  /// Returns `false` if an error occurs during deletion of an existing resource.
+  Future<bool> deleteEncryptedFileAndKey(String fileId, String encryptedFilePath) async {
+    bool keyDeletionSuccess = false;
+    bool fileDeletionSuccess = false;
+    String? operationFailed;
+
+    _logger.i("Attempting to delete file and key for ID: $fileId, Path: $encryptedFilePath");
+
+    // 1. Delete Key and IV from secure storage
+    try {
+      final String? keyExists = await _secureStorage.read(key: fileId);
+      if (keyExists != null) {
+        await _secureStorage.delete(key: fileId);
+        _logger.i("Successfully deleted key/IV from secure storage for fileId: $fileId");
+        keyDeletionSuccess = true;
+      } else {
+        _logger.i("Key/IV for fileId: $fileId not found in secure storage (already deleted or never existed).");
+        keyDeletionSuccess = true; // Considered success if not found
+      }
+    } catch (e, s) {
+      _logger.e('Error deleting key/IV for fileId $fileId: $e', error: e, stackTrace: s);
+      operationFailed = "key deletion";
+      keyDeletionSuccess = false;
+    }
+
+    // 2. Delete Encrypted File from disk
+    try {
+      if (await _fileSystemOps.fileExists(encryptedFilePath)) {
+        await _fileSystemOps.deleteFile(encryptedFilePath);
+        _logger.i('Successfully deleted encrypted file: $encryptedFilePath');
+        fileDeletionSuccess = true;
+      } else {
+        _logger.i('Encrypted file not found at path: $encryptedFilePath (already deleted or never existed).');
+        fileDeletionSuccess = true; // Considered success if not found
+      }
+    } catch (e, s) {
+      _logger.e('Error deleting encrypted file $encryptedFilePath: $e', error: e, stackTrace: s);
+      operationFailed = operationFailed == null ? "file deletion" : "$operationFailed and file deletion";
+      fileDeletionSuccess = false;
+    }
+
+    if (keyDeletionSuccess && fileDeletionSuccess) {
+      _logger.i("Successfully completed deletion process for file ID: $fileId.");
+      return true;
+    } else {
+      _logger.w("Deletion process for file ID: $fileId encountered issues. Key deleted: $keyDeletionSuccess, File deleted: $fileDeletionSuccess. Operation(s) failed: ${operationFailed ?? 'none'}.");
+      return false;
     }
   }
 

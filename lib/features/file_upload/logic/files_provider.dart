@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/services/database_helper.dart';
 import '../../../core/services/secure_file_storage_service.dart';
 import '../../../core/services/file_system_operations.dart'; // For FileSystemOperations
+import '../../../core/helpers/exceptions.dart'; // Import custom exceptions
 import '../data/models/medical_file_model.dart';
 
 // --- Dependency Providers ---
@@ -98,10 +99,7 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
   Future<bool> pickAndSecureFile() async {
     _logger.d("Initiating pickAndSecureFile process...");
     try {
-      // Expecting Map<String, String>? based on linter feedback if pickAndSecureFile was not updated
-      // to only return fileId after db storage.
-      // If SecureFileStorageService.pickAndSecureFile() *has* been updated to return String? fileId directly,
-      // then this part would be simpler: final String? fileId = await _fileStorageService.pickAndSecureFile();
+      // pickAndSecureFile in SecureFileStorageService now throws DuplicateFileException
       final Map<String, String>? secureResult = await _fileStorageService.pickAndSecureFile();
 
       if (secureResult != null && secureResult.containsKey('fileId')) {
@@ -111,8 +109,14 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
         return true;
       } else {
         _logger.w("File picking or securing was cancelled or failed. Secure result: $secureResult");
+        // If secureResult is null, it might be due to cancellation or an error handled within SecureFileStorageService (other than DuplicateFileException which is thrown)
+        // Consider if specific state update is needed here or if existing error handling in UI is sufficient.
         return false;
       }
+    } on DuplicateFileException catch (e, stackTrace) {
+      _logger.w("Duplicate file detected during pickAndSecureFile: ${e.message}");
+      state = AsyncValue.error(e, stackTrace); // Use the exception itself for the error state
+      return false;
     } catch (e, stackTrace) {
       _logger.e("Error during pickAndSecureFile flow", error: e, stackTrace: stackTrace);
       state = AsyncValue.error("Failed to add file: ${e.toString()}", stackTrace);
@@ -135,6 +139,41 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
     } catch (e, stackTrace) {
       _logger.e("Error decrypting file $fileId", error: e, stackTrace: stackTrace);
       return null;
+    }
+  }
+
+  // Deletes a medical file (metadata, encrypted file, and key).
+  // Returns true if successful, false otherwise.
+  Future<bool> deleteMedicalFile(MedicalFile fileToDelete) async {
+    _logger.d("Attempting to delete medical file: ${fileToDelete.originalFilename} (ID: ${fileToDelete.id})");
+    try {
+      // 1. Delete encrypted file and its key from secure storage
+      final bool secureDeletionSuccess = await _fileStorageService.deleteEncryptedFileAndKey(
+        fileToDelete.id,
+        fileToDelete.encryptedPath,
+      );
+
+      if (!secureDeletionSuccess) {
+        _logger.w("Failed to delete encrypted file/key for ${fileToDelete.id}. Aborting metadata deletion.");
+        // Optionally, update state to reflect partial failure if needed by UI
+        // state = AsyncValue.error("Failed to delete file components for ${fileToDelete.originalFilename}", StackTrace.current);
+        return false;
+      }
+
+      // 2. Delete metadata from the database
+      await _dbHelper.deleteMedicalFileMetadata(fileToDelete.id);
+      _logger.i("Successfully deleted metadata for file ID: ${fileToDelete.id}");
+
+      // 3. Refresh the list of files in the state
+      await _loadFiles(); // This will set state to data or error
+      _logger.i("Successfully deleted and refreshed files list for ${fileToDelete.originalFilename}.");
+      return true;
+
+    } catch (e, stackTrace) {
+      _logger.e("Error deleting medical file ${fileToDelete.id}", error: e, stackTrace: stackTrace);
+      // Update state to reflect error, so UI can react
+      state = AsyncValue.error("Failed to delete ${fileToDelete.originalFilename}: ${e.toString()}", stackTrace);
+      return false;
     }
   }
 }
