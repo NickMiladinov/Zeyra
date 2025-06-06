@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zeyra/core/constants/app_constants.dart';
 import 'package:zeyra/app.dart'; // Import the App widget
+import 'package:zeyra/core/services/app_auth_listener.dart'; // Import the new listener
 
 // Global NavigatorKey - can be used by App widget
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -17,6 +18,10 @@ Future<void> main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
+
+  // Initialize and start the global authentication listener.
+  AppAuthListener(navigatorKey: navigatorKey).init();
+
   // Run the App widget, which contains ProviderScope and MaterialApp
   runApp(App(navigatorKey: navigatorKey)); // Pass navigatorKey to App
 }
