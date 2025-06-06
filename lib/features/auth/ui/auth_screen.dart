@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:zeyra/features/dashboard/ui/home_page.dart'; // Placeholder for HomePage
+import 'package:zeyra/features/dashboard/ui/screens/main_screen.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class AuthScreen extends StatefulWidget {
@@ -61,7 +61,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         if (response.session != null) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            MaterialPageRoute(builder: (_) => const MainScreen()),
           );
         } else if (response.user != null && !_isLoginMode) {
           // User signed up, but requires confirmation (if enabled)

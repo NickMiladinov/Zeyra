@@ -98,6 +98,23 @@ class DatabaseHelper {
     return null;
   }
 
+  /// Retrieves metadata for a single medical file by its original filename and size.
+  /// Returns a Map if found, null otherwise.
+  Future<Map<String, dynamic>?> getMedicalFileMetadataByFilenameAndSize(
+      String originalFilename, int fileSize) async {
+    final db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      tableName,
+      where: '$colOriginalFilename = ? AND $colFileSize = ?',
+      whereArgs: [originalFilename, fileSize],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return maps.first;
+    }
+    return null;
+  }
+
   /// Deletes metadata for a medical file from the database by its ID.
   Future<void> deleteMedicalFileMetadata(String fileId) async {
     final db = await database;
