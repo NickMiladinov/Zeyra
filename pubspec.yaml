@@ -57,7 +57,7 @@ dev_dependencies:
   sqflite_common_ffi: ^2.0.0 # For testing sqflite on desktop/VM
   mockito: ^5.4.4 # Check for the latest version - For mocking
   build_runner: ^2.4.9 # Check for the latest version - For code generation
-  plugin_platform_interface: ^2.0.0 # For MockPlatformInterfaceMixin
+  plugin_platform_interface: ^2.1.8 # For MockPlatformInterfaceMixin
   path_provider_platform_interface: ^2.0.0 # ADDED - For PathProviderPlatform
 
   # The "flutter_lints" package below contains a set of recommended lints to

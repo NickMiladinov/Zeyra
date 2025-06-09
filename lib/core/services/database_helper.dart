@@ -156,4 +156,11 @@ class DatabaseHelper {
       whereArgs: [fileId, userId],
     );
   }
+
+  /// Closes the database connection.
+  Future<void> close() async {
+    final db = await database;
+    await db.close();
+    _database = null; // Set to null so it can be re-initialized
+  }
 } 
