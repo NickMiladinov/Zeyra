@@ -47,9 +47,14 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
   final Logger _logger;
   final String? _userId;
 
+  /// A future that completes when the initial loading of files is finished.
+  ///
+  /// This can be awaited in tests to ensure the notifier is initialized.
+  late final Future<void> initializationDone;
+
   MedicalFilesNotifier(this._dbHelper, this._fileStorageService, this._logger, this._userId) 
       : super(const AsyncValue.loading()) {
-    _loadFiles();
+    initializationDone = _loadFiles();
   }
 
   Future<void> _loadFiles() async {
