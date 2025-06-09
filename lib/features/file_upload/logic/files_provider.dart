@@ -19,6 +19,7 @@ final loggerProvider = Provider<Logger>((ref) => Logger());
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 final fileSystemOperationsProvider = Provider<FileSystemOperations>((ref) => const DefaultFileSystemOperations());
 
+// This service is self-contained and handles its own dependencies.
 final secureFileStorageServiceProvider = Provider<SecureFileStorageService>((ref) {
   return SecureFileStorageService(
     secureStorage: ref.watch(flutterSecureStorageProvider),
@@ -28,20 +29,31 @@ final secureFileStorageServiceProvider = Provider<SecureFileStorageService>((ref
   );
 });
 
+// New provider for user-specific DatabaseHelper instance.
+// Returns null if no user is logged in.
+final userSpecificDatabaseHelperProvider = Provider<DatabaseHelper?>((ref) {
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) {
+    return null;
+  }
+  return DatabaseHelper(userId);
+});
+
 // --- StateNotifier for Medical Files Logic ---
 
 class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> {
+  final DatabaseHelper? _dbHelper;
   final SecureFileStorageService _fileStorageService;
   final Logger _logger;
-  final String? _userId; // Hold the current user's ID
+  final String? _userId;
 
-  MedicalFilesNotifier(this._fileStorageService, this._logger, this._userId) 
+  MedicalFilesNotifier(this._dbHelper, this._fileStorageService, this._logger, this._userId) 
       : super(const AsyncValue.loading()) {
     _loadFiles();
   }
 
   Future<void> _loadFiles() async {
-    if (_userId == null) {
+    if (_dbHelper == null) {
       _logger.w("No user logged in. Cannot load files.");
       state = const AsyncValue.data([]);
       return;
@@ -49,11 +61,10 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
     _logger.d("Attempting to load medical files for user $_userId...");
     try {
       state = const AsyncValue.loading();
-      final dbHelper = DatabaseHelper(_userId);
-      final List<Map<String, dynamic>> fileMaps = await dbHelper.getMedicalFilesMetadata();
+      final List<Map<String, dynamic>> fileMaps = await _dbHelper.getMedicalFilesMetadata();
       final List<MedicalFile> files = fileMaps.map((map) => MedicalFile.fromMap(map)).toList();
       
-      // The database query already sorts by created_at DESC
+      // The database query already sorts by created_at DESC, no client-side sort needed.
       state = AsyncValue.data(files);
       _logger.i("Successfully loaded ${files.length} medical files for user $_userId.");
     } catch (e, stackTrace) {
@@ -67,7 +78,7 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
   }
 
   Future<bool> pickAndSecureFile() async {
-    if (_userId == null) {
+     if (_userId == null) {
       _logger.e("Cannot pick file, no user is logged in.");
       state = AsyncValue.error("User is not logged in.", StackTrace.current);
       return false;
@@ -118,7 +129,7 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
   // Deletes a medical file (metadata, encrypted file, and key).
   // Returns true if successful, false otherwise.
   Future<bool> deleteMedicalFile(MedicalFile fileToDelete) async {
-    if (_userId == null) {
+    if (_dbHelper == null || _userId == null) {
       _logger.e("Cannot delete file, no user is logged in.");
       return false;
     }
@@ -134,9 +145,7 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
         return false;
       }
 
-      // 2. Delete metadata from the database
-      final dbHelper = DatabaseHelper(_userId);
-      await dbHelper.deleteMedicalFileMetadata(fileToDelete.id);
+      await _dbHelper.deleteMedicalFileMetadata(fileToDelete.id);
       _logger.i("Successfully soft-deleted metadata for file ID: ${fileToDelete.id}");
 
       // 3. Refresh the list of files in the state
@@ -155,9 +164,10 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
 // The StateNotifierProvider that UI will interact with.
 // It provides an instance of MedicalFilesNotifier.
 final medicalFilesProvider = StateNotifierProvider<MedicalFilesNotifier, AsyncValue<List<MedicalFile>>>((ref) {
+  final dbHelper = ref.watch(userSpecificDatabaseHelperProvider);
   final fileStorageService = ref.watch(secureFileStorageServiceProvider);
   final logger = ref.watch(loggerProvider);
   final userId = Supabase.instance.client.auth.currentUser?.id;
   
-  return MedicalFilesNotifier(fileStorageService, logger, userId);
+  return MedicalFilesNotifier(dbHelper, fileStorageService, logger, userId);
 }); 

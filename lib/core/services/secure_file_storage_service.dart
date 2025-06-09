@@ -14,21 +14,26 @@ import '../helpers/exceptions.dart'; // Import custom exceptions
 import './database_helper.dart'; // Import DatabaseHelper
 import './file_system_operations.dart'; // Import the new abstraction
 
+typedef DatabaseBuilder = DatabaseHelper Function(String userId);
+
 class SecureFileStorageService {
   final FlutterSecureStorage _secureStorage;
   final Uuid _uuid;
   final Logger _logger;
   final FileSystemOperations _fileSystemOps;
+  final DatabaseBuilder _dbBuilder;
 
   SecureFileStorageService({
     FlutterSecureStorage? secureStorage,
     Uuid? uuid,
     Logger? logger,
     FileSystemOperations? fileSystemOps,
+    @visibleForTesting DatabaseBuilder? dbBuilder,
   })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
         _uuid = uuid ?? const Uuid(),
         _logger = logger ?? Logger(),
-        _fileSystemOps = fileSystemOps ?? const DefaultFileSystemOperations();
+        _fileSystemOps = fileSystemOps ?? const DefaultFileSystemOperations(),
+        _dbBuilder = dbBuilder ?? ((userId) => DatabaseHelper(userId));
 
   static const String _encryptedFilesDirName = 'encrypted_medical_files';
 
@@ -86,7 +91,7 @@ class SecureFileStorageService {
     _logger.i('File picked: ${pickedFile.name}, Size: ${pickedFile.size}');
 
     // Check for duplicates for the current user
-    final dbHelper = DatabaseHelper(userId);
+    final dbHelper = _dbBuilder(userId);
     final existingFileMeta = await dbHelper.getMedicalFileMetadataByFilenameAndSize(
         pickedFile.name, pickedFile.size);
 
@@ -146,7 +151,7 @@ class SecureFileStorageService {
       await _fileSystemOps.writeFileAsBytes(encryptedFilePathForCleanup, encryptedBytes, flush: true);
 
       // 7. Save Metadata to Database
-      final dbHelper = DatabaseHelper(userId);
+      final dbHelper = _dbBuilder(userId);
       final Map<String, dynamic> fileMetadata = {
         DatabaseHelper.colId: fileId,
         DatabaseHelper.colUserId: userId,
@@ -208,7 +213,8 @@ class SecureFileStorageService {
     try {
       // SECURITY-CRITICAL CHANGE: First, verify user has access to the file metadata.
       // This prevents any attempt to access a key for a file the user does not own.
-      final Map<String, dynamic>? fileMetadata = await DatabaseHelper(userId).getMedicalFileMetadataById(fileId);
+      final dbHelper = _dbBuilder(userId);
+      final Map<String, dynamic>? fileMetadata = await dbHelper.getMedicalFileMetadataById(fileId);
       final String? encryptedPathFromDb = fileMetadata?[DatabaseHelper.colEncryptedPath] as String?;
 
       if (fileMetadata == null || encryptedPathFromDb == null || encryptedPathFromDb.isEmpty) {

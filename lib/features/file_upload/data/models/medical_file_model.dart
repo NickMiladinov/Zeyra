@@ -61,7 +61,7 @@ class MedicalFile {
   // Optional: Implement toString for easy debugging
   @override
   String toString() {
-    return 'MedicalFile{id: $id, userId: $userId, originalFilename: $originalFilename, fileType: $fileType, createdAt: $createdAt, encryptedPath: $encryptedPath, fileSize: $fileSize}';
+    return 'MedicalFile{id: $id, userId: $userId, originalFilename: $originalFilename, fileType: $fileType, createdAt: $createdAt, encryptedPath: $encryptedPath, fileSize: $fileSize, version: $version, lastModifiedAt: $lastModifiedAt, deletedAt: $deletedAt}';
   }
 
   // Optional: Implement copyWith if you need to create modified copies
@@ -103,7 +103,10 @@ class MedicalFile {
           fileType == other.fileType &&
           createdAt == other.createdAt &&
           encryptedPath == other.encryptedPath &&
-          fileSize == other.fileSize;
+          fileSize == other.fileSize &&
+          version == other.version &&
+          lastModifiedAt == other.lastModifiedAt &&
+          deletedAt == other.deletedAt;
 
   @override
   int get hashCode =>
@@ -113,7 +116,10 @@ class MedicalFile {
       fileType.hashCode ^
       createdAt.hashCode ^
       encryptedPath.hashCode ^
-      fileSize.hashCode;
+      fileSize.hashCode ^
+      version.hashCode ^
+      lastModifiedAt.hashCode ^
+      deletedAt.hashCode;
 
   String get fileSizeFormatted {
     if (fileSize == null) return 'N/A';
