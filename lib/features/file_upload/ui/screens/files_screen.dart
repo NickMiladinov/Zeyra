@@ -56,7 +56,7 @@ class FilesScreen extends ConsumerWidget {
                   leading: Icon(_getIconForFileType(file.fileType), size: 40, color: Theme.of(context).primaryColor),
                   title: Text(file.originalFilename, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(
-                      "Added: ${DateFormat.yMMMd().add_jm().format(file.dateAdded)}\n"
+                      "Added: ${DateFormat.yMMMd().add_jm().format(file.createdAt)}\n"
                       "Type: ${file.fileType?.toUpperCase() ?? 'UNKNOWN'}${file.fileSize != null ? ' - ${_formatFileSize(file.fileSize!)}' : ''}",
                       style: TextStyle(color: Colors.grey[700])),
                   isThreeLine: true,
