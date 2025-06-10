@@ -19,6 +19,13 @@ final loggerProvider = Provider<Logger>((ref) => Logger());
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) => const FlutterSecureStorage());
 final fileSystemOperationsProvider = Provider<FileSystemOperations>((ref) => const DefaultFileSystemOperations());
 
+/// Provider that exposes the Supabase authentication state stream.
+///
+/// This allows other providers to listen to authentication changes (login/logout).
+final authStateStreamProvider = StreamProvider<AuthState>((ref) {
+  return Supabase.instance.client.auth.onAuthStateChange;
+});
+
 // This service is self-contained and handles its own dependencies.
 final secureFileStorageServiceProvider = Provider<SecureFileStorageService>((ref) {
   return SecureFileStorageService(
@@ -32,11 +39,35 @@ final secureFileStorageServiceProvider = Provider<SecureFileStorageService>((ref
 // New provider for user-specific DatabaseHelper instance.
 // Returns null if no user is logged in.
 final userSpecificDatabaseHelperProvider = Provider<DatabaseHelper?>((ref) {
-  final userId = Supabase.instance.client.auth.currentUser?.id;
-  if (userId == null) {
-    return null;
-  }
-  return DatabaseHelper(userId);
+  // Depend on the auth state change stream. This will cause the provider
+  // to be re-evaluated whenever the user logs in or out.
+  final authState = ref.watch(authStateStreamProvider);
+
+  // When the stream is loading or has an error, we have no user.
+  return authState.when(
+    data: (state) {
+      final userId = state.session?.user.id;
+      if (userId == null) {
+        return null;
+      }
+      
+      // Create a new DatabaseHelper for the current user.
+      final dbHelper = DatabaseHelper(userId);
+
+      // When the provider is disposed (e.g., user logs out), close the database connection.
+      ref.onDispose(() {
+        dbHelper.close();
+        ref.read(loggerProvider).i('Closed database connection for user $userId on provider dispose.');
+      });
+
+      return dbHelper;
+    },
+    loading: () => null,
+    error: (err, stack) {
+      ref.read(loggerProvider).e('Error in authStateStreamProvider', error: err, stackTrace: stack);
+      return null;
+    },
+  );
 });
 
 // --- StateNotifier for Medical Files Logic ---
@@ -172,7 +203,8 @@ final medicalFilesProvider = StateNotifierProvider<MedicalFilesNotifier, AsyncVa
   final dbHelper = ref.watch(userSpecificDatabaseHelperProvider);
   final fileStorageService = ref.watch(secureFileStorageServiceProvider);
   final logger = ref.watch(loggerProvider);
-  final userId = Supabase.instance.client.auth.currentUser?.id;
+  // The user ID now comes directly from the auth state, making it more reliable.
+  final userId = ref.watch(authStateStreamProvider).value?.session?.user.id;
   
   return MedicalFilesNotifier(dbHelper, fileStorageService, logger, userId);
 }); 
