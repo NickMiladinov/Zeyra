@@ -105,35 +105,40 @@ class FilesScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final notifier = ref.read(medicalFilesProvider.notifier);
-          final bool success = await notifier.pickAndSecureFile();
-          
-          if (context.mounted) { // Check if the widget is still in the tree
-            if (success) {
+          try {
+            final bool success = await notifier.pickAndSecureFile();
+            
+            if (context.mounted && success) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("File added successfully!"), backgroundColor: Colors.green),
               );
-            } else {
-              final currentState = ref.read(medicalFilesProvider);
-              String errorMessage = "File addition cancelled or failed."; // Default message
-
-              if (currentState.hasError && currentState.error != null) {
-                final error = currentState.error;
-                if (error is DuplicateFileException) {
-                  errorMessage = error.message; // Use message from DuplicateFileException
-                } else {
-                  // Attempt to give a cleaner error message for other types
-                  String specificError = error.toString();
-                  if (specificError.contains("FileSystemException")) {
-                      errorMessage = "Storage permission denied or error accessing file system.";
-                  } else if (specificError.length > 100) { // Avoid overly long technical errors
-                      errorMessage = "An unexpected error occurred while adding the file.";
-                  } else {
-                      errorMessage = "Failed to add file: $specificError";
-                  }
-                }
-              }
+            }
+          } on DuplicateFileException catch (e) {
+            // Show a user-friendly dialog for duplicate files
+            if (context.mounted) {
+              showDialog(
+                context: context,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    title: const Text("File Already Exists"),
+                    content: Text(e.message), // The user-friendly message from the exception
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text("OK"),
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop(); // Close the dialog
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
+          } catch (e) {
+            // Handle other potential errors with a generic snackbar
+            if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+                SnackBar(content: Text("An unexpected error occurred: ${e.toString()}"), backgroundColor: Colors.red),
               );
             }
           }
