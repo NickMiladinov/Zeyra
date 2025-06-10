@@ -7,30 +7,33 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pointycastle/export.dart' as pc;
 import 'package:uuid/uuid.dart';
 import 'dart:math'; // For Random.secure()
+import 'package:meta/meta.dart'; // Import for @visibleForTesting
 
 import '../helpers/crypto_utils.dart'; // Import crypto utils
 import '../helpers/exceptions.dart'; // Import custom exceptions
 import './database_helper.dart'; // Import DatabaseHelper
 import './file_system_operations.dart'; // Import the new abstraction
 
+typedef DatabaseBuilder = DatabaseHelper Function(String userId);
+
 class SecureFileStorageService {
   final FlutterSecureStorage _secureStorage;
   final Uuid _uuid;
   final Logger _logger;
-  final DatabaseHelper _dbHelper;
   final FileSystemOperations _fileSystemOps;
+  final DatabaseBuilder _dbBuilder;
 
   SecureFileStorageService({
     FlutterSecureStorage? secureStorage,
-    DatabaseHelper? dbHelper,
     Uuid? uuid,
     Logger? logger,
     FileSystemOperations? fileSystemOps,
+    @visibleForTesting DatabaseBuilder? dbBuilder,
   })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
-        _dbHelper = dbHelper ?? DatabaseHelper(),
         _uuid = uuid ?? const Uuid(),
         _logger = logger ?? Logger(),
-        _fileSystemOps = fileSystemOps ?? const DefaultFileSystemOperations();
+        _fileSystemOps = fileSystemOps ?? const DefaultFileSystemOperations(),
+        _dbBuilder = dbBuilder ?? ((userId) => DatabaseHelper(userId));
 
   static const String _encryptedFilesDirName = 'encrypted_medical_files';
 
@@ -50,10 +53,11 @@ class SecureFileStorageService {
     return Uint8List.fromList(values);
   }
 
-  Future<String> _getSecureStorageDirectory() async {
-    // PathProvider is still used here, as it's a higher-level abstraction for platform paths.
+  // Directory is now user-specific but visible for tests
+  @visibleForTesting
+  Future<String> getSecureStorageDirectory(String userId) async {
     final Directory appDir = await getApplicationDocumentsDirectory();
-    final String secureDirPath = '${appDir.path}/$_encryptedFilesDirName';
+    final String secureDirPath = '${appDir.path}/$_encryptedFilesDirName/$userId';
 
     // Use injected _fileSystemOps
     if (!await _fileSystemOps.directoryExists(secureDirPath)) {
@@ -62,18 +66,14 @@ class SecureFileStorageService {
     return secureDirPath;
   }
 
-  Future<PlatformFile?> _pickFile() async {
+  @visibleForTesting
+  Future<PlatformFile?> pickFile() async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: _allowedExtensions,
       );
-      if (result != null && result.files.single.path != null) {
-        return result.files.single;
-      } else {
-        // User canceled the picker or path is null
-        return null;
-      }
+      return result?.files.single.path != null ? result!.files.single : null;
     } catch (e, s) {
       _logger.e('Error picking file: $e', error: e, stackTrace: s);
       return null;
@@ -82,30 +82,34 @@ class SecureFileStorageService {
 
   // Public method to orchestrate picking and storing
   // Throws DuplicateFileException if a file with the same name and size already exists.
-  Future<Map<String, String>?> pickAndSecureFile() async {
-    final PlatformFile? pickedFile = await _pickFile();
+  Future<Map<String, String>?> pickAndSecureFile(String userId) async {
+    final PlatformFile? pickedFile = await pickFile();
     if (pickedFile == null) {
       _logger.i('File picking cancelled by user or failed.');
       return null; // User cancelled or error occurred
     }
     _logger.i('File picked: ${pickedFile.name}, Size: ${pickedFile.size}');
 
-    // Check for duplicates before attempting encryption and storage
-    final existingFileMeta = await _dbHelper.getMedicalFileMetadataByFilenameAndSize(
-        pickedFile.name,
-        pickedFile.size,
-    );
+    // Check for duplicates for the current user
+    final dbHelper = _dbBuilder(userId);
+    final existingFileMeta = await dbHelper.getMedicalFileMetadataByFilenameAndSize(
+        pickedFile.name, pickedFile.size);
 
     if (existingFileMeta != null) {
-      _logger.w('Duplicate file detected: ${pickedFile.name} (Size: ${pickedFile.size}) already exists with ID: ${existingFileMeta[DatabaseHelper.colId]}.');
-      throw DuplicateFileException("File '${pickedFile.name}' (Size: ${pickedFile.size} bytes) already exists.");
+      _logger.w('Duplicate file detected for user $userId: ${pickedFile.name}');
+      throw DuplicateFileException("File '${pickedFile.name}' already exists.");
     }
 
-    _logger.i('No duplicate found for ${pickedFile.name}. Proceeding with encryption and storage.');
-    return await _encryptAndStoreFile(pickedFile);
+    _logger.i('No duplicate found for user $userId. Proceeding with encryption.');
+    return await encryptAndStoreFile(pickedFile, userId);
   }
 
-  Future<Map<String, String>?> _encryptAndStoreFile(PlatformFile platformFile) async {
+  @visibleForTesting
+  Future<Map<String, String>?> encryptAndStoreFile(PlatformFile platformFile, String userId) async {
+    if (userId.isEmpty) {
+      throw ArgumentError.value(userId, 'userId', 'User ID cannot be empty.');
+    }
+
     String? fileId; 
     String? encryptedFilePathForCleanup;
 
@@ -141,25 +145,27 @@ class SecureFileStorageService {
       final String encryptedFileName = '${_uuid.v4()}.enc';
 
       // 6. Write Encrypted File
-      final String secureDir = await _getSecureStorageDirectory();
+      final String secureDir = await getSecureStorageDirectory(userId);
       encryptedFilePathForCleanup = '$secureDir/$encryptedFileName';
       
       await _fileSystemOps.writeFileAsBytes(encryptedFilePathForCleanup, encryptedBytes, flush: true);
 
       // 7. Save Metadata to Database
+      final dbHelper = _dbBuilder(userId);
       final Map<String, dynamic> fileMetadata = {
         DatabaseHelper.colId: fileId,
+        DatabaseHelper.colUserId: userId,
         DatabaseHelper.colOriginalFilename: originalFileName,
         DatabaseHelper.colFileType: fileExtension ?? 'unknown',
-        DatabaseHelper.colDateAdded: DateTime.now().millisecondsSinceEpoch,
+        DatabaseHelper.colCreatedAt: DateTime.now().toUtc().toIso8601String(),
         DatabaseHelper.colEncryptedPath: encryptedFilePathForCleanup,
         DatabaseHelper.colFileSize: originalFileSize,
       };
       
       // Critical point: if this fails, we need to attempt cleanup
-      await _dbHelper.saveMedicalFileMetadata(fileMetadata);
+      await dbHelper.saveMedicalFileMetadata(fileMetadata);
       
-      _logger.i('Successfully encrypted and stored file: $originalFileName (ID: $fileId)');
+      _logger.i('Successfully stored file for user $userId: ${platformFile.name} (ID: $fileId)');
 
       // 8. Return fileId and path
       return {
@@ -167,7 +173,7 @@ class SecureFileStorageService {
         'path': encryptedFilePathForCleanup,
       };
     } catch (e, s) {
-      _logger.e('Error encrypting and storing file ${platformFile.name}: $e', error: e, stackTrace: s);
+      _logger.e('Error encrypting and storing file ${platformFile.name} for user $userId: $e', error: e, stackTrace: s);
 
       // Attempt cleanup if fileId was generated (meaning key might be stored) 
       // and/or encryptedFilePathForCleanup is set (meaning file might be written).
@@ -203,12 +209,23 @@ class SecureFileStorageService {
     }
   }
 
-  Future<Uint8List?> decryptFile(String fileId) async {
+  Future<Uint8List?> decryptFile(String fileId, String userId) async {
     try {
+      // SECURITY-CRITICAL CHANGE: First, verify user has access to the file metadata.
+      // This prevents any attempt to access a key for a file the user does not own.
+      final dbHelper = _dbBuilder(userId);
+      final Map<String, dynamic>? fileMetadata = await dbHelper.getMedicalFileMetadataById(fileId);
+      final String? encryptedPathFromDb = fileMetadata?[DatabaseHelper.colEncryptedPath] as String?;
+
+      if (fileMetadata == null || encryptedPathFromDb == null || encryptedPathFromDb.isEmpty) {
+        _logger.e('Error: No metadata, or encrypted path is null/empty in DB for fileId: $fileId and userId: $userId');
+        return null;
+      }
+      
       // 1. Retrieve Key and IV from secure storage
       final String? keyAndIvStorageValue = await _secureStorage.read(key: fileId);
       if (keyAndIvStorageValue == null) {
-        _logger.e('Error: No key/IV found for fileId: $fileId');
+        _logger.e('Error: No key/IV found for fileId: $fileId (after confirming user access)');
         return null;
       }
 
@@ -231,14 +248,6 @@ class SecureFileStorageService {
         _logger.e('Error: Invalid IV length (${iv.length} bytes, expected 12) for fileId: $fileId');
         return null;
       }
-
-      final Map<String, dynamic>? fileMetadata = await _dbHelper.getMedicalFileMetadataById(fileId);
-      final String? encryptedPathFromDb = fileMetadata?[DatabaseHelper.colEncryptedPath] as String?;
-
-      if (fileMetadata == null || encryptedPathFromDb == null || encryptedPathFromDb.isEmpty) {
-        _logger.e('Error: No metadata, or encrypted path is null/empty in DB for fileId: $fileId');
-        return null;
-      }
       
       // encryptedPathFromDb is now confirmed not null and not empty
       if (!await _fileSystemOps.fileExists(encryptedPathFromDb)) {
@@ -256,21 +265,11 @@ class SecureFileStorageService {
       
       // This will throw InvalidCipherTextException if GCM tag check fails (tampered data/wrong key)
       final Uint8List decryptedBytes = cipher.process(encryptedBytes);
-      _logger.i('Successfully decrypted file with ID: $fileId');
+      _logger.i('Successfully decrypted file ID: $fileId for user: $userId');
 
-      // 6. Return decrypted bytes
       return decryptedBytes;
-    } on FormatException catch (e, s) {
-      _logger.e('Error decrypting file (Malformed hex data for key/IV) for fileId $fileId: $e', error: e, stackTrace: s);
-      return null;
-    } on pc.InvalidCipherTextException catch (e, s) {
-      _logger.e('Error decrypting file (Data integrity check failed - GCM tag mismatch) for fileId $fileId: $e', error: e, stackTrace: s);
-      return null;
-    } on ArgumentError catch (e, s) { 
-      _logger.e('Error decrypting file (Invalid argument during cipher initialization, possibly key/IV related) for fileId $fileId: $e', error: e, stackTrace: s);
-      return null;
     } catch (e, s) {
-      _logger.e('Generic error decrypting file with fileId $fileId: $e', error: e, stackTrace: s);
+      _logger.e('Error decrypting file $fileId for user $userId: $e', error: e, stackTrace: s);
       return null;
     }
   }
@@ -330,14 +329,14 @@ class SecureFileStorageService {
 
   // Test wrappers
   Future<String> getSecureStorageDirectoryForTest() {
-    return _getSecureStorageDirectory();
+    return getSecureStorageDirectory('testUserId');
   }
 
   Future<Map<String, String>?> encryptAndStoreFileForTest(PlatformFile platformFile) {
-    return _encryptAndStoreFile(platformFile);
+    return encryptAndStoreFile(platformFile, 'testUserId');
   }
 
   Future<PlatformFile?> pickFileForTest() {
-     return _pickFile();
+     return pickFile();
   }
 } 

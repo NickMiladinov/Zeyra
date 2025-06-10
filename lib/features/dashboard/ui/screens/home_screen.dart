@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase for auth
+import 'package:zeyra/core/services/database_helper.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   Future<void> _signOut(BuildContext context) async {
+    // Get the user ID *before* signing out
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+
     try {
       await Supabase.instance.client.auth.signOut();
-      // AuthGate will handle navigation to AuthScreen
-    } catch (e) {
+
+      // If there was a logged-in user, close their database
+      if (userId != null) {
+        final dbHelper = DatabaseHelper(userId);
+        await dbHelper.close();
+        debugPrint("Database for user $userId closed successfully.");
+      }
+
+    } on AuthException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Logout failed: ${e.toString()}'),
+            content: Text('Sign out failed: ${e.message}'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );

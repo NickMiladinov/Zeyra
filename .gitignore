@@ -47,7 +47,7 @@ linked_*.ds
 unlinked.ds
 unlinked_spec.ds
 .idea/caches
-/test/*.mocks.*
+/test/**/*.mocks.*
 
 # Android related
 **/android/**/gradle-wrapper.jar
