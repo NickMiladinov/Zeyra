@@ -120,6 +120,7 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
       return false;
     }
 
+    // Do not catch DuplicateFileException here. Let it propagate to the UI.
     try {
       final secureResult = await _fileStorageService.pickAndSecureFile(_userId);
       if (secureResult != null) {
@@ -130,11 +131,11 @@ class MedicalFilesNotifier extends StateNotifier<AsyncValue<List<MedicalFile>>> 
         _logger.w("File picking or securing was cancelled or failed for user $_userId.");
         return false;
       }
-    } on DuplicateFileException catch (e, stackTrace) {
-      _logger.w("Duplicate file detected for user $_userId: ${e.message}");
-      state = AsyncValue.error(e, stackTrace);
-      return false;
     } catch (e, stackTrace) {
+      if (e is DuplicateFileException) {
+        // Re-throw the specific exception to be caught by the UI.
+        rethrow;
+      }
       _logger.e("Error during pickAndSecureFile flow for user $_userId", error: e, stackTrace: stackTrace);
       state = AsyncValue.error("Failed to add file: ${e.toString()}", stackTrace);
       return false;
