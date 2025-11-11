@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zeyra/features/dashboard/ui/screens/home_screen.dart';
 import 'package:zeyra/features/dashboard/ui/widgets/bottom_nav_bar.dart';
-// Corrected import path for FilesScreen
-import '../../../file_upload/ui/screens/files_screen.dart'; 
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,7 +17,6 @@ class _MainScreenState extends State<MainScreen> {
   // List of widgets to display in the body based on the current index
   final List<Widget> _screens = [
     const HomeScreen(),
-    const FilesScreen(),
     // Add more screens here if you expand your BottomNavBar
   ];
 

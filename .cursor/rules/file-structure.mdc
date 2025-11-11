@@ -8,57 +8,114 @@ Please follow this file structure when making new files or changing them, specif
 lib/
 │
 ├── main.dart                         # App entry point
-├── app.dart                          # Root widget & app-level setup
+├── app/
+│   ├── app.dart                      # Root widget (MaterialApp)
+│   ├── config/                       # Global constants, themes, routing, environment setup
+│   ├── theme/                        # Colours, typography (from your Figma)
+│   ├── router/                       # GoRouter or AutoRoute setup
+│   └── localization/                 # English localization files (future multi-lang ready)
 │
 ├── core/                             # Core utilities used across the app
+|   ├── di/                           # DI graph entry
+|   │   ├── main_providers.dart       # Registers all top-level Riverpod providers
+│   │   └── di_graph.dart             # explicit DI graph visualizer/initializer
 │   ├── constants/                    # App-wide constants (e.g., colors, spacing)
-│   ├── helpers/                      # Helpers/util functions (e.g. date formatter)
-│   ├── services/                     # Global services (API, Auth, OCR, AI, etc.)
-│   ├── widgets/                      # Reusable/shared widgets (buttons, modals)
-│   └── config/                       # Env config, routing, themes, etc.
+│   ├── errors/                       # Custom exceptions, failure classes
+│   ├── utils/                        # Formatters, validators, etc.
+│   ├── services/                     # Global services (APIs, Auth, OCR, AI, Encryption, Migration, Subscription, Sync Manager, Background Task Manager, Notification, Networking, etc.)
+│   ├── monitoring/                   # Logs, crash reporting, diagnostics
+│   └── mixins/                       # Generic Flutter mixins (animation, refreshable, etc.)
+│
+├── data/                             # Global data layer
+│   ├── local/                        # Drift setup, AppDatabase, DAOs for shared data
+│   │   ├── app_database.dart
+│   │   ├── daos/
+│   │   └── models/                   # DB models (Drift tables)
+│   ├── remote/                       # Supabase or REST services
+│   ├── repositories/                 # Implementations of domain repositories
+│   └── mappers/                      # Bridges DB/API ↔ Domain entities
+│
+├── domain/                           # All domain logic
+│   ├── entities/                     # Pure models used across the app (not DB)
+│   ├── repositories/                 # Abstract repository interfaces for each entity group
+│   └── usecases/                     # Feature-specific use cases (app layer orchestration)
 │
 ├── features/                         # Feature-based folders (main app logic)
 │   ├── auth/                         # Authentication
-│   │   ├── data/                     # Auth API calls, models
 │   │   ├── logic/                    # State (BLoC, Riverpod)
 │   │   └── ui/                       # Login, signup, forgot password screens
 │
 │   ├── file_upload/                  # File picker, preview, upload, OCR
-│   │   ├── data/                     # File models, services
 │   │   ├── logic/                    # State (upload status, OCR result)
 │   │   └── ui/                       # UI to select, upload, view files
 │
 │   ├── biomarkers/                   # Biomarker data and organ UI
-│   │   ├── data/                     # Data models and API
 │   │   ├── logic/                    # State for biomarker lists, updates
 │   │   └── ui/                       # Organ/part view, biomarker cards
 │
 │   ├── timeline/                     # Timeline view and health progression
-│   │   ├── data/
 │   │   ├── logic/
 │   │   └── ui/
 │
 │   ├── sharing/                      # Share with doctors, parents, etc.
-│   │   ├── data/
 │   │   ├── logic/
 │   │   └── ui/
 │
-│   ├── doctor_notes/                # Visit notes, prescriptions
-│   │   ├── data/
+│   ├── doctor_notes/                 # Visit notes, prescriptions
 │   │   ├── logic/
 │   │   └── ui/
 │
 │   ├── labs/                         # Lab API integration & kit orders
-│   │   ├── data/
 │   │   ├── logic/
 │   │   └── ui/
 │
 │   ├── ai_chat/                      # AI assistant
-│   │   ├── data/
 │   │   ├── logic/
 │   │   └── ui/
 │
-│   └── dashboard/                    # Home, nav, profile
-│       ├── logic/
+├── shared/
+│   ├── widgets/                      # Global reusable widgets (buttons, cards, modals)
+│   ├── providers/                    # Global Riverpod providers (theme, auth, etc.)
+│   └── extensions/                   # String, DateTime extensions
 
-│       └── ui/
+assets/
+├── images/
+├── icons/
+├── fonts/
+├── audio/
+└── lottie/
+
+test/
+├── core/
+│    ├── utils/
+│    ├── services/
+│    └── di/
+│
+├── data/
+│    ├── repositories/
+│    ├── datasources/
+│    └── models/
+│
+├── domain/
+│    ├── entities/
+│    ├── usecases/
+│    └── mappers/
+│
+├── features/
+│
+├── harness/
+│    ├── test_harness.dart          # Core harness entry — initializes the test environment.
+│    ├── mock_dependencies.dart     # Registers mock repositories/services.
+│    ├── test_app_wrapper.dart      # Wraps widgets in ProviderScope, MaterialApp, etc.
+│    └── fixtures.dart              # Loads JSON/sample test data.
+│
+├── integration/
+│    ├── user_flows/
+│    └── network/
+│
+├── mocks/
+│    ├── fake_data/
+│    ├── stubs/
+│    └── mock_repositories.dart
+│
+└── test_config.dart

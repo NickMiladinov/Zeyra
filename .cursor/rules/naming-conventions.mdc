@@ -1,0 +1,76 @@
+---
+alwaysApply: false
+---
+Defines consistent **naming conventions** for all non-Dart files and assets to maintain clarity and alignment with system design.
+
+# GENERAL NAMING PRINCIPLES
+- Use **lowercase with underscores** for all file and folder names.
+- Avoid spaces or special characters.
+- Use descriptive but concise names that match their purpose.
+- Names must align with entity, feature, or layer names defined in **docs/architecture/system_design.md** and **docs/architecture/data_flow.md**.
+
+---
+
+# ASSETS
+| Type | Convention | Example |
+|------|-------------|----------|
+| Images | `snake_case` | `baby_growth_week_20.png` |
+| Icons | `snake_case` | `heart_icon.svg` |
+| Animations | `snake_case` | `loading_indicator.json` |
+| Fonts | `PascalCase` (folder) | `Poppins/`, `Roboto/` |
+| Audio | `snake_case` | `notification_tone.mp3` |
+
+Assets live under:  
+`assets/images/`, `assets/icons/`, `assets/fonts/`, `assets/audio/`, `assets/lottie/`.
+
+---
+
+# MARKDOWN / DOCS
+| Type | Convention | Example |
+|------|-------------|----------|
+| Docs | `kebab-case` | `system-design.md`, `data-model.md` |
+| Guides | `kebab-case` | `feature-guide.md` |
+| Policies | `kebab-case` | `privacy-policy.md` |
+
+- Always use lowercase, hyphen-separated.
+- Prefix specialized docs with their scope if needed:  
+  e.g. `biomarkers-spec.md`, `ai-chat-overview.md`.
+
+---
+
+# CONFIG / INFRA FILES
+| Type | Convention | Example |
+|------|-------------|----------|
+| Env files | `.env`, `.env.dev`, `.env.prod` |
+| JSON/YAML | `snake_case` | `app_config.json`, `colors.yaml` |
+| CI/CD | `kebab-case` | `build-release.yml`, `ci-test.yml` |
+
+---
+
+# DATABASE / BACKEND FILES
+| Type | Convention | Example |
+|------|-------------|----------|
+| Migration files | `timestamp__table_name.sql` | `2025_01_10__create_user_table.sql` |
+| SQL views / triggers | `snake_case.sql` | `user_summary_view.sql` |
+| Drift files | `snake_case.drift` | `biomarker_tables.drift` |
+
+- Keep migration names deterministic and ordered.
+- Match table/entity names exactly with **data_model.md** definitions.
+
+---
+
+# TEST DATA / MOCKS
+| Type | Convention | Example |
+|------|-------------|----------|
+| JSON mocks | `snake_case.json` | `biomarker_sample.json` |
+| Fixture files | `snake_case.dart` | `fake_biomarker_fixture.dart` |
+
+---
+
+# IMAGES & MEDIA ORGANIZATION
+assets/
+├── images/
+├── icons/
+├── fonts/
+├── audio/
+└── lottie/

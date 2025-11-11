@@ -3,25 +3,57 @@ description:
 globs: 
 alwaysApply: true
 ---
-Act as a highly skilled senior software engineer who design apps. Always look for minimal code change solutions, comment your code and make it readable, with a reusability mindset. Leverage available resources extensively for proactive research, context gathering, verification, and execution. Assume responsibility for understanding the full context, implications, and optimal implementation strategy. Prioritize proactive execution, making reasoned decisions to resolve ambiguities and implement maintainable, extensible solutions autonomously.
+Act as a highly skilled senior software engineer who designs apps. Always look for minimal code change solutions, comment your code and make it readable, with a reusability mindset. Leverage available resources extensively for proactive research, context gathering, verification, and execution. Assume responsibility for understanding the full context, implications, and optimal implementation strategy. Prioritize proactive execution, making reasoned decisions to resolve ambiguities and implement maintainable, extensible solutions autonomously.
+All code must conform to architectural documents: **docs/architecture/system_design.md**, **docs/architecture/data_flow.md**, and **docs/data/data_model.md**.
 
-You are building a secure, easy to use health app that stores medical data and displays your biomarkers.
+You are building a secure, easy to use pregnancy health app that bridges medical data, pregnancy visualisation and NHS guidance in one secure place.
 
 # TECH STACK
-Frontend:
-- Framework: Flutter
+**Frontend:** Flutter (Dart)
 - Routing: go_router
 - State Management: Riverpod
+- Local DB: Drift
+- Remote Backend: Supabase (REST + Realtime), Supabase Auth (User Auth)
+- Dependency Injection: Riverpod providers (DI graph in `core/di/`)
+- Secure storage for local sensitive data
 
-Backend:
-- User Auth: Supabase Auth
-- Database: Supabase (PostgreSQL)
-- Backend API: Supabase REST & Realtime
+**Version control:** GitHub
 
-Version control:
-- GitHub
+**Testing:**
+- Unit, widget, and integration tests using `flutter_test` and `mocktail`
+- CI/CD via GitHub Actions
 
-Testing:
-- Unit & Widget Testing: Dart's test package + Flutter built-in support
+# CODING PHILOSOPHY
+- Every feature is modular, isolated, and testable.
+- Avoid tight coupling between UI, logic, and data layers.
+- Always keep **domain entities** pure (no Drift or Flutter imports).
+- Repositories are bridges between domain and data.
+- Avoid circular dependencies.
+- Use clean architecture principles (data → domain → UI).
 
+# GENERAL GUIDELINES
+- Favour composition over inheritance.
+- Always comment complex logic.
+- Write self-documenting, readable code.
+- Follow reactive patterns cautiously (only where justified).
+- Never block the main thread with heavy computation or IO.
 
+# PERFORMANCE & SECURITY
+- Optimize build methods (use `const` and keys).
+- Use efficient list and image caching.
+- Encrypt sensitive local files (via secure storage or encryption service).
+- Store all PII and medical data only on device for MVP.
+- Use UTC timestamps everywhere.
+
+# FILE PLACEMENT REFERENCE
+Refer to **file-structure.mdc** for correct folder placement:
+- `core/` → app-wide utilities, DI, services
+- `data/` → Drift DAOs, API clients, repositories (implementations)
+- `domain/` → entities, repository interfaces, use cases
+- `features/` → UI + logic (state management)
+- `shared/` → reusable widgets, providers, extensions
+
+# GENERAL NAMING PRINCIPLES
+- Use **lowercase with underscores** for all file and folder names.
+- Avoid spaces or special characters.
+- Use descriptive but concise names that match their purpose.

@@ -4,30 +4,65 @@ globs: *.dart
 alwaysApply: false
 ---
 Applies Flutter best practices and coding guidelines, focusing on constants, themes, utilities, and widgets.
+
+# NAMING CONVENTIONS
+- **Classes**: PascalCase → `UserProfile`, `BiomarkerRepository`
+- **Methods**: lowerCamelCase → `fetchBiomarkers()`, `saveUserProfile()`
+- **Variables**: lowerCamelCase → `userProfile`, `selectedPregnancy`
+- **Constants**: UPPER_SNAKE_CASE → `DEFAULT_LANGUAGE = 'en'`
+- **Enums**: PascalCase + UpperCamel values → `enum Gender { male, female, other }`
+- **Files**: snake_case → `user_profile_repository.dart`, `biomarker_card.dart`
+- **Directories**: lowercase_with_underscores → `biomarkers/data/`
+- **Providers**: suffix `_provider` → `user_profile_provider`
+- **Widgets**: must be stateless unless justified otherwise
+
+# FLUTTER ARCHITECTURE RULES
+- Use **Riverpod** for dependency injection and state.
+- Avoid direct DB/API calls in UI.
+- Logic goes into `logic/` and use cases in `domain/usecases/`.
+- Repository interfaces defined in `domain/repositories/`.
+- Repository implementations live in `data/repositories/`.
+- UI widgets consume providers only; never directly access repositories.
+
+# CODE STYLE
 - Adapt to existing project architecture while maintaining clean code principles.
+- Always use `const` constructors when possible.
+- Use `final` for immutable local variables.
+- Always provide meaningful widget keys.
+- Prefer composition (break large widgets into smaller ones).
+- Keep widget build methods short (<100 lines).
+- Use `Theme.of(context)` and `AppColors` from `app/theme/`.
+- Use extension methods (in `shared/extensions/`) for repeated logic.
+- Ensure `lint` passes (`flutter analyze` clean).
 - Implement proper null safety practices.
-- Follow proper naming conventions.
-- Use proper widget composition and keys.
-- Keep widgets small and focused.
-- Use const constructors when possible.
-- Follow proper layout principles.
 
-- Implement proper routing using GoRouter.
-- Use proper form validation.
-- Implement proper error boundaries.
-- Follow proper accessibility guidelines.
+# ERROR HANDLING
+- Define custom exceptions in `core/errors/`.
+- Catch at the repository level, map to domain-friendly failures.
+- Avoid silent catches.
+- Log handled errors via `core/monitoring/`.
 
-- Implement clean architecture with BLoC pattern.
-- Follow proper state management principles.
-- Use proper dependency injection.
-- Implement proper error handling.
-- Follow proper state management with BLoC.
-- Implement proper dependency injection using GetIt.
+# DEPENDENCY INJECTION
+- Register all global providers in `core/di/main_providers.dart`.
+- Never use singletons outside DI.
+- Avoid runtime service locators; prefer compile-time DI.
 
-- Use proper image caching.
+# DOCUMENTATION
+- All public classes and methods must include DartDoc comments.
+- Reference **docs/data/data_flow.md** when implementing repositories or entities.
+
+# CODE CONSISTENCY
+- Ensure domain entities never depend on Flutter or Drift imports.
+- Data models (DTOs) mirror DB/API schema and map to/from domain entities.
+- Follow reactive update rules only for timeline, AI chat, and live trackers.
+
+# UI
+- Accessible text sizes and color contrast.
+- Follow design tokens from `app/theme/`.
+- Use `SizedBox` and `Padding` over hardcoded spacers.
+- Reuse `shared/widgets/` components whenever possible.
+
+# Optimisation
 - Implement proper list view optimization.
 - Use proper build methods optimization.
-- Implement proper memory management.
-- Use proper platform channels when needed.
-
 - Follow proper compilation optimization techniques.

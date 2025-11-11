@@ -3,13 +3,40 @@ description:
 globs: test/*
 alwaysApply: false
 ---
-Specifies testing guidelines for Flutter projects, covering unit, widget, and integration tests.
+Defines testing principles and conventions for the app.
 
-- Write unit tests for business logic.
-- Implement widget tests for UI components.
-- Use integration tests for feature testing.
-- Implement proper mocking strategies.
-- Use proper test coverage tools.
-- Follow proper test naming conventions.
+# TEST STRUCTURE
+Follow feature-based test structure mirroring `lib/features/`.
 
-- Implement proper CI/CD testing.
+# TEST TYPES
+- **Unit tests** → Pure logic, use cases, repositories (mock dependencies)
+- **Widget tests** → UI components (Golden tests optional)
+- **Integration tests** → End-to-end feature flows
+
+# NAMING CONVENTIONS
+- File names: `<class>_test.dart`
+- Test group: `'[Feature] <Behavior>'`
+- Test name: `'should <expected behavior> when <condition>'`
+
+# MOCKING
+- Use `mocktail` for mocks.
+- Use fake data builders for entities (e.g. `FakeBiomarker`).
+- Avoid hitting live Supabase or Drift DB in tests — use in-memory DB.
+
+# COVERAGE
+- Maintain >85% coverage on domain & data layers.
+- Exclude generated code and UI constants from coverage.
+
+# CI/CD
+- All tests run on GitHub Actions.
+- Lint and tests must pass before merge.
+
+# ASSERTIONS
+- Prefer `expectLater()` for async checks.
+- Use `verify()` for mock verification.
+- Avoid brittle widget tree matchers — use keys and finders.
+
+# DOCUMENTATION
+Reference:
+- **docs/architecture/system_design.md** for architecture coverage expectations.
+- **docs/architecture/data_flow.md** for correct repository and entity boundaries.

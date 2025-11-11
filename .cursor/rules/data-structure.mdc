@@ -1,0 +1,19 @@
+---
+description: 
+globs: *.dart
+alwaysApply: false
+---
+| Entity        | Description                | Key Fields                                       |
+| ------------- | -------------------------- | ------------------------------------------------ |
+| UserProfile   | Basic profile info         | name, dueDate, pregnancyWeek, settings           |
+| Symptom       | Symptom logs               | id, date, name, description, severity            |
+| BiometricLog  | Weight, BP, etc.           | id, type, value, unit, timestamp                 |
+| MedicalFile   | Uploaded files             | id, category, filePath, date, note               |
+| Biomarker     | Lab metrics                | id, type, value, unit, normalRange, timestamp    |
+| PrenatalTest  | Test results               | id, testName, result, date, notes                |
+| Hospital      | Hospital data              | id, name, address, postcode, NHSrating, location |
+| Shortlist     | User-saved hospitals       | id, hospitalId, dateAdded                        |
+| Appointment   | Calendar events            | id, date, time, location, doctor, notes          |
+| BirthPlan     | Structured plan            | id, section, preferences                         |
+| AIChatContext | Chat history + linked data | message, timestamp, attachedData                 |
+

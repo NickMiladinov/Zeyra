@@ -1,0 +1,65 @@
+---
+alwaysApply: false
+---
+Defines how to create a **new feature module** consistent with system design.
+
+# FEATURE CREATION WORKFLOW
+
+## STEP 1: Create Folder Structure
+Under `lib/features/<feature_name>/`, create:
+logic/
+ui/
+
+## STEP 2: Define Domain Layer
+- Create pure **entities** in `domain/entities/` (no Flutter/Drift imports).
+- Define **repository interface** in `domain/repositories/`.
+- Define **use cases** in `domain/usecases/` following one-action-per-class rule.
+- Ensure domain models align with **docs/architecture/data_flow.md** and **docs/data/data_model.md**.
+
+## STEP 3: Implement Data Layer
+- Create **DTOs and Drift tables** in `data/models/`.
+- Implement **repository** in `data/repositories/` that maps DTO ↔ domain entity.
+- Implement **services** if API or local logic is needed.
+- Add tests for repository logic (mock dependencies).
+
+## STEP 4: Add Logic Layer
+- Implement **Riverpod providers/state notifiers** in `logic/`.
+- Providers depend on repositories via DI (`core/di/main_providers.dart`).
+
+## STEP 5: Build UI Layer
+- Create screens, widgets, and forms under `ui/`.
+- Use providers to read/update data.
+- Follow design tokens and accessibility guidelines.
+
+## STEP 6: Testing
+- Add:
+  - Unit tests for domain/usecases
+  - Repository tests for data mapping
+  - Widget tests for UI states
+- Use `testing.mdc` rules for naming and structure.
+
+## STEP 7: Integration
+- Register providers in `core/di/main_providers.dart`.
+- Add navigation routes in `app/router/`.
+- Ensure localization if user-facing.
+
+## STEP 8: Review
+- Verify naming follows `dart-rules.mdc`.
+- Ensure repository boundaries follow **system_design.md**.
+- Add doc comments for all public classes and methods.
+
+# FEATURE NAMING RULES
+- Feature names in snake_case → `file_upload`, `biomarkers`, `timeline`
+- Providers → `<feature>_provider.dart`
+- States → `<feature>_state.dart`
+- Use cases → verb-noun pattern → `FetchBiomarkers`, `SaveSymptomLog`
+- Entities → singular noun → `Biomarker`, `SymptomLog`
+
+# VALIDATION
+Before finalizing:
+✅ Domain entities are Flutter/DB-agnostic  
+✅ Repositories correctly bridge domain ↔ data  
+✅ Providers connect use cases to UI only  
+✅ Tests exist for each layer
+
+
