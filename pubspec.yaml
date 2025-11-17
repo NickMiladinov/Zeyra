@@ -23,6 +23,11 @@ dependencies:
 
   intl: ^0.20.2 # For date formatting
   meta: ^1.12.0 # For annotations like @visibleForTesting
+  
+  # UI and theming
+  google_fonts: ^6.2.1 # Google Fonts for custom typography
+  material_symbols_icons: ^4.2785.1 # Material Symbols with fill, weight, grade support
+  flutter_svg: ^2.0.10 # SVG rendering for custom icons
 
 dev_dependencies:
   flutter_test:

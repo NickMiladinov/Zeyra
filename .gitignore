@@ -9,6 +9,7 @@
 .env
 *.iml
 .idea/
+devtools_options.yaml
 
 
 # Flutter repo-specific

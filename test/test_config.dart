@@ -1,5 +1,6 @@
 /// Test configuration and constants.
 /// This file contains configuration values and constants used across tests.
+library;
 
 class TestConfig {
   // Test database configuration

@@ -31,10 +31,11 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Always provide meaningful widget keys.
 - Prefer composition (break large widgets into smaller ones).
 - Keep widget build methods short (<100 lines).
-- Use `Theme.of(context)` and `AppColors` from `app/theme/`.
+- Use `Theme.of(context)` and `AppColors`, `AppEffects`, `AppIcons`, `AppSpacing`, `AppTypography` from `app/theme/`.
 - Use extension methods (in `shared/extensions/`) for repeated logic.
 - Ensure `lint` passes (`flutter analyze` clean).
 - Implement proper null safety practices.
+- NEVER use Material widgets directly when custom app widgets exist. When in doubt, check `shared/widgets/` for existing custom components first.
 
 # ERROR HANDLING
 - Define custom exceptions in `core/errors/`.
