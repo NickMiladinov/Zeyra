@@ -2,6 +2,7 @@
 /// 
 /// This file provides visibility into the dependency injection graph
 /// and handles initialization of the DI container if needed.
+library;
 
 class DIGraph {
   /// Initialize the dependency injection graph.

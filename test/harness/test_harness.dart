@@ -1,6 +1,7 @@
 /// Core test harness entry point.
 /// This file initializes the test environment and provides common setup
 /// for all tests in the application.
+library;
 
 class TestHarness {
   /// Initialize the test harness.
