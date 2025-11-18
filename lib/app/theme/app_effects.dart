@@ -97,6 +97,15 @@ class AppEffects {
     ),
   ];
 
+  /// Shadow for top edge (bottom navigation bar)
+  static List<BoxShadow> get shadowTop => [
+    BoxShadow(
+      color: AppColors.black.withValues(alpha: 0.05),
+      offset: const Offset(0, -1),
+      blurRadius: 12,
+    ),
+  ];
+
   // ============================================================================
   // BORDERS
   // ============================================================================

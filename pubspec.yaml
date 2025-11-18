@@ -55,3 +55,17 @@ flutter:
     - assets/fonts/
     - assets/audio/
     - assets/lottie/
+
+  # Custom fonts
+  fonts:
+    # Manrope - Variable font with all weights (200-800)
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope/Manrope-VariableFont_wght.ttf
+
+    # IBM Plex Sans - Variable font with all weights and widths
+    - family: IBM Plex Sans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-VariableFont_wdth,wght.ttf
+        - asset: assets/fonts/IBMPlexSans/IBMPlexSans-Italic-VariableFont_wdth,wght.ttf
+          style: italic

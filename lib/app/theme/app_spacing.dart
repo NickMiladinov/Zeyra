@@ -112,8 +112,11 @@ class AppSpacing {
   /// App bar height
   static const double appBarHeight = 56.0;
   
-  /// Bottom navigation bar height
-  static const double bottomNavHeight = 56.0;
+  /// Bottom navigation bar height (with comfortable padding)
+  static const double bottomNavHeight = 80.0;
+  
+  /// Bottom navigation item height
+  static const double bottomNavItemHeight = 48.0;
   
   /// Tab bar height
   static const double tabBarHeight = 56.0;

@@ -35,7 +35,37 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Use extension methods (in `shared/extensions/`) for repeated logic.
 - Ensure `lint` passes (`flutter analyze` clean).
 - Implement proper null safety practices.
-- NEVER use Material widgets directly when custom app widgets exist. When in doubt, check `shared/widgets/` for existing custom components first.
+
+# THEME CONSTANTS (CRITICAL)
+- **ALWAYS use theme constants** from `app/theme/` instead of hardcoded values if possible:
+  - **Colors**: Use `AppColors.*` (primary, secondary, white, textPrimary, etc.) - NEVER use `Color(0xFF...)` or `Colors.*` directly
+  - **Spacing**: Use `AppSpacing.*` (xs, sm, md, lg, xl, padding*, margin*, gap*, screen*, icon*, button*, etc.)
+  - **Typography**: Use `AppTypography.*` (displayLarge, headlineMedium, bodyLarge, labelSmall, etc.)
+  - **Effects**: Use `AppEffects.*` (rounded*, shadow*, border*, opacity*, duration*, curve*)
+  - **Icons**: Use `AppIcons.*` methods (icon(), active(), baby(), etc.) with Material Symbols
+- **Examples of FORBIDDEN hardcoded values**:
+  - ❌ `height: 24` → ✅ `height: AppSpacing.iconSM`
+  - ❌ `fontSize: 16` → ✅ `style: AppTypography.bodyLarge`
+  - ❌ `Color(0xFF4DB6AC)` → ✅ `AppColors.primary`
+  - ❌ `BorderRadius.circular(12)` → ✅ `AppEffects.roundedMD`
+  - ❌ `EdgeInsets.all(16)` → ✅ `EdgeInsets.all(AppSpacing.paddingLG)`
+  - ❌ `Duration(milliseconds: 200)` → ✅ `AppEffects.durationFast`
+- If a needed constant doesn't exist, **add it to the appropriate theme file** rather than hardcoding
+- Exception: Design-specific values unique to a component (document why with a comment)
+
+# CUSTOM WIDGETS (DESIGN SYSTEM)
+- **NEVER use Material widgets directly** when custom app widgets exist
+- When in doubt, check `shared/widgets/` for existing custom components first
+
+# FIGMA DESIGN INTERPRETATION
+- **IGNORE OS-level elements** in Figma screenshots/designs:
+  - ❌ Home indicator bars (bottom gesture bar on iOS/Android)
+  - ❌ Status bars (time, battery, signal at top)
+  - ❌ System navigation (back button, home button on Android)
+  - ❌ Notches, camera cutouts, rounded screen corners
+- **Only implement app-level UI** - the OS handles its own elements
+- If unsure whether an element is OS-level or app-level, ask for clarification
+- Figma dimensions that include OS elements should be adjusted to exclude them
 
 # ERROR HANDLING
 - Define custom exceptions in `core/errors/`.
@@ -67,3 +97,17 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Implement proper list view optimization.
 - Use proper build methods optimization.
 - Follow proper compilation optimization techniques.
+
+# CODE REVIEW CHECKLIST (ALWAYS CHECK BEFORE FINISHING)
+- **Scan for hardcoded numbers** in your code:
+  - Search for patterns like: `height: \d+`, `width: \d+`, `EdgeInsets.all(\d+)`, `padding: \d+`, `fontSize: \d+`, etc.
+  - Replace with theme constants from `AppSpacing`, `AppTypography`, etc.
+- **Scan for hardcoded colors**:
+  - Search for: `Color(0x`, `Colors.`, hex color values
+  - Replace with `AppColors.*` constants
+- **Scan for magic strings**:
+  - Hard-coded text that should be localized or constants
+- **Check imports**:
+  - Remove unused imports
+  - Use theme imports when using theme constants
+- **Run before completing**: `flutter analyze` to catch any compilation errors
