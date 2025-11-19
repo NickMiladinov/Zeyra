@@ -172,22 +172,14 @@ class AppEffects {
     ],
   );
 
-  // TODO: Add custom gradients from Figma
-  // Example:
-  // static LinearGradient get gradientHero => const LinearGradient(
-  //   begin: Alignment.topCenter,
-  //   end: Alignment.bottomCenter,
-  //   colors: [Color(0xFF...), Color(0xFF...)],
-  // );
-
   // ============================================================================
   // BLURS (Backdrop filters)
   // ============================================================================
   /// Blur values for frosted glass effects
   static const double blurNone = 0.0;
-  static const double blurLight = 4.0; // TODO: Replace
-  static const double blurMedium = 8.0; // TODO: Replace
-  static const double blurHeavy = 16.0; // TODO: Replace
+  static const double blurLight = 4.0;
+  static const double blurMedium = 8.0;
+  static const double blurHeavy = 16.0;
 
   // ============================================================================
   // OPACITY

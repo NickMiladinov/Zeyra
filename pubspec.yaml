@@ -24,6 +24,12 @@ dependencies:
   intl: ^0.20.2 # For date formatting
   meta: ^1.12.0 # For annotations like @visibleForTesting
   
+  # Database and encryption
+  drift: ^2.16.0 # Local database with type-safe queries
+  drift_flutter: ^0.1.0 # Flutter integration for Drift
+  flutter_secure_storage: ^9.0.0 # Secure storage for encryption keys
+  crypto: ^3.0.3 # Cryptographic operations
+  
   # UI and theming
   google_fonts: ^6.2.1 # Google Fonts for custom typography
   material_symbols_icons: ^4.2785.1 # Material Symbols with fill, weight, grade support
@@ -33,8 +39,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   sqflite_common_ffi: ^2.0.0 # For testing sqflite on desktop/VM
-  mockito: ^5.4.4 # Check for the latest version - For mocking
+  mocktail: ^1.0.0 # For mocking in tests
   build_runner: ^2.4.9 # Check for the latest version - For code generation
+  drift_dev: ^2.16.0 # Code generator for Drift
   plugin_platform_interface: ^2.1.8 # For MockPlatformInterfaceMixin
   path_provider_platform_interface: ^2.0.0 # ADDED - For PathProviderPlatform
   flutter_lints: ^5.0.0

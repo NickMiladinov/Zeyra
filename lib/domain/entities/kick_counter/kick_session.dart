@@ -1,0 +1,133 @@
+import 'kick.dart';
+
+/// Represents a kick counting session for tracking fetal movements.
+/// 
+/// A session tracks kicks from start to completion, including pause tracking
+/// to calculate accurate active monitoring duration. This data is critical
+/// for medical assessment of fetal wellbeing.
+class KickSession {
+  /// Unique identifier for this session
+  final String id;
+  
+  /// When the session started
+  final DateTime startTime;
+  
+  /// When the session ended (null if still active)
+  final DateTime? endTime;
+  
+  /// Whether this session is currently active
+  final bool isActive;
+  
+  /// All kicks recorded in this session
+  final List<Kick> kicks;
+  
+  /// Timestamp when session was paused (null if not currently paused)
+  final DateTime? pausedAt;
+  
+  /// Total accumulated pause duration across all pause/resume cycles
+  final Duration totalPausedDuration;
+  
+  /// Number of times the user has paused this session (tracking metric)
+  final int pauseCount;
+
+  const KickSession({
+    required this.id,
+    required this.startTime,
+    this.endTime,
+    required this.isActive,
+    required this.kicks,
+    this.pausedAt,
+    required this.totalPausedDuration,
+    required this.pauseCount,
+  });
+
+  /// Whether the session is currently paused
+  bool get isPaused => pausedAt != null;
+
+  /// Number of kicks recorded in this session
+  int get kickCount => kicks.length;
+
+  /// Calculate the active duration (excluding pauses)
+  /// 
+  /// This is the actual time spent monitoring, which is more medically
+  /// relevant than total elapsed time.
+  Duration get activeDuration {
+    final end = endTime ?? DateTime.now();
+    var active = end.difference(startTime) - totalPausedDuration;
+    
+    // If currently paused, subtract the current pause duration
+    // Use 'end' instead of DateTime.now() for ended sessions
+    if (pausedAt != null) {
+      active -= end.difference(pausedAt!);
+    }
+    
+    return active;
+  }
+
+  /// Calculate average time between kicks
+  /// 
+  /// Returns null if less than 2 kicks (need at least 2 points for average)
+  Duration? get averageTimeBetweenKicks {
+    if (kicks.length < 2) return null;
+    
+    final totalDuration = kicks.last.timestamp.difference(kicks.first.timestamp);
+    final intervals = kicks.length - 1;
+    
+    return Duration(
+      milliseconds: totalDuration.inMilliseconds ~/ intervals,
+    );
+  }
+
+  /// Create a copy with updated fields
+  KickSession copyWith({
+    String? id,
+    DateTime? startTime,
+    DateTime? endTime,
+    bool? isActive,
+    List<Kick>? kicks,
+    DateTime? pausedAt,
+    Duration? totalPausedDuration,
+    int? pauseCount,
+  }) {
+    return KickSession(
+      id: id ?? this.id,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isActive: isActive ?? this.isActive,
+      kicks: kicks ?? this.kicks,
+      pausedAt: pausedAt ?? this.pausedAt,
+      totalPausedDuration: totalPausedDuration ?? this.totalPausedDuration,
+      pauseCount: pauseCount ?? this.pauseCount,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is KickSession &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          startTime == other.startTime &&
+          endTime == other.endTime &&
+          isActive == other.isActive &&
+          pausedAt == other.pausedAt &&
+          totalPausedDuration == other.totalPausedDuration &&
+          pauseCount == other.pauseCount;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      startTime.hashCode ^
+      endTime.hashCode ^
+      isActive.hashCode ^
+      pausedAt.hashCode ^
+      totalPausedDuration.hashCode ^
+      pauseCount.hashCode;
+
+  @override
+  String toString() =>
+      'KickSession(id: $id, startTime: $startTime, endTime: $endTime, '
+      'isActive: $isActive, kickCount: $kickCount, pauseCount: $pauseCount, '
+      'isPaused: $isPaused)';
+}
+
