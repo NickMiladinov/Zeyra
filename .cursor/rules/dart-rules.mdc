@@ -23,6 +23,10 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Repository interfaces defined in `domain/repositories/`.
 - Repository implementations live in `data/repositories/`.
 - UI widgets consume providers only; never directly access repositories.
+- **State Management (Notifiers/Blocs)** must rely on **UseCases** as the Single Source of Truth.
+- **UseCases** should return the updated entity after modifications so UI state can be updated authoritatively.
+- UI Logic should NEVER calculate/predict state changes manually (avoid guessing new state).
+- UI Logic must NEVER directly access Repositories.
 
 # CODE STYLE
 - Adapt to existing project architecture while maintaining clean code principles.

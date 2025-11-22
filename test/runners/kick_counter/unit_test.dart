@@ -12,6 +12,7 @@
 /// - Data repository tests (44 tests)
 /// - Data DAO tests (15 tests)
 /// - Error handling tests (24 tests)
+/// - Logic (State) tests (15 tests)
 /// 
 /// Excludes:
 /// - Integration tests (13 tests) - use all_tests.dart
@@ -23,6 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // Import only unit test files (no integration/performance)
 import '../../data/local/daos/kick_counter_dao_test.dart' as dao_tests;
+import '../../data/local/daos/kick_session_with_kicks_test.dart' as dao_extensions_tests;
 import '../../data/mappers/kick_session_mapper_test.dart' as mapper_tests;
 import '../../data/repositories/kick_counter_repository_error_handling_test.dart'
     as error_handling_tests;
@@ -36,9 +38,13 @@ import '../../domain/exceptions/kick_counter_exception_test.dart'
     as exception_tests;
 import '../../domain/usecases/kick_counter/manage_session_usecase_test.dart'
     as usecase_tests;
+import '../../features/kick_counter/logic/kick_counter_notifier_test.dart'
+    as notifier_tests;
+import '../../features/kick_counter/logic/kick_history_provider_test.dart'
+    as history_provider_tests;
 
 void main() {
-  group('[KickCounter] Unit Tests (160 tests)', () {
+  group('[KickCounter] Unit Tests', () {
     // -------------------------------------------------------------------------
     // Domain Layer Unit Tests (78 tests)
     // -------------------------------------------------------------------------
@@ -72,10 +78,21 @@ void main() {
         error_handling_tests.main();
       });
 
-      group('DAOs (15 tests)', () {
+      group('DAOs (20 tests)', () {
         dao_tests.main();
+        dao_extensions_tests.main();
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // Logic Layer Unit Tests (15 tests)
+    // -------------------------------------------------------------------------
+    
+    group('Logic Layer', () {
+      group('Notifiers (15 tests)', () {
+        notifier_tests.main();
+        history_provider_tests.main();
       });
     });
   });
 }
-

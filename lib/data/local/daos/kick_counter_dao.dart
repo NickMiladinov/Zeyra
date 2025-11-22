@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../models/kick_session_table.dart';
 import '../models/kick_table.dart';
+import 'package:equatable/equatable.dart';
 
 part 'kick_counter_dao.g.dart';
 
@@ -169,7 +170,7 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
 /// Composite data class for a session with its kicks.
 /// 
 /// Used to return complete session data in a single query operation.
-class KickSessionWithKicks {
+class KickSessionWithKicks extends Equatable {
   final KickSessionDto session;
   final List<KickDto> kicks;
 
@@ -179,14 +180,7 @@ class KickSessionWithKicks {
   });
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is KickSessionWithKicks &&
-          runtimeType == other.runtimeType &&
-          session == other.session;
-
-  @override
-  int get hashCode => session.hashCode;
+  List<Object?> get props => [session, kicks];
 
   @override
   String toString() =>

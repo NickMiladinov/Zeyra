@@ -17,6 +17,15 @@ class ManageSessionUseCase {
   }) : _repository = repository;
 
   // --------------------------------------------------------------------------
+  // State Queries
+  // --------------------------------------------------------------------------
+  
+  /// Get the currently active session, if one exists.
+  Future<KickSession?> getActiveSession() async {
+    return await _repository.getActiveSession();
+  }
+
+  // --------------------------------------------------------------------------
   // Session Lifecycle
   // --------------------------------------------------------------------------
 
@@ -47,12 +56,12 @@ class ManageSessionUseCase {
   /// [strength] - User's perception of movement strength
   /// 
   /// Validates that session hasn't reached maximum kick limit (100).
-  /// Returns the created kick and a flag indicating if the user should
+  /// Returns the updated session and a flag indicating if the user should
   /// be prompted to end the session (after 10 kicks).
   /// 
   /// Throws [KickCounterException] with type [maxKicksReached]
   /// if session already has 100 kicks.
-  Future<({Kick kick, bool shouldPromptEnd})> recordKick(
+  Future<({KickSession session, bool shouldPromptEnd})> recordKick(
     String sessionId,
     MovementStrength strength,
   ) async {
@@ -74,14 +83,23 @@ class ManageSessionUseCase {
     }
 
     // Add the kick
-    final kick = await _repository.addKick(sessionId, strength);
+    await _repository.addKick(sessionId, strength);
+
+    // Fetch updated session
+    final updatedSession = await _repository.getActiveSession();
+    if (updatedSession == null) {
+      throw const KickCounterException(
+        'Session lost after update.',
+        KickCounterErrorType.noActiveSession,
+      );
+    }
 
     // Check if should prompt user to end session (at 10 kicks)
-    final newKickCount = session.kickCount + 1;
+    // Note: Use updatedSession.kickCount which includes the new kick
     final shouldPrompt =
-        newKickCount == KickCounterConstants.promptEndSessionAt;
+        updatedSession.kickCount == KickCounterConstants.promptEndSessionAt;
 
-    return (kick: kick, shouldPromptEnd: shouldPrompt);
+    return (session: updatedSession, shouldPromptEnd: shouldPrompt);
   }
 
   /// Remove the most recently added kick from the session.
@@ -89,10 +107,11 @@ class ManageSessionUseCase {
   /// [sessionId] - ID of the session to remove kick from
   /// 
   /// Provides undo functionality for accidental taps.
+  /// Returns the updated session.
   /// 
   /// Throws [KickCounterException] with type [noKicksToUndo]
   /// if session has no kicks.
-  Future<void> undoLastKick(String sessionId) async {
+  Future<KickSession> undoLastKick(String sessionId) async {
     // Get current session to check if kicks exist
     final session = await _repository.getActiveSession();
     if (session == null || session.id != sessionId) {
@@ -110,6 +129,15 @@ class ManageSessionUseCase {
     }
 
     await _repository.removeLastKick(sessionId);
+
+    final updatedSession = await _repository.getActiveSession();
+    if (updatedSession == null) {
+      throw const KickCounterException(
+        'Session lost after update.',
+        KickCounterErrorType.noActiveSession,
+      );
+    }
+    return updatedSession;
   }
 
   /// End the specified session.
@@ -163,9 +191,10 @@ class ManageSessionUseCase {
   /// 
   /// Idempotent operation - if session is already paused, this is a no-op.
   /// Sets pausedAt timestamp to track pause duration.
-  Future<void> pauseSession(String sessionId) async {
+  /// Returns the updated session.
+  Future<KickSession> pauseSession(String sessionId) async {
     // Get current session to check if already paused
-    final session = await _repository.getActiveSession();
+    var session = await _repository.getActiveSession();
     if (session == null || session.id != sessionId) {
       throw const KickCounterException(
         'No active session found.',
@@ -173,12 +202,21 @@ class ManageSessionUseCase {
       );
     }
 
-    // Idempotent - if already paused, don't do anything
+    // Idempotent - if already paused, return current session
     if (session.isPaused) {
-      return;
+      return session;
     }
 
     await _repository.pauseSession(sessionId);
+
+    session = await _repository.getActiveSession();
+    if (session == null) {
+       throw const KickCounterException(
+        'Session lost after update.',
+        KickCounterErrorType.noActiveSession,
+      );
+    }
+    return session;
   }
 
   /// Resume the specified session.
@@ -187,12 +225,13 @@ class ManageSessionUseCase {
   /// 
   /// Calculates elapsed pause duration, adds to total paused time,
   /// increments pause count, and clears pausedAt timestamp.
+  /// Returns the updated session.
   /// 
   /// Throws [KickCounterException] with type [sessionNotPaused]
   /// if session is not currently paused.
-  Future<void> resumeSession(String sessionId) async {
+  Future<KickSession> resumeSession(String sessionId) async {
     // Get current session to validate it's paused
-    final session = await _repository.getActiveSession();
+    var session = await _repository.getActiveSession();
     if (session == null || session.id != sessionId) {
       throw const KickCounterException(
         'No active session found.',
@@ -208,6 +247,15 @@ class ManageSessionUseCase {
     }
 
     await _repository.resumeSession(sessionId);
+
+    session = await _repository.getActiveSession();
+    if (session == null) {
+       throw const KickCounterException(
+        'Session lost after update.',
+        KickCounterErrorType.noActiveSession,
+      );
+    }
+    return session;
   }
 }
 

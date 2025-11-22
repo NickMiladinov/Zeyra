@@ -22,6 +22,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 
 // Import only the fastest unit tests
+import '../../data/local/daos/kick_session_with_kicks_test.dart' as dao_extensions_tests;
 import '../../data/mappers/kick_session_mapper_test.dart' as mapper_tests;
 import '../../domain/entities/kick_counter/kick_session_test.dart'
     as session_entity_tests;
@@ -47,8 +48,9 @@ void main() {
       usecase_tests.main();
     });
 
-    group('Data Mappers (10 tests)', () {
+    group('Data Mappers & DTOs (15 tests)', () {
       mapper_tests.main();
+      dao_extensions_tests.main();
     });
   });
 }

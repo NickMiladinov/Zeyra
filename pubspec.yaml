@@ -29,6 +29,8 @@ dependencies:
   drift_flutter: ^0.1.0 # Flutter integration for Drift
   flutter_secure_storage: ^9.0.0 # Secure storage for encryption keys
   crypto: ^3.0.3 # Cryptographic operations
+  equatable: ^2.0.7 # Value equality
+
   
   # UI and theming
   google_fonts: ^6.2.1 # Google Fonts for custom typography

@@ -102,14 +102,24 @@ void main() {
           () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
           kicks: FakeKick.batch(5), // 5 existing kicks
         );
         final newKick = FakeKick.simple(sequenceNumber: 6);
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          kicks: [...initialSession.kicks, newKick],
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        // First call checks validation, second call returns updated session
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+          callCount++;
+          if (callCount == 1) return initialSession;
+          return updatedSession;
+        });
+        
         when(() => mockRepository.addKick(sessionId, MovementStrength.strong))
             .thenAnswer((_) async => newKick);
 
@@ -120,9 +130,9 @@ void main() {
         );
 
         // Assert
-        expect(result.kick, equals(newKick));
+        expect(result.session, equals(updatedSession));
         expect(result.shouldPromptEnd, isFalse);
-        verify(() => mockRepository.getActiveSession()).called(1);
+        verify(() => mockRepository.getActiveSession()).called(2);
         verify(() => mockRepository.addKick(sessionId, MovementStrength.strong))
             .called(1);
       });
@@ -130,14 +140,22 @@ void main() {
       test('should return shouldPromptEnd=true at exactly 10 kicks', () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
-          kicks: FakeKick.batch(9), // 9 existing kicks
+          kicks: FakeKick.batch(9),
         );
         final newKick = FakeKick.simple(sequenceNumber: 10);
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          kicks: [...initialSession.kicks, newKick],
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+           callCount++;
+           return callCount == 1 ? initialSession : updatedSession;
+        });
+        
         when(() => mockRepository.addKick(sessionId, MovementStrength.moderate))
             .thenAnswer((_) async => newKick);
 
@@ -148,21 +166,29 @@ void main() {
         );
 
         // Assert
-        expect(result.kick, equals(newKick));
+        expect(result.session, equals(updatedSession));
         expect(result.shouldPromptEnd, isTrue);
       });
 
       test('should return shouldPromptEnd=false after 10 kicks', () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
-          kicks: FakeKick.batch(15), // 15 existing kicks
+          kicks: FakeKick.batch(15),
         );
         final newKick = FakeKick.simple(sequenceNumber: 16);
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          kicks: [...initialSession.kicks, newKick],
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+           callCount++;
+           return callCount == 1 ? initialSession : updatedSession;
+        });
+
         when(() => mockRepository.addKick(sessionId, MovementStrength.weak))
             .thenAnswer((_) async => newKick);
 
@@ -276,13 +302,21 @@ void main() {
       test('should remove last kick when kicks exist', () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
           kicks: FakeKick.batch(3),
         );
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          kicks: FakeKick.batch(2),
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+           callCount++;
+           return callCount == 1 ? initialSession : updatedSession;
+        });
+        
         when(() => mockRepository.removeLastKick(sessionId))
             .thenAnswer((_) async {});
 
@@ -290,7 +324,7 @@ void main() {
         await useCase.undoLastKick(sessionId);
 
         // Assert
-        verify(() => mockRepository.getActiveSession()).called(1);
+        verify(() => mockRepository.getActiveSession()).called(2);
         verify(() => mockRepository.removeLastKick(sessionId)).called(1);
       });
 
@@ -533,13 +567,21 @@ void main() {
       test('should pause session when not already paused', () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
           pausedAt: null, // Not paused
         );
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          pausedAt: DateTime.now(),
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+           callCount++;
+           return callCount == 1 ? initialSession : updatedSession;
+        });
+
         when(() => mockRepository.pauseSession(sessionId))
             .thenAnswer((_) async {});
 
@@ -547,7 +589,7 @@ void main() {
         await useCase.pauseSession(sessionId);
 
         // Assert
-        verify(() => mockRepository.getActiveSession()).called(1);
+        verify(() => mockRepository.getActiveSession()).called(2);
         verify(() => mockRepository.pauseSession(sessionId)).called(1);
       });
 
@@ -563,9 +605,10 @@ void main() {
             .thenAnswer((_) async => session);
 
         // Act
-        await useCase.pauseSession(sessionId);
+        final result = await useCase.pauseSession(sessionId);
 
         // Assert
+        expect(result, equals(session));
         verify(() => mockRepository.getActiveSession()).called(1);
         verifyNever(() => mockRepository.pauseSession(any()));
       });
@@ -616,13 +659,21 @@ void main() {
       test('should resume session when paused', () async {
         // Arrange
         final sessionId = 'session-1';
-        final session = FakeKickSession.simple(
+        final initialSession = FakeKickSession.simple(
           id: sessionId,
           pausedAt: DateTime.now(), // Paused
         );
+        final updatedSession = FakeKickSession.simple(
+          id: sessionId,
+          pausedAt: null,
+        );
 
-        when(() => mockRepository.getActiveSession())
-            .thenAnswer((_) async => session);
+        int callCount = 0;
+        when(() => mockRepository.getActiveSession()).thenAnswer((_) async {
+           callCount++;
+           return callCount == 1 ? initialSession : updatedSession;
+        });
+
         when(() => mockRepository.resumeSession(sessionId))
             .thenAnswer((_) async {});
 
@@ -630,7 +681,7 @@ void main() {
         await useCase.resumeSession(sessionId);
 
         // Assert
-        verify(() => mockRepository.getActiveSession()).called(1);
+        verify(() => mockRepository.getActiveSession()).called(2);
         verify(() => mockRepository.resumeSession(sessionId)).called(1);
       });
 

@@ -16,10 +16,13 @@ This document outlines all existing tests for the Kick Counter feature. The feat
 | **Unit - Mappers** | `kick_session_mapper_test.dart` | 1 | 10 |
 | **Unit - Repository** | `kick_counter_repository_impl_test.dart` | 10 | 20 |
 | **Unit - DAO** | `kick_counter_dao_test.dart` | 3 | 15 |
+| **Unit - DAO** | `kick_session_with_kicks_test.dart` | 1 | 5 |
 | **Error Handling** | `kick_counter_repository_error_handling_test.dart` | 6 | 24 |
 | **Performance** | `kick_counter_performance_test.dart` | 6 | 13 |
 | **Integration** | `kick_counter_flow_test.dart` | 1 | 13 |
-| **Total** | **10 files** | **41 groups** | **173 tests** 🎉 |
+| **Unit - Logic** | `kick_counter_notifier_test.dart` | 5 | 12 |
+| **Unit - Logic** | `kick_history_provider_test.dart` | 1 | 3 |
+| **Total** | **12 files** | **47 groups** | **188 tests** 🎉 |
 
 ---
 
@@ -95,7 +98,7 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 1.2.4 | should return isPaused true when pausedAt is set | `isPaused` getter returns true when `pausedAt` is not null | Pause state detection |
 | 1.2.5 | should return isPaused false when pausedAt is null | `isPaused` getter returns false when `pausedAt` is null | Active state detection |
 | 1.2.6 | should return kickCount matching kicks list length | `kickCount` returns the number of kicks in the session | Kick counting |
-| 1.2.7 | should calculate averageTimeBetweenKicks correctly | Calculates average time between consecutive kicks | Average interval calculation |
+| 1.2.7 | should calculate averageTime betweenKicks correctly | Calculates average time between consecutive kicks | Average interval calculation |
 | 1.2.8 | should return null averageTimeBetweenKicks with less than 2 kicks | Returns null when insufficient kicks for average | Edge case: < 2 kicks |
 | 1.2.9 | should copyWith create new instance with updated fields | Creates new instance with specified fields updated | Immutability pattern |
 
@@ -278,7 +281,7 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 
 | Test # | Test Name | Description | Validates |
 |--------|-----------|-------------|-----------|
-| 4.2.3.1 | should encrypt perceivedStrength before saving | Calls encryption service with strength string | Encryption integration |
+| 4.2.3.1 | should encrypt perceived strength before saving | Calls encryption service with strength string | Encryption integration |
 | 4.2.3.2 | should set correct timestamp | Kick timestamp is set to current time | Timestamp accuracy |
 | 4.2.3.3 | should increment sequenceNumber | Sequence numbers increment: 1, 2, 3... | Sequence numbering |
 
@@ -364,6 +367,22 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 4.3.3.4 | should only return inactive sessions in history | History excludes active | Filtering |
 
 **Coverage:** ✅ Pagination, edge cases, data integrity, foreign keys, sorting
+
+---
+
+### 4.4 KickSessionWithKicks (`test/data/local/daos/kick_session_with_kicks_test.dart`) 🆕
+
+**Purpose:** Validate equality logic for the composite DTO to ensure data integrity in collections.
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 4.4.1 | should support value equality | Equal objects have equal hash codes | Value equality contract |
+| 4.4.2 | should differ when session differs | Different sessions are not equal | Identity logic |
+| 4.4.3 | should differ when kicks list content differs | Different kicks list = different object | Deep equality |
+| 4.4.4 | should differ when kicks list order differs | Order matters for exact equality | List equality |
+| 4.4.5 | should have correct toString output | Debug string contains relevant info | Debugging |
+
+**Coverage:** ✅ Value equality, hash code contract, deep list comparison
 
 ---
 
@@ -509,6 +528,36 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 
 ---
 
+## 8. Logic / State Management Tests 🆕
+
+### 8.1 KickCounterNotifier (`test/features/kick_counter/logic/kick_counter_notifier_test.dart`)
+
+**Purpose:** Unit test the Riverpod Notifier for the active session screen.
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.1.1 | initial state is correct | Validates start state (null session, loading=false) | Initial state |
+| 8.1.2 | starts session successfully | Validates state update on start | Session start |
+| 8.1.3 | handles sessionAlreadyActive | Restores existing session if active error occurs | Resume logic |
+| 8.1.4 | handles generic error | Sets error state on failure | Error handling |
+| 8.1.5 | records kick successfully | Adds kick to local state list | Optimistic updates |
+| 8.1.6 | sets shouldPromptEnd | Sets flag when use case returns true | Prompt logic |
+| 8.1.7 | pauses session updates state | Sets pausedAt | Pause UI |
+| 8.1.8 | resumes session clears pausedAt | Clears pausedAt | Resume UI |
+| 8.1.9 | ends session and resets state | Clears session from state | End flow |
+
+### 8.2 KickHistoryNotifier (`test/features/kick_counter/logic/kick_history_provider_test.dart`)
+
+**Purpose:** Unit test the Riverpod Notifier for the history screen.
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.2.1 | loads history successfully | Loads list from repository | Data loading |
+| 8.2.2 | handles error on load | Sets error message | Error handling |
+| 8.2.3 | calculates typical range correctly | Computes average duration to 10 kicks | Business logic |
+
+---
+
 ## Test Environment Setup
 
 ### Mocking Strategy
@@ -568,24 +617,6 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 
 ---
 
-## Coverage Status
-
-| Area | Status | Notes |
-|------|--------|-------|
-| **Domain Entities** | ✅ Complete | 17 tests |
-| **Domain Use Cases** | ✅ Complete | 42 tests (NEW) |
-| **Domain Exceptions** | ✅ Complete | 19 tests (NEW) |
-| **Data Mappers** | ✅ Complete | 10 tests |
-| **Data Repository** | ✅ Complete | 20 tests |
-| **Data DAO** | ✅ Complete | 15 tests (NEW) |
-| **Error Handling** | ✅ Complete | 24 tests (NEW) |
-| **Performance** | ✅ Complete | 13 tests (NEW) |
-| **Integration** | ✅ Complete | 13 tests |
-| **Concurrent Sessions** | ✅ Complete | Tested in use case |
-| **Pregnancy Week Context** | ⏳ Pending | Not implemented yet (TODO in code) |
-| **Widget Tests** | ⏳ Pending | UI not implemented yet |
-
----
 
 ## Running Tests by Category
 
@@ -610,28 +641,6 @@ flutter test --tags kick_counter
 
 # Run with coverage
 flutter test --tags kick_counter --coverage
-
-# Run using presets (from dart_test.yaml)
-flutter test --preset=kick_counter
-flutter test --preset=unit
-flutter test --preset=integration
-flutter test --preset=performance
-
-# Run specific directories
-flutter test test/domain/                    # All domain tests
-flutter test test/data/                      # All data tests
-flutter test test/integration/               # Integration tests
-flutter test test/performance/               # Performance tests only
-```
-
-### Run Specific Test Files
-
-```bash
-flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
-flutter test test/data/local/daos/kick_counter_dao_test.dart
-flutter test test/domain/exceptions/kick_counter_exception_test.dart
-flutter test test/data/repositories/kick_counter_repository_error_handling_test.dart
-flutter test test/performance/kick_counter_performance_test.dart
 ```
 
 ---
@@ -670,8 +679,8 @@ flutter test test/performance/kick_counter_performance_test.dart
 
 ## Document Metadata
 
-**Last Updated:** 2025-11-19  
-**Total Tests:** 173 🎉  
-**Test Files:** 10  
-**Coverage Level:** Comprehensive (Unit + Integration + Performance + Error Handling)  
-**Feature Status:** ✅ Thoroughly tested with all coverage gaps addressed
+**Last Updated:** 2025-11-21  
+**Total Tests:** 188 🎉  
+**Test Files:** 12  
+**Coverage Level:** Comprehensive (Unit + Integration + Performance + Error Handling + Logic)  
+**Feature Status:** ✅ Logic Implemented & Tested
