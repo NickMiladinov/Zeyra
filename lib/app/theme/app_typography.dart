@@ -80,7 +80,7 @@ class AppTypography {
   static const TextStyle headlineSmall = TextStyle(
     fontFamily: primaryFontFamily,
     fontSize: 18,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w600,
     height: 1.3,
     letterSpacing: 0,
     color: AppColors.textPrimary,
@@ -90,7 +90,7 @@ class AppTypography {
   static const TextStyle headlineExtraSmall = TextStyle(
     fontFamily: primaryFontFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w600,
     height: 1.3,
     letterSpacing: 0,
     color: AppColors.textPrimary,

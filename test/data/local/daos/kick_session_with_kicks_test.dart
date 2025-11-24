@@ -1,7 +1,6 @@
 @Tags(['kick_counter'])
 library;
 
-import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/local/daos/kick_counter_dao.dart';

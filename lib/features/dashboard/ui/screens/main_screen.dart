@@ -3,6 +3,7 @@ import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/features/dashboard/ui/screens/home_screen.dart';
+import 'package:zeyra/features/tools/ui/screens/tools_screen.dart';
 import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(), // Today (index 0)
     const _PlaceholderScreen(key: ValueKey('my-health'), title: 'My Health'), // My Health (index 1)
     const _PlaceholderScreen(key: ValueKey('baby'), title: 'Baby'), // Baby (index 2)
-    const _PlaceholderScreen(key: ValueKey('tools'), title: 'Tools'), // Tools (index 3)
+    const ToolsScreen(key: ValueKey('tools')), // Tools (index 3)
     const _PlaceholderScreen(key: ValueKey('more'), title: 'More'), // More (index 4)
   ];
 
