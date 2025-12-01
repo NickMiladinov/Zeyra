@@ -41,6 +41,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       pausedAtMillis: null,
       totalPausedMillis: 0,
       pauseCount: 0,
+      note: null,
       createdAtMillis: now.millisecondsSinceEpoch,
       updatedAtMillis: now.millisecondsSinceEpoch,
     );
@@ -61,6 +62,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
           : null,
       totalPausedDuration: Duration(milliseconds: session.totalPausedMillis),
       pauseCount: session.pauseCount,
+      note: null,
     );
   }
 
@@ -83,6 +85,12 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       );
     }
 
+    // Decrypt note if present
+    String? decryptedNote;
+    if (sessionWithKicks.session.note != null) {
+      decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
+    }
+
     // Build session with decrypted kicks
     return KickSession(
       id: sessionWithKicks.session.id,
@@ -102,6 +110,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         milliseconds: sessionWithKicks.session.totalPausedMillis,
       ),
       pauseCount: sessionWithKicks.session.pauseCount,
+      note: decryptedNote,
     );
   }
 
@@ -137,6 +146,76 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
   @override
   Future<void> deleteSession(String sessionId) async {
     await _dao.deleteSession(sessionId);
+  }
+
+  @override
+  Future<KickSession?> getSession(String sessionId) async {
+    final sessionWithKicks = await _dao.getSessionWithKicks(sessionId);
+    if (sessionWithKicks == null) return null;
+
+    // Decrypt all kicks
+    final decryptedKicks = <Kick>[];
+    for (final kickDto in sessionWithKicks.kicks) {
+      final decryptedStrength =
+          await _encryptionService.decrypt(kickDto.perceivedStrength);
+      decryptedKicks.add(
+        KickSessionMapper.kickToDomain(kickDto, decryptedStrength),
+      );
+    }
+
+    // Decrypt note if present
+    String? decryptedNote;
+    if (sessionWithKicks.session.note != null) {
+      decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
+    }
+
+    // Build session with decrypted kicks
+    return KickSession(
+      id: sessionWithKicks.session.id,
+      startTime: DateTime.fromMillisecondsSinceEpoch(
+          sessionWithKicks.session.startTimeMillis),
+      endTime: sessionWithKicks.session.endTimeMillis != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              sessionWithKicks.session.endTimeMillis!)
+          : null,
+      isActive: sessionWithKicks.session.isActive,
+      kicks: decryptedKicks,
+      pausedAt: sessionWithKicks.session.pausedAtMillis != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              sessionWithKicks.session.pausedAtMillis!)
+          : null,
+      totalPausedDuration: Duration(
+        milliseconds: sessionWithKicks.session.totalPausedMillis,
+      ),
+      pauseCount: sessionWithKicks.session.pauseCount,
+      note: decryptedNote,
+    );
+  }
+
+  @override
+  Future<KickSession> updateSessionNote(String sessionId, String? note) async {
+    // Encrypt note if present
+    String? encryptedNote;
+    if (note != null && note.isNotEmpty) {
+      encryptedNote = await _encryptionService.encrypt(note);
+    }
+
+    // Update session
+    final now = DateTime.now();
+    await _dao.updateSessionFields(
+      sessionId,
+      KickSessionsCompanion(
+        note: Value(encryptedNote),
+        updatedAtMillis: Value(now.millisecondsSinceEpoch),
+      ),
+    );
+
+    // Fetch and return updated session
+    final updatedSession = await getSession(sessionId);
+    if (updatedSession == null) {
+      throw Exception('Session not found after update: $sessionId');
+    }
+    return updatedSession;
   }
 
   // --------------------------------------------------------------------------
@@ -264,6 +343,12 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         );
       }
 
+      // Decrypt note if present
+      String? decryptedNote;
+      if (sessionWithKicks.session.note != null) {
+        decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
+      }
+
       // Build session with decrypted kicks
       decryptedSessions.add(KickSession(
         id: sessionWithKicks.session.id,
@@ -283,6 +368,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
           milliseconds: sessionWithKicks.session.totalPausedMillis,
         ),
         pauseCount: sessionWithKicks.session.pauseCount,
+        note: decryptedNote,
       ));
     }
 

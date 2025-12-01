@@ -90,6 +90,15 @@ class $KickSessionsTable extends KickSessions
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
     'createdAtMillis',
   );
@@ -121,6 +130,7 @@ class $KickSessionsTable extends KickSessions
     pausedAtMillis,
     totalPausedMillis,
     pauseCount,
+    note,
     createdAtMillis,
     updatedAtMillis,
   ];
@@ -191,6 +201,12 @@ class $KickSessionsTable extends KickSessions
         pauseCount.isAcceptableOrUnknown(data['pause_count']!, _pauseCountMeta),
       );
     }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
     if (data.containsKey('created_at_millis')) {
       context.handle(
         _createdAtMillisMeta,
@@ -250,6 +266,10 @@ class $KickSessionsTable extends KickSessions
         DriftSqlType.int,
         data['${effectivePrefix}pause_count'],
       )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
       createdAtMillis: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at_millis'],
@@ -293,6 +313,10 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
   /// Tracking metric for understanding user behavior patterns
   final int pauseCount;
 
+  /// Optional encrypted note attached to this session
+  /// Users can add personal observations about the session
+  final String? note;
+
   /// Timestamp when record was created (stored as millis since epoch)
   final int createdAtMillis;
 
@@ -306,6 +330,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
     this.pausedAtMillis,
     required this.totalPausedMillis,
     required this.pauseCount,
+    this.note,
     required this.createdAtMillis,
     required this.updatedAtMillis,
   });
@@ -323,6 +348,9 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
     }
     map['total_paused_millis'] = Variable<int>(totalPausedMillis);
     map['pause_count'] = Variable<int>(pauseCount);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
     map['created_at_millis'] = Variable<int>(createdAtMillis);
     map['updated_at_millis'] = Variable<int>(updatedAtMillis);
     return map;
@@ -341,6 +369,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
           : Value(pausedAtMillis),
       totalPausedMillis: Value(totalPausedMillis),
       pauseCount: Value(pauseCount),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       createdAtMillis: Value(createdAtMillis),
       updatedAtMillis: Value(updatedAtMillis),
     );
@@ -359,6 +388,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
       pausedAtMillis: serializer.fromJson<int?>(json['pausedAtMillis']),
       totalPausedMillis: serializer.fromJson<int>(json['totalPausedMillis']),
       pauseCount: serializer.fromJson<int>(json['pauseCount']),
+      note: serializer.fromJson<String?>(json['note']),
       createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
       updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
     );
@@ -374,6 +404,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
       'pausedAtMillis': serializer.toJson<int?>(pausedAtMillis),
       'totalPausedMillis': serializer.toJson<int>(totalPausedMillis),
       'pauseCount': serializer.toJson<int>(pauseCount),
+      'note': serializer.toJson<String?>(note),
       'createdAtMillis': serializer.toJson<int>(createdAtMillis),
       'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
     };
@@ -387,6 +418,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
     Value<int?> pausedAtMillis = const Value.absent(),
     int? totalPausedMillis,
     int? pauseCount,
+    Value<String?> note = const Value.absent(),
     int? createdAtMillis,
     int? updatedAtMillis,
   }) => KickSessionDto(
@@ -401,6 +433,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
         : this.pausedAtMillis,
     totalPausedMillis: totalPausedMillis ?? this.totalPausedMillis,
     pauseCount: pauseCount ?? this.pauseCount,
+    note: note.present ? note.value : this.note,
     createdAtMillis: createdAtMillis ?? this.createdAtMillis,
     updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
   );
@@ -423,6 +456,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
       pauseCount: data.pauseCount.present
           ? data.pauseCount.value
           : this.pauseCount,
+      note: data.note.present ? data.note.value : this.note,
       createdAtMillis: data.createdAtMillis.present
           ? data.createdAtMillis.value
           : this.createdAtMillis,
@@ -442,6 +476,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
           ..write('pausedAtMillis: $pausedAtMillis, ')
           ..write('totalPausedMillis: $totalPausedMillis, ')
           ..write('pauseCount: $pauseCount, ')
+          ..write('note: $note, ')
           ..write('createdAtMillis: $createdAtMillis, ')
           ..write('updatedAtMillis: $updatedAtMillis')
           ..write(')'))
@@ -457,6 +492,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
     pausedAtMillis,
     totalPausedMillis,
     pauseCount,
+    note,
     createdAtMillis,
     updatedAtMillis,
   );
@@ -471,6 +507,7 @@ class KickSessionDto extends DataClass implements Insertable<KickSessionDto> {
           other.pausedAtMillis == this.pausedAtMillis &&
           other.totalPausedMillis == this.totalPausedMillis &&
           other.pauseCount == this.pauseCount &&
+          other.note == this.note &&
           other.createdAtMillis == this.createdAtMillis &&
           other.updatedAtMillis == this.updatedAtMillis);
 }
@@ -483,6 +520,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
   final Value<int?> pausedAtMillis;
   final Value<int> totalPausedMillis;
   final Value<int> pauseCount;
+  final Value<String?> note;
   final Value<int> createdAtMillis;
   final Value<int> updatedAtMillis;
   final Value<int> rowid;
@@ -494,6 +532,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
     this.pausedAtMillis = const Value.absent(),
     this.totalPausedMillis = const Value.absent(),
     this.pauseCount = const Value.absent(),
+    this.note = const Value.absent(),
     this.createdAtMillis = const Value.absent(),
     this.updatedAtMillis = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -506,6 +545,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
     this.pausedAtMillis = const Value.absent(),
     this.totalPausedMillis = const Value.absent(),
     this.pauseCount = const Value.absent(),
+    this.note = const Value.absent(),
     required int createdAtMillis,
     required int updatedAtMillis,
     this.rowid = const Value.absent(),
@@ -521,6 +561,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
     Expression<int>? pausedAtMillis,
     Expression<int>? totalPausedMillis,
     Expression<int>? pauseCount,
+    Expression<String>? note,
     Expression<int>? createdAtMillis,
     Expression<int>? updatedAtMillis,
     Expression<int>? rowid,
@@ -533,6 +574,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
       if (pausedAtMillis != null) 'paused_at_millis': pausedAtMillis,
       if (totalPausedMillis != null) 'total_paused_millis': totalPausedMillis,
       if (pauseCount != null) 'pause_count': pauseCount,
+      if (note != null) 'note': note,
       if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
       if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
       if (rowid != null) 'rowid': rowid,
@@ -547,6 +589,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
     Value<int?>? pausedAtMillis,
     Value<int>? totalPausedMillis,
     Value<int>? pauseCount,
+    Value<String?>? note,
     Value<int>? createdAtMillis,
     Value<int>? updatedAtMillis,
     Value<int>? rowid,
@@ -559,6 +602,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
       pausedAtMillis: pausedAtMillis ?? this.pausedAtMillis,
       totalPausedMillis: totalPausedMillis ?? this.totalPausedMillis,
       pauseCount: pauseCount ?? this.pauseCount,
+      note: note ?? this.note,
       createdAtMillis: createdAtMillis ?? this.createdAtMillis,
       updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
       rowid: rowid ?? this.rowid,
@@ -589,6 +633,9 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
     if (pauseCount.present) {
       map['pause_count'] = Variable<int>(pauseCount.value);
     }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
     if (createdAtMillis.present) {
       map['created_at_millis'] = Variable<int>(createdAtMillis.value);
     }
@@ -611,6 +658,7 @@ class KickSessionsCompanion extends UpdateCompanion<KickSessionDto> {
           ..write('pausedAtMillis: $pausedAtMillis, ')
           ..write('totalPausedMillis: $totalPausedMillis, ')
           ..write('pauseCount: $pauseCount, ')
+          ..write('note: $note, ')
           ..write('createdAtMillis: $createdAtMillis, ')
           ..write('updatedAtMillis: $updatedAtMillis, ')
           ..write('rowid: $rowid')
@@ -1045,6 +1093,7 @@ typedef $$KickSessionsTableCreateCompanionBuilder =
       Value<int?> pausedAtMillis,
       Value<int> totalPausedMillis,
       Value<int> pauseCount,
+      Value<String?> note,
       required int createdAtMillis,
       required int updatedAtMillis,
       Value<int> rowid,
@@ -1058,6 +1107,7 @@ typedef $$KickSessionsTableUpdateCompanionBuilder =
       Value<int?> pausedAtMillis,
       Value<int> totalPausedMillis,
       Value<int> pauseCount,
+      Value<String?> note,
       Value<int> createdAtMillis,
       Value<int> updatedAtMillis,
       Value<int> rowid,
@@ -1104,6 +1154,11 @@ class $$KickSessionsTableFilterComposer
 
   ColumnFilters<int> get pauseCount => $composableBuilder(
     column: $table.pauseCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1162,6 +1217,11 @@ class $$KickSessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get createdAtMillis => $composableBuilder(
     column: $table.createdAtMillis,
     builder: (column) => ColumnOrderings(column),
@@ -1213,6 +1273,9 @@ class $$KickSessionsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
   GeneratedColumn<int> get createdAtMillis => $composableBuilder(
     column: $table.createdAtMillis,
     builder: (column) => column,
@@ -1262,6 +1325,7 @@ class $$KickSessionsTableTableManager
                 Value<int?> pausedAtMillis = const Value.absent(),
                 Value<int> totalPausedMillis = const Value.absent(),
                 Value<int> pauseCount = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 Value<int> createdAtMillis = const Value.absent(),
                 Value<int> updatedAtMillis = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -1273,6 +1337,7 @@ class $$KickSessionsTableTableManager
                 pausedAtMillis: pausedAtMillis,
                 totalPausedMillis: totalPausedMillis,
                 pauseCount: pauseCount,
+                note: note,
                 createdAtMillis: createdAtMillis,
                 updatedAtMillis: updatedAtMillis,
                 rowid: rowid,
@@ -1286,6 +1351,7 @@ class $$KickSessionsTableTableManager
                 Value<int?> pausedAtMillis = const Value.absent(),
                 Value<int> totalPausedMillis = const Value.absent(),
                 Value<int> pauseCount = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 required int createdAtMillis,
                 required int updatedAtMillis,
                 Value<int> rowid = const Value.absent(),
@@ -1297,6 +1363,7 @@ class $$KickSessionsTableTableManager
                 pausedAtMillis: pausedAtMillis,
                 totalPausedMillis: totalPausedMillis,
                 pauseCount: pauseCount,
+                note: note,
                 createdAtMillis: createdAtMillis,
                 updatedAtMillis: updatedAtMillis,
                 rowid: rowid,

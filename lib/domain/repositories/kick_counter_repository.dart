@@ -39,6 +39,23 @@ abstract class KickCounterRepository {
   /// Used when user discards a session without completing it.
   /// Cascades to delete all associated kicks.
   Future<void> deleteSession(String sessionId);
+
+  /// Get a single session by ID with all its kicks.
+  /// 
+  /// [sessionId] - ID of the session to retrieve
+  /// 
+  /// Returns null if session is not found.
+  /// Includes all kicks associated with the session.
+  Future<KickSession?> getSession(String sessionId);
+
+  /// Update the note attached to a session.
+  /// 
+  /// [sessionId] - ID of the session to update
+  /// [note] - New note text (null to clear the note)
+  /// 
+  /// Returns the updated session.
+  /// Note will be encrypted before storage.
+  Future<KickSession> updateSessionNote(String sessionId, String? note);
   
   // --------------------------------------------------------------------------
   // Kick Operations

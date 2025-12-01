@@ -51,10 +51,10 @@ class AppColors {
   static const Color textDisabled = Color(0xFFE0E0E0);
   
   /// Border and divider colors
-  static const Color border = Color(0xFFE0E0E0);
+  static const Color border = backgroundGrey100;
   static const Color borderPrimary = Color.fromARGB(52, 77, 182, 172);
   static const Color borderSecondary = Color.fromARGB(52, 255, 171, 145);
-  static const Color divider = Color(0xFFE0E0E0);
+  static const Color divider = backgroundGrey100;
 
   // ============================================================================
   // SEMANTIC COLORS (Status/Feedback)
@@ -117,5 +117,16 @@ class AppColors {
   
   /// Transparent
   static const Color transparent = Color(0x00000000);
+
+  // Icon colors
+  static const Color iconPrimary = primary;
+  static const Color iconSecondary = secondary;
+  static const Color iconDefault = backgroundGrey500;
+  static const Color iconDark = textPrimary;
+  static const Color iconLight = white;
+  static const Color iconError = error;
+  static const Color iconSuccess = success;
+  static const Color iconWarning = warning;
+  static const Color iconInfo = info;
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/features/auth/ui/widgets/auth_gate.dart';
+import 'package:zeyra/features/kick_counter/ui/widgets/kick_counter_banner_overlay.dart';
 import 'package:zeyra/app/theme/app_theme.dart';
 
 class App extends StatelessWidget {
@@ -18,6 +19,13 @@ class App extends StatelessWidget {
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         home: const AuthGate(),
+        // Wrap all routes with KickCounterBannerOverlay for global banner visibility
+        builder: (context, child) {
+          return KickCounterBannerOverlay(
+            navigatorKey: navigatorKey,
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
       ),
     );
   }

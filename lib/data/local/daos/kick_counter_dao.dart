@@ -14,7 +14,7 @@ part 'kick_counter_dao.g.dart';
 @DriftAccessor(tables: [KickSessions, Kicks])
 class KickCounterDao extends DatabaseAccessor<AppDatabase>
     with _$KickCounterDaoMixin {
-  KickCounterDao(AppDatabase db) : super(db);
+  KickCounterDao(super.db);
 
   // --------------------------------------------------------------------------
   // Session CRUD Operations
@@ -54,6 +54,13 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
   /// Cascade delete will automatically remove all associated kicks.
   Future<int> deleteSession(String sessionId) {
     return (delete(kickSessions)..where((s) => s.id.equals(sessionId))).go();
+  }
+
+  /// Get a session by ID without kicks.
+  Future<KickSessionDto?> getSessionById(String sessionId) {
+    return (select(kickSessions)
+          ..where((s) => s.id.equals(sessionId)))
+        .getSingleOrNull();
   }
 
   /// Get a session with all its kicks.

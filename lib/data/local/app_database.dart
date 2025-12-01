@@ -30,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   // For testing with in-memory database
-  AppDatabase.forTesting(QueryExecutor executor) : super(executor);
+  AppDatabase.forTesting(super.executor);
 
   @override
   int get schemaVersion => 1;
@@ -38,12 +38,22 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
+          // Create all tables from scratch
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // TODO: Add migration logic when schema changes
+          // Migration strategy for future schema versions
+          // Add migrations here as schema evolves
+          // Example:
+          // if (from == 1 && to == 2) {
+          //   await m.addColumn(kicks, kicks.newColumn);
+          // }
+          // if (from <= 2 && to == 3) {
+          //   await m.createTable(newTable);
+          // }
         },
         beforeOpen: (details) async {
+          // Enable foreign key constraints
           await customStatement('PRAGMA foreign_keys = ON');
         },
       );

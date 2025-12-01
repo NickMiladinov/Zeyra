@@ -532,6 +532,100 @@ void main() {
         expect(history.first.session.isActive, isFalse);
       });
     });
+
+    // ------------------------------------------------------------------------
+    // getSessionById Tests
+    // ------------------------------------------------------------------------
+
+    group('getSessionById', () {
+      test('should retrieve session by ID without kicks', () async {
+        // Arrange
+        final now = DateTime.now();
+        final session = KickSessionDto(
+          id: 'test-session',
+          startTimeMillis: now.millisecondsSinceEpoch,
+          endTimeMillis: null,
+          isActive: true,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          note: 'Test note',
+          createdAtMillis: now.millisecondsSinceEpoch,
+          updatedAtMillis: now.millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(session);
+
+        // Act
+        final result = await dao.getSessionById('test-session');
+
+        // Assert
+        expect(result, isNotNull);
+        expect(result!.id, equals('test-session'));
+        expect(result.note, equals('Test note'));
+      });
+
+      test('should return null when session does not exist', () async {
+        // Act
+        final result = await dao.getSessionById('non-existent-id');
+
+        // Assert
+        expect(result, isNull);
+      });
+
+      test('should retrieve session with note field', () async {
+        // Arrange
+        final now = DateTime.now();
+        const note = 'Session note';
+        final session = KickSessionDto(
+          id: 'session-with-note',
+          startTimeMillis: now.millisecondsSinceEpoch,
+          endTimeMillis: null,
+          isActive: true,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          note: note,
+          createdAtMillis: now.millisecondsSinceEpoch,
+          updatedAtMillis: now.millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(session);
+
+        // Act
+        final result = await dao.getSessionById('session-with-note');
+
+        // Assert
+        expect(result, isNotNull);
+        expect(result!.note, equals(note));
+      });
+
+      test('should retrieve session with null note', () async {
+        // Arrange
+        final now = DateTime.now();
+        final session = KickSessionDto(
+          id: 'session-no-note',
+          startTimeMillis: now.millisecondsSinceEpoch,
+          endTimeMillis: null,
+          isActive: true,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          note: null,
+          createdAtMillis: now.millisecondsSinceEpoch,
+          updatedAtMillis: now.millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(session);
+
+        // Act
+        final result = await dao.getSessionById('session-no-note');
+
+        // Assert
+        expect(result, isNotNull);
+        expect(result!.note, isNull);
+      });
+    });
   });
 }
 

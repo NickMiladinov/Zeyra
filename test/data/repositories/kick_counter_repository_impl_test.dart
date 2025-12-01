@@ -481,6 +481,282 @@ void main() {
         expect(history.length, equals(3));
       });
     });
+
+    // ------------------------------------------------------------------------
+    // getSession Tests
+    // ------------------------------------------------------------------------
+
+    group('getSession', () {
+      test('should retrieve session by ID with kicks', () async {
+        // Arrange
+        when(() => mockEncryptionService.encrypt(any()))
+            .thenAnswer((_) async => 'encrypted');
+        // Mock decrypt to return valid movement strength for any encrypted value
+        when(() => mockEncryptionService.decrypt(any()))
+            .thenAnswer((_) async => 'moderate');
+
+        final createdSession = await repository.createSession();
+        await repository.addKick(createdSession.id, MovementStrength.moderate);
+        await repository.addKick(createdSession.id, MovementStrength.strong);
+
+        // Act
+        final session = await repository.getSession(createdSession.id);
+
+        // Assert
+        expect(session, isNotNull);
+        expect(session!.id, equals(createdSession.id));
+        expect(session.kicks.length, equals(2));
+      });
+
+      test('should return null when session does not exist', () async {
+        // Act
+        final session = await repository.getSession('non-existent-id');
+
+        // Assert
+        expect(session, isNull);
+      });
+
+      test('should decrypt note if present', () async {
+        // Arrange
+        const note = 'Test note';
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        // Mock for any decrypt call - handles both note and any kicks
+        when(() => mockEncryptionService.decrypt(any()))
+            .thenAnswer((invocation) async {
+              final encrypted = invocation.positionalArguments[0] as String;
+              if (encrypted == 'encrypted-note') return note;
+              return 'moderate'; // Default for kick strengths
+            });
+
+        final createdSession = await repository.createSession();
+        await repository.updateSessionNote(createdSession.id, note);
+
+        // Act
+        final session = await repository.getSession(createdSession.id);
+
+        // Assert
+        expect(session, isNotNull);
+        expect(session!.note, equals(note));
+      });
+
+      test('should handle session with no note', () async {
+        // Arrange
+        final createdSession = await repository.createSession();
+
+        // Act
+        final session = await repository.getSession(createdSession.id);
+
+        // Assert
+        expect(session, isNotNull);
+        expect(session!.note, isNull);
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // updateSessionNote Tests
+    // ------------------------------------------------------------------------
+
+    group('updateSessionNote', () {
+      test('should encrypt and store note', () async {
+        // Arrange
+        const note = 'Felt very active today';
+        final session = await repository.createSession();
+        
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        when(() => mockEncryptionService.decrypt('encrypted-note'))
+            .thenAnswer((_) async => note);
+
+        // Act
+        final updatedSession = await repository.updateSessionNote(session.id, note);
+
+        // Assert
+        expect(updatedSession.note, equals(note));
+        verify(() => mockEncryptionService.encrypt(note)).called(1);
+        verify(() => mockEncryptionService.decrypt('encrypted-note')).called(1);
+      });
+
+      test('should clear note when null is provided', () async {
+        // Arrange
+        const note = 'Initial note';
+        final session = await repository.createSession();
+        
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        when(() => mockEncryptionService.decrypt('encrypted-note'))
+            .thenAnswer((_) async => note);
+        
+        await repository.updateSessionNote(session.id, note);
+
+        // Act
+        final updatedSession = await repository.updateSessionNote(session.id, null);
+
+        // Assert
+        expect(updatedSession.note, isNull);
+      });
+
+      test('should clear note when empty string is provided', () async {
+        // Arrange
+        const note = 'Initial note';
+        final session = await repository.createSession();
+        
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        when(() => mockEncryptionService.decrypt('encrypted-note'))
+            .thenAnswer((_) async => note);
+        
+        await repository.updateSessionNote(session.id, note);
+
+        // Act
+        final updatedSession = await repository.updateSessionNote(session.id, '');
+
+        // Assert
+        expect(updatedSession.note, isNull);
+        verifyNever(() => mockEncryptionService.encrypt(''));
+      });
+
+      test('should throw when session does not exist', () async {
+        // Arrange
+        const note = 'Test note';
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+
+        // Act & Assert
+        expect(
+          () => repository.updateSessionNote('non-existent-id', note),
+          throwsA(isA<Exception>()),
+        );
+      });
+
+      test('should preserve session metadata when updating note', () async {
+        // Arrange
+        const note = 'Test note';
+        // Mock encryption/decryption for kick strength
+        when(() => mockEncryptionService.encrypt('moderate'))
+            .thenAnswer((_) async => 'encrypted-strength');
+        when(() => mockEncryptionService.decrypt('encrypted-strength'))
+            .thenAnswer((_) async => 'moderate');
+        // Mock encryption/decryption for note
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        when(() => mockEncryptionService.decrypt('encrypted-note'))
+            .thenAnswer((_) async => note);
+
+        final session = await repository.createSession();
+        await repository.addKick(session.id, MovementStrength.moderate);
+        
+        // Act
+        final updatedSession = await repository.updateSessionNote(session.id, note);
+
+        // Assert
+        expect(updatedSession.id, equals(session.id));
+        expect(updatedSession.startTime, equals(session.startTime));
+        expect(updatedSession.isActive, equals(session.isActive));
+        expect(updatedSession.kicks.length, equals(1));
+      });
+
+      test('should update note multiple times', () async {
+        // Arrange
+        const note1 = 'First note';
+        const note2 = 'Second note';
+        final session = await repository.createSession();
+        
+        when(() => mockEncryptionService.encrypt(note1))
+            .thenAnswer((_) async => 'encrypted-1');
+        when(() => mockEncryptionService.encrypt(note2))
+            .thenAnswer((_) async => 'encrypted-2');
+        when(() => mockEncryptionService.decrypt('encrypted-1'))
+            .thenAnswer((_) async => note1);
+        when(() => mockEncryptionService.decrypt('encrypted-2'))
+            .thenAnswer((_) async => note2);
+
+        // Act
+        await repository.updateSessionNote(session.id, note1);
+        final finalSession = await repository.updateSessionNote(session.id, note2);
+
+        // Assert
+        expect(finalSession.note, equals(note2));
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // Integration Tests - Note in History
+    // ------------------------------------------------------------------------
+
+    group('note in session history', () {
+      test('should include notes in session history', () async {
+        // Arrange
+        const note1 = 'Session 1 note';
+        const note2 = 'Session 2 note';
+        
+        when(() => mockEncryptionService.encrypt(any()))
+            .thenAnswer((_) async => 'encrypted');
+        when(() => mockEncryptionService.decrypt(any()))
+            .thenAnswer((_) async => 'moderate');
+        when(() => mockEncryptionService.encrypt(note1))
+            .thenAnswer((_) async => 'encrypted-note-1');
+        when(() => mockEncryptionService.encrypt(note2))
+            .thenAnswer((_) async => 'encrypted-note-2');
+        when(() => mockEncryptionService.decrypt('encrypted-note-1'))
+            .thenAnswer((_) async => note1);
+        when(() => mockEncryptionService.decrypt('encrypted-note-2'))
+            .thenAnswer((_) async => note2);
+
+        final session1 = await repository.createSession();
+        await repository.addKick(session1.id, MovementStrength.moderate);
+        await repository.updateSessionNote(session1.id, note1);
+        await repository.endSession(session1.id);
+        
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        final session2 = await repository.createSession();
+        await repository.addKick(session2.id, MovementStrength.moderate);
+        await repository.updateSessionNote(session2.id, note2);
+        await repository.endSession(session2.id);
+
+        // Act
+        final history = await repository.getSessionHistory();
+
+        // Assert
+        expect(history.length, equals(2));
+        expect(history[0].note, equals(note2));
+        expect(history[1].note, equals(note1));
+      });
+
+      test('should handle mix of sessions with and without notes', () async {
+        // Arrange
+        const note = 'Has a note';
+        
+        when(() => mockEncryptionService.encrypt(any()))
+            .thenAnswer((_) async => 'encrypted');
+        when(() => mockEncryptionService.decrypt(any()))
+            .thenAnswer((_) async => 'moderate');
+        when(() => mockEncryptionService.encrypt(note))
+            .thenAnswer((_) async => 'encrypted-note');
+        when(() => mockEncryptionService.decrypt('encrypted-note'))
+            .thenAnswer((_) async => note);
+
+        final session1 = await repository.createSession();
+        await repository.addKick(session1.id, MovementStrength.moderate);
+        await repository.endSession(session1.id);
+        
+        await Future.delayed(const Duration(milliseconds: 10));
+        
+        final session2 = await repository.createSession();
+        await repository.addKick(session2.id, MovementStrength.moderate);
+        await repository.updateSessionNote(session2.id, note);
+        await repository.endSession(session2.id);
+
+        // Act
+        final history = await repository.getSessionHistory();
+
+        // Assert
+        expect(history.length, equals(2));
+        expect(history[0].note, equals(note));
+        expect(history[1].note, isNull);
+      });
+    });
   });
 }
 

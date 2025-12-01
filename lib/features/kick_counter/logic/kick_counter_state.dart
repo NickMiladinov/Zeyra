@@ -68,7 +68,14 @@ class KickCounterNotifier extends StateNotifier<KickCounterState> {
     try {
       final activeSession = await _useCase.getActiveSession();
       if (activeSession != null) {
-        await restoreSession(activeSession);
+        // If session was running when app closed, pause it on restart
+        // This prevents counting time while app was closed
+        if (!activeSession.isPaused) {
+          final pausedSession = await _useCase.pauseSession(activeSession.id);
+          await restoreSession(pausedSession);
+        } else {
+          await restoreSession(activeSession);
+        }
       }
     } catch (e) {
       // Silently fail on init check
@@ -197,10 +204,15 @@ class KickCounterNotifier extends StateNotifier<KickCounterState> {
     }
   }
 
-  Future<void> endSession() async {
+  Future<void> endSession({String? note}) async {
     if (state.activeSession == null) return;
 
     try {
+      // Update note if provided
+      if (note != null && note.isNotEmpty) {
+        await _useCase.updateSessionNote(state.activeSession!.id, note);
+      }
+      
       await _useCase.endSession(state.activeSession!.id);
       _timer?.cancel();
       state = const KickCounterState(); // Reset state

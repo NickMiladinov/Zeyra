@@ -198,6 +198,8 @@ class AppEffects {
   static const Duration durationFast = Duration(milliseconds: 150);
   static const Duration durationNormal = Duration(milliseconds: 300);
   static const Duration durationSlow = Duration(milliseconds: 500);
+  static const Duration durationVerySlow = Duration(milliseconds: 750);
+  static const Duration durationVeryVerySlow = Duration(milliseconds: 1000);
   
   /// Animation curves
   static const Curve curveDefault = Curves.easeInOut;

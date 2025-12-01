@@ -1,13 +1,13 @@
 /// Kick Counter Feature - Quick Tests
 /// 
-/// This file runs the fastest kick counter tests (~88 tests).
+/// This file runs the fastest kick counter tests (~98 tests).
 /// Perfect for rapid iteration and TDD. No database, no encryption, no integration.
 /// Click the ▶️ Run button next to main() to run these tests.
 /// 
 /// Includes:
-/// - Domain entity tests (17 tests) - Pure Dart, no dependencies
+/// - Domain entity tests (22 tests) - Pure Dart, no dependencies
 /// - Domain exception tests (19 tests) - Pure Dart
-/// - Domain use case tests (42 tests) - Mocked repository
+/// - Domain use case tests (52 tests) - Mocked repository
 /// - Data mapper tests (10 tests) - Pure mapping logic
 /// 
 /// Excludes:
@@ -34,8 +34,8 @@ import '../../domain/usecases/kick_counter/manage_session_usecase_test.dart'
     as usecase_tests;
 
 void main() {
-  group('[KickCounter] Quick Tests (~88 tests)', () {
-    group('Domain Entities (17 tests)', () {
+  group('[KickCounter] Quick Tests (~103 tests)', () {
+    group('Domain Entities (22 tests)', () {
       kick_entity_tests.main();
       session_entity_tests.main();
     });
@@ -44,7 +44,7 @@ void main() {
       exception_tests.main();
     });
 
-    group('Domain Use Cases (42 tests)', () {
+    group('Domain Use Cases (52 tests)', () {
       usecase_tests.main();
     });
 

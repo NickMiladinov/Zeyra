@@ -30,6 +30,10 @@ class KickSession {
   /// Number of times the user has paused this session (tracking metric)
   final int pauseCount;
 
+  /// Optional note attached to this session
+  /// Users can add personal observations about the session
+  final String? note;
+
   const KickSession({
     required this.id,
     required this.startTime,
@@ -39,6 +43,7 @@ class KickSession {
     this.pausedAt,
     required this.totalPausedDuration,
     required this.pauseCount,
+    this.note,
   });
 
   /// Whether the session is currently paused
@@ -88,6 +93,7 @@ class KickSession {
     DateTime? pausedAt,
     Duration? totalPausedDuration,
     int? pauseCount,
+    String? note,
   }) {
     return KickSession(
       id: id ?? this.id,
@@ -98,6 +104,7 @@ class KickSession {
       pausedAt: pausedAt ?? this.pausedAt,
       totalPausedDuration: totalPausedDuration ?? this.totalPausedDuration,
       pauseCount: pauseCount ?? this.pauseCount,
+      note: note ?? this.note,
     );
   }
 
@@ -112,7 +119,8 @@ class KickSession {
           isActive == other.isActive &&
           pausedAt == other.pausedAt &&
           totalPausedDuration == other.totalPausedDuration &&
-          pauseCount == other.pauseCount;
+          pauseCount == other.pauseCount &&
+          note == other.note;
 
   @override
   int get hashCode =>
@@ -122,12 +130,13 @@ class KickSession {
       isActive.hashCode ^
       pausedAt.hashCode ^
       totalPausedDuration.hashCode ^
-      pauseCount.hashCode;
+      pauseCount.hashCode ^
+      note.hashCode;
 
   @override
   String toString() =>
       'KickSession(id: $id, startTime: $startTime, endTime: $endTime, '
       'isActive: $isActive, kickCount: $kickCount, pauseCount: $pauseCount, '
-      'isPaused: $isPaused)';
+      'isPaused: $isPaused, note: $note)';
 }
 

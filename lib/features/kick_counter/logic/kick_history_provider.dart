@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
-import 'package:zeyra/domain/repositories/kick_counter_repository.dart';
+import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 
 // ----------------------------------------------------------------------------
 // State Class
@@ -40,16 +40,16 @@ class KickHistoryState {
 // ----------------------------------------------------------------------------
 
 class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
-  final KickCounterRepository _repository;
+  final ManageSessionUseCase _manageSessionUseCase;
 
-  KickHistoryNotifier(this._repository) : super(const KickHistoryState()) {
+  KickHistoryNotifier(this._manageSessionUseCase) : super(const KickHistoryState()) {
     loadHistory();
   }
 
   Future<void> loadHistory() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final history = await _repository.getSessionHistory(limit: 50);
+      final history = await _manageSessionUseCase.getSessionHistory(limit: 50);
       final typical = _calculateTypicalRange(history);
       
       state = state.copyWith(
@@ -67,6 +67,34 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
 
   Future<void> refresh() async {
     await loadHistory();
+  }
+
+  /// Delete a session from history
+  Future<void> deleteSession(String sessionId) async {
+    try {
+      await _manageSessionUseCase.deleteHistoricalSession(sessionId);
+      // Reload history after deletion
+      await loadHistory();
+    } catch (e) {
+      state = state.copyWith(
+        error: 'Failed to delete session: ${e.toString()}',
+      );
+      rethrow;
+    }
+  }
+
+  /// Update the note for a session
+  Future<void> updateSessionNote(String sessionId, String? note) async {
+    try {
+      await _manageSessionUseCase.updateSessionNote(sessionId, note);
+      // Reload history after update
+      await loadHistory();
+    } catch (e) {
+      state = state.copyWith(
+        error: 'Failed to update note: ${e.toString()}',
+      );
+      rethrow;
+    }
   }
 
   /// Calculate "Typical Range" - Average time to reach 10 kicks
@@ -100,7 +128,7 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
 // ----------------------------------------------------------------------------
 
 final kickHistoryProvider = StateNotifierProvider<KickHistoryNotifier, KickHistoryState>((ref) {
-  final repository = ref.watch(kickCounterRepositoryProvider);
-  return KickHistoryNotifier(repository);
+  final manageSessionUseCase = ref.watch(manageSessionUseCaseProvider);
+  return KickHistoryNotifier(manageSessionUseCase);
 });
 

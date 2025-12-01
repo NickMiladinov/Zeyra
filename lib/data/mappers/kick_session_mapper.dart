@@ -18,12 +18,19 @@ class KickSessionMapper {
   /// 
   /// [dto] - Database representation with kicks
   /// [decryptStrength] - Function to decrypt perceived strength values
+  /// [decryptNote] - Function to decrypt note (if present)
   /// 
   /// Returns fully hydrated domain entity with decrypted kicks.
   static KickSession toDomain(
     KickSessionWithKicks dto,
-    String Function(String) decryptStrength,
-  ) {
+    String Function(String) decryptStrength, {
+    String Function(String)? decryptNote,
+  }) {
+    String? note;
+    if (dto.session.note != null && decryptNote != null) {
+      note = decryptNote(dto.session.note!);
+    }
+
     return KickSession(
       id: dto.session.id,
       startTime: DateTime.fromMillisecondsSinceEpoch(dto.session.startTimeMillis),
@@ -41,6 +48,7 @@ class KickSessionMapper {
         milliseconds: dto.session.totalPausedMillis,
       ),
       pauseCount: dto.session.pauseCount,
+      note: note,
     );
   }
 
@@ -48,13 +56,20 @@ class KickSessionMapper {
   /// 
   /// [domain] - Domain entity
   /// [encryptStrength] - Function to encrypt perceived strength values
+  /// [encryptNote] - Function to encrypt note (if present)
   /// 
   /// Returns database representation. Kicks must be saved separately.
   static KickSessionDto toDto(
     KickSession domain,
-    String Function(MovementStrength) encryptStrength,
-  ) {
+    String Function(MovementStrength) encryptStrength, {
+    String Function(String)? encryptNote,
+  }) {
     final now = DateTime.now();
+    String? encryptedNote;
+    if (domain.note != null && encryptNote != null) {
+      encryptedNote = encryptNote(domain.note!);
+    }
+
     return KickSessionDto(
       id: domain.id,
       startTimeMillis: domain.startTime.millisecondsSinceEpoch,
@@ -63,6 +78,7 @@ class KickSessionMapper {
       pausedAtMillis: domain.pausedAt?.millisecondsSinceEpoch,
       totalPausedMillis: domain.totalPausedDuration.inMilliseconds,
       pauseCount: domain.pauseCount,
+      note: encryptedNote,
       createdAtMillis: now.millisecondsSinceEpoch,
       updatedAtMillis: now.millisecondsSinceEpoch,
     );

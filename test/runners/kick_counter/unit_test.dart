@@ -1,18 +1,18 @@
 /// Kick Counter Feature - Unit Tests Only
 /// 
-/// This file runs all unit tests for kick counter (160 tests).
+/// This file runs all unit tests for kick counter (228 tests).
 /// Excludes integration and performance tests for faster execution.
 /// Click the ▶️ Run button next to main() to run these tests.
 /// 
 /// Includes:
-/// - Domain entity tests (17 tests)
-/// - Domain use case tests (42 tests)
+/// - Domain entity tests (22 tests)
+/// - Domain use case tests (52 tests)
 /// - Domain exception tests (19 tests)
 /// - Data mapper tests (10 tests)
-/// - Data repository tests (44 tests)
-/// - Data DAO tests (15 tests)
+/// - Data repository tests (56 tests)
+/// - Data DAO tests (24 tests)
 /// - Error handling tests (24 tests)
-/// - Logic (State) tests (15 tests)
+/// - Logic (State) tests (45 tests)
 /// 
 /// Excludes:
 /// - Integration tests (13 tests) - use all_tests.dart
@@ -42,15 +42,19 @@ import '../../features/kick_counter/logic/kick_counter_notifier_test.dart'
     as notifier_tests;
 import '../../features/kick_counter/logic/kick_history_provider_test.dart'
     as history_provider_tests;
+import '../../features/kick_counter/logic/kick_counter_banner_provider_test.dart'
+    as banner_provider_tests;
+import '../../features/kick_counter/logic/kick_counter_onboarding_provider_test.dart'
+    as onboarding_provider_tests;
 
 void main() {
-  group('[KickCounter] Unit Tests', () {
+  group('[KickCounter] Unit Tests (228 tests)', () {
     // -------------------------------------------------------------------------
-    // Domain Layer Unit Tests (78 tests)
+    // Domain Layer Unit Tests (93 tests)
     // -------------------------------------------------------------------------
 
     group('Domain Layer', () {
-      group('Entities (17 tests)', () {
+      group('Entities (22 tests)', () {
         kick_entity_tests.main();
         session_entity_tests.main();
       });
@@ -59,13 +63,13 @@ void main() {
         exception_tests.main();
       });
 
-      group('Use Cases (42 tests)', () {
+      group('Use Cases (52 tests)', () {
         usecase_tests.main();
       });
     });
 
     // -------------------------------------------------------------------------
-    // Data Layer Unit Tests (69 tests)
+    // Data Layer Unit Tests (90 tests)
     // -------------------------------------------------------------------------
 
     group('Data Layer', () {
@@ -73,25 +77,27 @@ void main() {
         mapper_tests.main();
       });
 
-      group('Repositories (44 tests)', () {
+      group('Repositories (56 tests)', () {
         repository_tests.main();
         error_handling_tests.main();
       });
 
-      group('DAOs (20 tests)', () {
+      group('DAOs (24 tests)', () {
         dao_tests.main();
         dao_extensions_tests.main();
       });
     });
 
     // -------------------------------------------------------------------------
-    // Logic Layer Unit Tests (15 tests)
+    // Logic Layer Unit Tests (45 tests)
     // -------------------------------------------------------------------------
     
     group('Logic Layer', () {
-      group('Notifiers (15 tests)', () {
+      group('Notifiers (45 tests)', () {
         notifier_tests.main();
         history_provider_tests.main();
+        banner_provider_tests.main();
+        onboarding_provider_tests.main();
       });
     });
   });

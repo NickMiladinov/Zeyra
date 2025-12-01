@@ -1,3 +1,6 @@
+@Tags(['kick_counter'])
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
@@ -206,6 +209,157 @@ void main() {
         // Assert
         expect(notifier.state.activeSession, isNull);
         expect(notifier.state.sessionDuration, Duration.zero);
+      });
+
+      test('updates note before ending session when note is provided', () async {
+        // Arrange
+        const testNote = 'Test session note';
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => tKickSession);
+        await notifier.startSession();
+        
+        final sessionWithNote = tKickSession.copyWith(note: testNote);
+        when(() => mockUseCase.updateSessionNote(any(), testNote))
+            .thenAnswer((_) async => sessionWithNote);
+        when(() => mockUseCase.endSession(any())).thenAnswer((_) async {});
+
+        // Act
+        await notifier.endSession(note: testNote);
+
+        // Assert
+        verify(() => mockUseCase.updateSessionNote(tKickSession.id, testNote)).called(1);
+        verify(() => mockUseCase.endSession(tKickSession.id)).called(1);
+        expect(notifier.state.activeSession, isNull);
+      });
+
+      test('skips note update when note is null', () async {
+        // Arrange
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => tKickSession);
+        await notifier.startSession();
+        when(() => mockUseCase.endSession(any())).thenAnswer((_) async {});
+
+        // Act
+        await notifier.endSession(note: null);
+
+        // Assert
+        verifyNever(() => mockUseCase.updateSessionNote(any(), any()));
+        verify(() => mockUseCase.endSession(tKickSession.id)).called(1);
+      });
+
+      test('skips note update when note is empty string', () async {
+        // Arrange
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => tKickSession);
+        await notifier.startSession();
+        when(() => mockUseCase.endSession(any())).thenAnswer((_) async {});
+
+        // Act
+        await notifier.endSession(note: '');
+
+        // Assert
+        verifyNever(() => mockUseCase.updateSessionNote(any(), any()));
+        verify(() => mockUseCase.endSession(tKickSession.id)).called(1);
+      });
+    });
+
+    group('undoLastKick', () {
+      test('should remove last kick when kicks exist', () async {
+        // Arrange
+        final tKick = Kick(
+          id: 'kick-1',
+          sessionId: 'session-1',
+          timestamp: DateTime.now(),
+          sequenceNumber: 1,
+          perceivedStrength: MovementStrength.moderate,
+        );
+        final sessionWithKick = tKickSession.copyWith(kicks: [tKick]);
+        
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => sessionWithKick);
+        await notifier.startSession();
+
+        final sessionAfterUndo = tKickSession.copyWith(kicks: []);
+        when(() => mockUseCase.undoLastKick(any())).thenAnswer((_) async => sessionAfterUndo);
+
+        // Act
+        await notifier.undoLastKick();
+
+        // Assert
+        verify(() => mockUseCase.undoLastKick(tKickSession.id)).called(1);
+        expect(notifier.state.activeSession!.kicks.length, 0);
+      });
+
+      test('should handle error when undo fails', () async {
+        // Arrange
+        final tKick = Kick(
+          id: 'kick-1',
+          sessionId: 'session-1',
+          timestamp: DateTime.now(),
+          sequenceNumber: 1,
+          perceivedStrength: MovementStrength.moderate,
+        );
+        final sessionWithKick = tKickSession.copyWith(kicks: [tKick]);
+        
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => sessionWithKick);
+        await notifier.startSession();
+
+        when(() => mockUseCase.undoLastKick(any())).thenThrow(
+          const KickCounterException(
+            'No kicks to undo',
+            KickCounterErrorType.noKicksToUndo,
+          ),
+        );
+
+        // Act
+        await notifier.undoLastKick();
+
+        // Assert
+        expect(notifier.state.error, KickCounterErrorType.noKicksToUndo);
+      });
+    });
+
+    group('discardSession', () {
+      test('should delete session and reset state', () async {
+        // Arrange
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => tKickSession);
+        await notifier.startSession();
+        when(() => mockUseCase.discardSession(any())).thenAnswer((_) async {});
+
+        // Act
+        await notifier.discardSession();
+
+        // Assert
+        verify(() => mockUseCase.discardSession(tKickSession.id)).called(1);
+        expect(notifier.state.activeSession, isNull);
+        expect(notifier.state.sessionDuration, Duration.zero);
+      });
+
+      test('should handle generic errors gracefully', () async {
+        // Arrange
+        when(() => mockUseCase.startSession()).thenAnswer((_) async => tKickSession);
+        await notifier.startSession();
+        when(() => mockUseCase.discardSession(any())).thenThrow(Exception('Delete failed'));
+
+        // Act
+        await notifier.discardSession();
+
+        // Assert - should not crash, session remains
+        expect(notifier.state.activeSession, isNotNull);
+      });
+    });
+
+    group('checkActiveSession', () {
+      test('should auto-pause session when restoring from app close', () async {
+        // Arrange
+        final activeSession = tKickSession.copyWith(pausedAt: null); // Not paused
+        final pausedSession = tKickSession.copyWith(pausedAt: DateTime.now());
+        
+        when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => activeSession);
+        when(() => mockUseCase.pauseSession(activeSession.id)).thenAnswer((_) async => pausedSession);
+
+        // Act
+        await notifier.checkActiveSession();
+
+        // Assert
+        verify(() => mockUseCase.pauseSession(activeSession.id)).called(1);
+        expect(notifier.state.activeSession?.pausedAt, isNotNull);
       });
     });
   });

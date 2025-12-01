@@ -752,5 +752,173 @@ void main() {
         );
       });
     });
+
+    // ------------------------------------------------------------------------
+    // updateSessionNote Tests
+    // ------------------------------------------------------------------------
+
+    group('updateSessionNote', () {
+      test('should update note and return updated session', () async {
+        // Arrange
+        const sessionId = 'session-1';
+        const note = 'Felt very active today';
+        final updatedSession = FakeKickSession.ended(note: note);
+        
+        when(() => mockRepository.updateSessionNote(sessionId, note))
+            .thenAnswer((_) async => updatedSession);
+
+        // Act
+        final result = await useCase.updateSessionNote(sessionId, note);
+
+        // Assert
+        expect(result, equals(updatedSession));
+        expect(result.note, equals(note));
+        verify(() => mockRepository.updateSessionNote(sessionId, note)).called(1);
+      });
+
+      test('should clear note when null is provided', () async {
+        // Arrange
+        const sessionId = 'session-1';
+        final updatedSession = FakeKickSession.ended(note: null);
+        
+        when(() => mockRepository.updateSessionNote(sessionId, null))
+            .thenAnswer((_) async => updatedSession);
+
+        // Act
+        final result = await useCase.updateSessionNote(sessionId, null);
+
+        // Assert
+        expect(result, equals(updatedSession));
+        expect(result.note, isNull);
+        verify(() => mockRepository.updateSessionNote(sessionId, null)).called(1);
+      });
+
+      test('should clear note when empty string is provided', () async {
+        // Arrange
+        const sessionId = 'session-1';
+        const note = '';
+        final updatedSession = FakeKickSession.ended(note: null);
+        
+        when(() => mockRepository.updateSessionNote(sessionId, note))
+            .thenAnswer((_) async => updatedSession);
+
+        // Act
+        final result = await useCase.updateSessionNote(sessionId, note);
+
+        // Assert
+        expect(result, equals(updatedSession));
+        verify(() => mockRepository.updateSessionNote(sessionId, note)).called(1);
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // deleteHistoricalSession Tests
+    // ------------------------------------------------------------------------
+
+    group('deleteHistoricalSession', () {
+      test('should delete session by calling repository', () async {
+        // Arrange
+        const sessionId = 'session-1';
+        when(() => mockRepository.deleteSession(sessionId))
+            .thenAnswer((_) async => Future.value());
+
+        // Act
+        await useCase.deleteHistoricalSession(sessionId);
+
+        // Assert
+        verify(() => mockRepository.deleteSession(sessionId)).called(1);
+      });
+
+      test('should complete without error when session does not exist', () async {
+        // Arrange
+        const sessionId = 'non-existent';
+        when(() => mockRepository.deleteSession(sessionId))
+            .thenAnswer((_) async => Future.value());
+
+        // Act & Assert
+        await expectLater(
+          useCase.deleteHistoricalSession(sessionId),
+          completes,
+        );
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // getSessionHistory Tests
+    // ------------------------------------------------------------------------
+
+    group('getSessionHistory', () {
+      test('should return session history from repository', () async {
+        // Arrange
+        final history = [
+          FakeKickSession.ended(note: 'First session'),
+          FakeKickSession.ended(note: 'Second session'),
+          FakeKickSession.ended(),
+        ];
+        when(() => mockRepository.getSessionHistory(limit: 50, before: null))
+            .thenAnswer((_) async => history);
+
+        // Act
+        final result = await useCase.getSessionHistory(limit: 50);
+
+        // Assert
+        expect(result, equals(history));
+        expect(result.length, equals(3));
+        verify(() => mockRepository.getSessionHistory(limit: 50, before: null)).called(1);
+      });
+
+      test('should return empty list when no history exists', () async {
+        // Arrange
+        when(() => mockRepository.getSessionHistory(limit: null, before: null))
+            .thenAnswer((_) async => []);
+
+        // Act
+        final result = await useCase.getSessionHistory();
+
+        // Assert
+        expect(result, isEmpty);
+        verify(() => mockRepository.getSessionHistory(limit: null, before: null)).called(1);
+      });
+
+      test('should pass limit parameter to repository', () async {
+        // Arrange
+        const limit = 10;
+        when(() => mockRepository.getSessionHistory(limit: limit, before: null))
+            .thenAnswer((_) async => []);
+
+        // Act
+        await useCase.getSessionHistory(limit: limit);
+
+        // Assert
+        verify(() => mockRepository.getSessionHistory(limit: limit, before: null)).called(1);
+      });
+
+      test('should pass before parameter to repository', () async {
+        // Arrange
+        final before = DateTime(2024, 1, 1);
+        when(() => mockRepository.getSessionHistory(limit: null, before: before))
+            .thenAnswer((_) async => []);
+
+        // Act
+        await useCase.getSessionHistory(before: before);
+
+        // Assert
+        verify(() => mockRepository.getSessionHistory(limit: null, before: before)).called(1);
+      });
+
+      test('should pass both limit and before parameters', () async {
+        // Arrange
+        const limit = 5;
+        final before = DateTime(2024, 1, 1);
+        when(() => mockRepository.getSessionHistory(limit: limit, before: before))
+            .thenAnswer((_) async => []);
+
+        // Act
+        await useCase.getSessionHistory(limit: limit, before: before);
+
+        // Assert
+        verify(() => mockRepository.getSessionHistory(limit: limit, before: before)).called(1);
+      });
+    });
   });
 }

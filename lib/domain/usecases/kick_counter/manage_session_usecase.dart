@@ -181,6 +181,43 @@ class ManageSessionUseCase {
     await _repository.deleteSession(sessionId);
   }
 
+  /// Delete a historical (completed) session.
+  /// 
+  /// [sessionId] - ID of the session to delete
+  /// 
+  /// Used when user wants to remove a completed session from their history.
+  /// Removes session and all associated kicks from database.
+  Future<void> deleteHistoricalSession(String sessionId) async {
+    await _repository.deleteSession(sessionId);
+  }
+
+  /// Update the note attached to a session.
+  /// 
+  /// [sessionId] - ID of the session to update
+  /// [note] - New note text (null or empty to clear the note)
+  /// 
+  /// Returns the updated session with the new note.
+  Future<KickSession> updateSessionNote(String sessionId, String? note) async {
+    return await _repository.updateSessionNote(sessionId, note);
+  }
+
+  // --------------------------------------------------------------------------
+  // History Operations
+  // --------------------------------------------------------------------------
+
+  /// Get historical kick counting sessions.
+  /// 
+  /// [limit] - Optional maximum number of sessions to return
+  /// [before] - Optional timestamp to get sessions before
+  /// 
+  /// Returns sessions ordered by startTime descending (most recent first).
+  Future<List<KickSession>> getSessionHistory({
+    int? limit,
+    DateTime? before,
+  }) async {
+    return await _repository.getSessionHistory(limit: limit, before: before);
+  }
+
   // --------------------------------------------------------------------------
   // Pause/Resume Operations
   // --------------------------------------------------------------------------

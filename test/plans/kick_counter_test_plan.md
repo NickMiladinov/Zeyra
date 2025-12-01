@@ -10,19 +10,21 @@ This document outlines all existing tests for the Kick Counter feature. The feat
 | Test Level | File | Test Groups | Total Tests |
 |------------|------|-------------|-------------|
 | **Unit - Domain Entities** | `kick_test.dart` | 1 | 6 |
-| **Unit - Domain Entities** | `kick_session_test.dart` | 1 | 11 |
-| **Unit - Domain Use Cases** | `manage_session_usecase_test.dart` | 7 | 42 |
+| **Unit - Domain Entities** | `kick_session_test.dart` | 2 | 16 |
+| **Unit - Domain Use Cases** | `manage_session_usecase_test.dart` | 10 | 52 |
 | **Unit - Domain Exceptions** | `kick_counter_exception_test.dart` | 5 | 19 |
 | **Unit - Mappers** | `kick_session_mapper_test.dart` | 1 | 10 |
-| **Unit - Repository** | `kick_counter_repository_impl_test.dart` | 10 | 20 |
-| **Unit - DAO** | `kick_counter_dao_test.dart` | 3 | 15 |
+| **Unit - Repository** | `kick_counter_repository_impl_test.dart` | 13 | 32 |
+| **Unit - DAO** | `kick_counter_dao_test.dart` | 4 | 19 |
 | **Unit - DAO** | `kick_session_with_kicks_test.dart` | 1 | 5 |
 | **Error Handling** | `kick_counter_repository_error_handling_test.dart` | 6 | 24 |
 | **Performance** | `kick_counter_performance_test.dart` | 6 | 13 |
 | **Integration** | `kick_counter_flow_test.dart` | 1 | 13 |
-| **Unit - Logic** | `kick_counter_notifier_test.dart` | 5 | 12 |
-| **Unit - Logic** | `kick_history_provider_test.dart` | 1 | 3 |
-| **Total** | **12 files** | **47 groups** | **188 tests** 🎉 |
+| **Unit - Logic** | `kick_counter_notifier_test.dart` | 8 | 17 |
+| **Unit - Logic** | `kick_history_provider_test.dart` | 5 | 14 |
+| **Unit - Logic** | `kick_counter_banner_provider_test.dart` | 4 | 13 |
+| **Unit - Logic** | `kick_counter_onboarding_provider_test.dart` | 3 | 7 |
+| **Total** | **15 files** | **70 groups** | **256 tests** 🎉 |
 
 ---
 
@@ -33,14 +35,14 @@ This document outlines all existing tests for the Kick Counter feature. The feat
 Use the convenient test runner files in `test/runners/kick_counter/`:
 
 ```bash
-# Quick tests - fastest (~20 seconds)
-flutter test test/runners/kick_counter/quick_tests.dart
+# Quick tests - fastest (~25 seconds) - 103 tests
+flutter test test/runners/kick_counter/quick_test.dart
 
-# Unit tests - comprehensive unit tests (~1-2 minutes)
-flutter test test/runners/kick_counter/unit_tests.dart
+# Unit tests - comprehensive unit tests (~1-2 minutes) - 228 tests
+flutter test test/runners/kick_counter/unit_test.dart
 
-# All tests - everything including integration & performance (~2-3 minutes)
-flutter test test/runners/kick_counter/all_tests.dart
+# All tests - everything including integration & performance (~2-3 minutes) - 254 tests
+flutter test test/runners/kick_counter/all_test.dart
 ```
 
 **In your IDE**: Open any of these files and click the ▶️ Run button next to `main()`!
@@ -98,6 +100,11 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 1.2.4 | should return isPaused true when pausedAt is set | `isPaused` getter returns true when `pausedAt` is not null | Pause state detection |
 | 1.2.5 | should return isPaused false when pausedAt is null | `isPaused` getter returns false when `pausedAt` is null | Active state detection |
 | 1.2.6 | should return kickCount matching kicks list length | `kickCount` returns the number of kicks in the session | Kick counting |
+| 1.2.11 | should copyWith update note field | Tests note can be updated via copyWith | Note field in copyWith |
+| 1.2.12 | should copyWith preserve note when not specified | Tests note preservation when not updated | Note preservation |
+| 1.2.13 | should include note in equality comparison | Tests note affects equality operator | Note in equality |
+| 1.2.14 | should include note in hashCode | Tests note affects hashCode | Note in hashCode |
+| 1.2.15 | should include note in toString | Tests note appears in string representation | Note in toString |
 | 1.2.7 | should calculate averageTime betweenKicks correctly | Calculates average time between consecutive kicks | Average interval calculation |
 | 1.2.8 | should return null averageTimeBetweenKicks with less than 2 kicks | Returns null when insufficient kicks for average | Edge case: < 2 kicks |
 | 1.2.9 | should copyWith create new instance with updated fields | Creates new instance with specified fields updated | Immutability pattern |
@@ -177,7 +184,32 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 2.1.7.3 | should throw noActiveSession when session is null | Session validation | Error handling |
 | 2.1.7.4 | should throw noActiveSession when session ID mismatch | ID validation | Error handling |
 
-**Coverage:** ✅ All use case methods, business rules, concurrent session prevention, validation logic
+#### 2.1.8 updateSessionNote Group (3 tests) 🆕
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 2.1.8.1 | should update note and return updated session | Updates note successfully | Note update |
+| 2.1.8.2 | should clear note when null is provided | Clears note with null | Note clearing |
+| 2.1.8.3 | should clear note when empty string is provided | Clears note with empty string | Note clearing |
+
+#### 2.1.9 deleteHistoricalSession Group (2 tests) 🆕
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 2.1.9.1 | should delete session by calling repository | Deletes session via repository | Session deletion |
+| 2.1.9.2 | should complete without error when session does not exist | Handles non-existent sessions | Error resilience |
+
+#### 2.1.10 getSessionHistory Group (5 tests) 🆕
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 2.1.10.1 | should return session history from repository | Returns history list | History retrieval |
+| 2.1.10.2 | should return empty list when no history exists | Handles empty history | Empty state |
+| 2.1.10.3 | should pass limit parameter to repository | Passes limit correctly | Pagination |
+| 2.1.10.4 | should pass before parameter to repository | Passes before date correctly | Pagination |
+| 2.1.10.5 | should pass both limit and before parameters | Passes both parameters | Pagination |
+
+**Coverage:** ✅ All use case methods including note management, session deletion, history retrieval, business rules, concurrent session prevention, validation logic
 
 ---
 
@@ -545,6 +577,14 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 8.1.7 | pauses session updates state | Sets pausedAt | Pause UI |
 | 8.1.8 | resumes session clears pausedAt | Clears pausedAt | Resume UI |
 | 8.1.9 | ends session and resets state | Clears session from state | End flow |
+| 8.1.10 | updates note before ending session when note is provided | Calls updateSessionNote before ending | Note update |
+| 8.1.11 | skips note update when note is null | Only calls endSession | Note handling |
+| 8.1.12 | skips note update when note is empty string | Only calls endSession | Note handling |
+| 8.1.13 | removes last kick when kicks exist | Updates state with kick removed | Undo functionality |
+| 8.1.14 | handles error when undo fails | Sets error state | Undo error handling |
+| 8.1.15 | deletes session and resets state on discard | Clears all session state | Discard flow |
+| 8.1.16 | handles generic errors gracefully on discard | No crash on error | Error resilience |
+| 8.1.17 | auto-pauses session when restoring from app close | Prevents counting time while app closed | App lifecycle |
 
 ### 8.2 KickHistoryNotifier (`test/features/kick_counter/logic/kick_history_provider_test.dart`)
 
@@ -555,6 +595,79 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 | 8.2.1 | loads history successfully | Loads list from repository | Data loading |
 | 8.2.2 | handles error on load | Sets error message | Error handling |
 | 8.2.3 | calculates typical range correctly | Computes average duration to 10 kicks | Business logic |
+
+### 8.3 KickCounterBannerNotifier (`test/features/kick_counter/logic/kick_counter_banner_provider_test.dart`) 🆕
+
+**Purpose:** Unit test the banner visibility provider for floating kick counter banner.
+
+#### 8.3.1 show() Tests (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.3.1.1 | should show banner when active session exists | Banner shown if session active | Show logic |
+| 8.3.1.2 | should not show banner when no active session exists | Banner hidden if no session | Show guard |
+| 8.3.1.3 | should set _isActiveScreenVisible to false | Internal flag updated | State management |
+
+#### 8.3.2 hide() Tests (2 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.3.2.1 | should hide banner | Banner state set to false | Hide logic |
+| 8.3.2.2 | should set _isActiveScreenVisible to true | Internal flag updated | State management |
+
+#### 8.3.3 shouldShow Getter Tests (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.3.3.1 | should return true when banner visible and session exists | Double-check logic | Getter logic |
+| 8.3.3.2 | should return false when banner hidden even if session exists | Hidden overrides | Getter guard |
+| 8.3.3.3 | should return false when banner visible but no session | Session check | Getter guard |
+
+#### 8.3.4 Session State Listener Tests (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.3.4.1 | should auto-hide banner when session ends | Listener hides on null session | Auto-hide |
+| 8.3.4.2 | should auto-show banner when session restored and not on active screen | Listener shows on restore | Auto-show |
+| 8.3.4.3 | should not auto-show banner when session restored but on active screen | Respects screen visibility | Conditional show |
+
+#### 8.3.5 shouldShowKickCounterBannerProvider Tests (2 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.3.5.1 | should return true when banner visible and session exists | Combined provider logic | Convenience provider |
+| 8.3.5.2 | should return false when banner visible but no session | Session check | Convenience provider |
+| 8.3.5.3 | should return false when session exists but banner hidden | Banner check | Convenience provider |
+
+**Coverage:** ✅ Banner visibility, auto-show/hide, session lifecycle, convenience provider
+
+### 8.4 KickCounterOnboardingNotifier (`test/features/kick_counter/logic/kick_counter_onboarding_provider_test.dart`) 🆕
+
+**Purpose:** Unit test the onboarding state provider using SharedPreferences.
+
+#### 8.4.1 Initial State Tests (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.4.1.1 | should start as null before loading | Initial state before async load | State initialization |
+| 8.4.1.2 | should load false when key not set | Default value for new users | Default loading |
+| 8.4.1.3 | should load saved value when exists | Persisted value restored | Persistence loading |
+
+#### 8.4.2 setHasStarted() Tests (2 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.4.2.1 | should persist true to SharedPreferences | Value saved to storage | Persistence |
+| 8.4.2.2 | should update state to true | State updated | State management |
+| 8.4.2.3 | should transition state from null -> false -> true | Full lifecycle | State transitions |
+
+#### 8.4.3 Persistence Tests (1 test)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 8.4.3.1 | should persist across notifier instances | Value survives recreation | Cross-instance persistence |
+
+**Coverage:** ✅ SharedPreferences integration, state loading, persistence, lifecycle transitions
 
 ---
 
@@ -677,10 +790,56 @@ flutter test --tags kick_counter --coverage
 
 ---
 
+---
+
+## Recent Updates
+
+### 2025-12-01: Added Tests for Banner & Onboarding Providers 🆕
+
+**New Test Coverage (+21 tests):**
+- ✅ Logic Provider: 13 new tests for `KickCounterBannerNotifier` (banner visibility management)
+- ✅ Logic Provider: 7 new tests for `KickCounterOnboardingNotifier` (SharedPreferences persistence)
+- ✅ Logic Provider: 5 additional tests for `KickCounterNotifier` (discard, undo, auto-pause)
+
+**Test Files Added:**
+- `test/features/kick_counter/logic/kick_counter_banner_provider_test.dart`
+- `test/features/kick_counter/logic/kick_counter_onboarding_provider_test.dart`
+
+**Test Files Updated:**
+- Added `@Tags(['kick_counter'])` to `kick_counter_notifier_test.dart`
+- Added missing tests for `undoLastKick()`, `discardSession()`, and `checkActiveSession()`
+
+**Documentation Updated:**
+- Updated test plan with new provider test sections
+- Updated all test runners with new imports and counts
+- Updated test count summary: 235 → 256 tests
+
+### 2025-11-26: Added Tests for Note-Taking & Session Deletion
+
+**New Test Coverage (+47 tests):**
+- ✅ Domain Entity: 5 new tests for note field in KickSession
+- ✅ Domain Use Cases: 10 new tests (updateSessionNote, deleteHistoricalSession, getSessionHistory)
+- ✅ Data DAO: 4 new tests (getSessionById with note support)
+- ✅ Data Repository: 12 new tests (getSession, updateSessionNote with encryption, note in history)
+- ✅ State Provider: 11 new tests (deleteSession, updateSessionNote, comprehensive state management)
+
+**Test Helpers Updated:**
+- Updated all `FakeKickSession` factory methods to support optional `note` parameter
+- Added new `withNote()` factory method for creating sessions with notes
+
+**Documentation Added:**
+- Created `kick_counter_notes_test_summary.md` with detailed test breakdown
+- Updated all test runners with new test counts
+- Updated this test plan with new test groups
+
+For detailed information about the new tests, see: `test/plans/kick_counter_notes_test_summary.md`
+
+---
+
 ## Document Metadata
 
-**Last Updated:** 2025-11-21  
-**Total Tests:** 188 🎉  
-**Test Files:** 12  
-**Coverage Level:** Comprehensive (Unit + Integration + Performance + Error Handling + Logic)  
-**Feature Status:** ✅ Logic Implemented & Tested
+**Last Updated:** 2025-12-01  
+**Total Tests:** 256 🎉 (+21 from banner/onboarding providers)  
+**Test Files:** 15  
+**Coverage Level:** Comprehensive (Unit + Integration + Performance + Error Handling + Logic + Notes + UI State)  
+**Feature Status:** ✅ Fully Implemented & Tested (including notes, deletion, banner, onboarding)

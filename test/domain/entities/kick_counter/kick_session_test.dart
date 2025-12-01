@@ -152,6 +152,69 @@ void main() {
       expect(updated.isActive, isFalse);
       expect(original.isActive, isTrue); // Original unchanged
     });
+
+    test('should copyWith update note field', () {
+      // Arrange
+      final original = FakeKickSession.simple(note: 'Original note');
+      const newNote = 'Updated note';
+
+      // Act
+      final updated = original.copyWith(note: newNote);
+
+      // Assert
+      expect(updated.note, equals(newNote));
+      expect(original.note, equals('Original note')); // Original unchanged
+    });
+
+    test('should copyWith preserve note when not specified', () {
+      // Arrange
+      const note = 'Test note';
+      final original = FakeKickSession.simple(note: note);
+
+      // Act
+      final updated = original.copyWith(isActive: false);
+
+      // Assert
+      expect(updated.note, equals(note));
+    });
+
+    test('should include note in equality comparison', () {
+      // Arrange
+      const note = 'Test note';
+      final session1 = FakeKickSession.simple(id: 'id-1', note: note);
+      final session2 = FakeKickSession.simple(id: 'id-1', note: note);
+      final session3 = FakeKickSession.simple(id: 'id-1', note: 'Different note');
+      final session4 = FakeKickSession.simple(id: 'id-1', note: null);
+
+      // Assert
+      expect(session1 == session2, isTrue); // Same note
+      expect(session1 == session3, isFalse); // Different note
+      expect(session1 == session4, isFalse); // Note vs no note
+    });
+
+    test('should include note in hashCode', () {
+      // Arrange
+      const note = 'Test note';
+      final session1 = FakeKickSession.simple(id: 'id-1', note: note);
+      final session2 = FakeKickSession.simple(id: 'id-1', note: note);
+      final session3 = FakeKickSession.simple(id: 'id-1', note: 'Different');
+
+      // Assert
+      expect(session1.hashCode, equals(session2.hashCode));
+      expect(session1.hashCode, isNot(equals(session3.hashCode)));
+    });
+
+    test('should include note in toString', () {
+      // Arrange
+      const note = 'Test note';
+      final session = FakeKickSession.simple(note: note);
+
+      // Act
+      final string = session.toString();
+
+      // Assert
+      expect(string, contains('note: $note'));
+    });
   });
 }
 

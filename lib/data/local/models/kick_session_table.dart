@@ -33,6 +33,10 @@ class KickSessions extends Table {
   /// Tracking metric for understanding user behavior patterns
   IntColumn get pauseCount => integer().withDefault(const Constant(0))();
 
+  /// Optional encrypted note attached to this session
+  /// Users can add personal observations about the session
+  TextColumn get note => text().nullable()();
+
   /// Timestamp when record was created (stored as millis since epoch)
   IntColumn get createdAtMillis => integer()();
 

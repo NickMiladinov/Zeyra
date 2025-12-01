@@ -4,6 +4,7 @@ import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_icons.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
+import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_screen.dart';
 import 'package:zeyra/shared/widgets/app_banner.dart';
 import 'package:zeyra/shared/widgets/app_card.dart';
 
@@ -84,6 +85,7 @@ class ToolsScreen extends StatelessWidget {
       icon: null, // Using custom baby icon in card logic if needed, or just icon
       isBabyIcon: true,
       color: const Color(0xFFD9EAD3), // Placeholder color
+      destination: (context) => const KickCounterScreen(),
     ),
     _ToolData(
       title: 'AI Assistant',
@@ -112,6 +114,7 @@ class _ToolData {
   final IconData? icon;
   final bool isBabyIcon;
   final Color color;
+  final WidgetBuilder? destination;
 
   _ToolData({
     required this.title,
@@ -119,6 +122,7 @@ class _ToolData {
     this.icon,
     this.isBabyIcon = false,
     required this.color,
+    this.destination,
   });
 }
 
@@ -131,7 +135,11 @@ class _ToolCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: () {
-        // TODO: Implement navigation
+        if (tool.destination != null) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: tool.destination!),
+          );
+        }
       },
       padding: const EdgeInsets.all(AppSpacing.paddingLG),
       child: Column(

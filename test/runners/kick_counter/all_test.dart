@@ -1,18 +1,18 @@
 /// Kick Counter Feature - All Tests Runner
 /// 
-/// This file imports and runs ALL kick counter tests (188 tests total).
+/// This file imports and runs ALL kick counter tests (254 tests total).
 /// Click the ▶️ Run button next to main() to run all tests for this feature.
 /// 
 /// Includes:
-/// - Domain entity tests (17 tests)
-/// - Domain use case tests (42 tests)
+/// - Domain entity tests (22 tests)
+/// - Domain use case tests (52 tests)
 /// - Domain exception tests (19 tests)
 /// - Data mapper tests (10 tests)
-/// - Data repository tests (44 tests)
-/// - Data DAO tests (15 tests)
+/// - Data repository tests (56 tests)
+/// - Data DAO tests (24 tests)
 /// - Integration tests (13 tests)
 /// - Performance tests (13 tests)
-/// - Logic tests (15 tests)
+/// - Logic tests (45 tests)
 @Tags(['kick_counter'])
 library;
 
@@ -38,18 +38,22 @@ import '../../features/kick_counter/logic/kick_counter_notifier_test.dart'
     as notifier_tests;
 import '../../features/kick_counter/logic/kick_history_provider_test.dart'
     as history_provider_tests;
+import '../../features/kick_counter/logic/kick_counter_banner_provider_test.dart'
+    as banner_provider_tests;
+import '../../features/kick_counter/logic/kick_counter_onboarding_provider_test.dart'
+    as onboarding_provider_tests;
 import '../../integration/kick_counter/kick_counter_flow_test.dart'
     as integration_tests;
 import '../../performance/kick_counter_performance_test.dart'
     as performance_tests;
 
 void main() {
-  group('[KickCounter] All Tests (188 tests)', () {
+  group('[KickCounter] All Tests (254 tests)', () {
     // -------------------------------------------------------------------------
-    // Domain Layer Tests (78 tests)
+    // Domain Layer Tests (93 tests)
     // -------------------------------------------------------------------------
 
-    group('1. Domain Entities (17 tests)', () {
+    group('1. Domain Entities (22 tests)', () {
       kick_entity_tests.main();
       session_entity_tests.main();
     });
@@ -58,24 +62,24 @@ void main() {
       exception_tests.main();
     });
 
-    group('3. Domain Use Cases (42 tests)', () {
+    group('3. Domain Use Cases (52 tests)', () {
       usecase_tests.main();
     });
 
     // -------------------------------------------------------------------------
-    // Data Layer Tests (69 tests)
+    // Data Layer Tests (90 tests)
     // -------------------------------------------------------------------------
 
     group('4. Data Mappers (10 tests)', () {
       mapper_tests.main();
     });
 
-    group('5. Data Repositories (44 tests)', () {
+    group('5. Data Repositories (56 tests)', () {
       repository_tests.main();
       error_handling_tests.main();
     });
 
-    group('6. Data Access Objects (20 tests)', () {
+    group('6. Data Access Objects (24 tests)', () {
       dao_tests.main();
       dao_extensions_tests.main();
     });
@@ -89,12 +93,14 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Logic Layer Tests (15 tests)
+    // Logic Layer Tests (45 tests)
     // -------------------------------------------------------------------------
     
-    group('8. Logic Tests (15 tests)', () {
+    group('8. Logic Tests (45 tests)', () {
       notifier_tests.main();
       history_provider_tests.main();
+      banner_provider_tests.main();
+      onboarding_provider_tests.main();
     });
 
     // -------------------------------------------------------------------------

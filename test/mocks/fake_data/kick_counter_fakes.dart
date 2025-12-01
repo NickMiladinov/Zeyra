@@ -60,6 +60,7 @@ class FakeKickSession {
     DateTime? pausedAt,
     Duration? totalPausedDuration,
     int? pauseCount,
+    String? note,
   }) {
     return KickSession(
       id: id ?? 'session-1',
@@ -70,6 +71,7 @@ class FakeKickSession {
       pausedAt: pausedAt,
       totalPausedDuration: totalPausedDuration ?? Duration.zero,
       pauseCount: pauseCount ?? 0,
+      note: note,
     );
   }
 
@@ -78,6 +80,7 @@ class FakeKickSession {
     required Duration totalPaused,
     int pauseCount = 1,
     List<Kick>? kicks,
+    String? note,
   }) {
     return KickSession(
       id: 'session-paused',
@@ -88,11 +91,12 @@ class FakeKickSession {
       pausedAt: null,
       totalPausedDuration: totalPaused,
       pauseCount: pauseCount,
+      note: note,
     );
   }
 
   /// Create an active session (no end time).
-  static KickSession active({List<Kick>? kicks}) {
+  static KickSession active({List<Kick>? kicks, String? note}) {
     return KickSession(
       id: 'session-active',
       startTime: DateTime(2024, 1, 1, 10, 0),
@@ -102,11 +106,12 @@ class FakeKickSession {
       pausedAt: null,
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
+      note: note,
     );
   }
 
   /// Create an ended session (with end time).
-  static KickSession ended({List<Kick>? kicks}) {
+  static KickSession ended({List<Kick>? kicks, String? note}) {
     return KickSession(
       id: 'session-ended',
       startTime: DateTime(2024, 1, 1, 10, 0),
@@ -116,11 +121,12 @@ class FakeKickSession {
       pausedAt: null,
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
+      note: note,
     );
   }
 
   /// Create a session with maximum kicks (100).
-  static KickSession maxKicks() {
+  static KickSession maxKicks({String? note}) {
     return KickSession(
       id: 'session-max',
       startTime: DateTime(2024, 1, 1, 10, 0),
@@ -130,6 +136,27 @@ class FakeKickSession {
       pausedAt: null,
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
+      note: note,
+    );
+  }
+
+  /// Create a session with a note attached.
+  static KickSession withNote({
+    String? id,
+    required String note,
+    List<Kick>? kicks,
+    bool isActive = false,
+  }) {
+    return KickSession(
+      id: id ?? 'session-with-note',
+      startTime: DateTime(2024, 1, 1, 10, 0),
+      endTime: isActive ? null : DateTime(2024, 1, 1, 10, 30),
+      isActive: isActive,
+      kicks: kicks ?? FakeKick.batch(10),
+      pausedAt: null,
+      totalPausedDuration: Duration.zero,
+      pauseCount: 0,
+      note: note,
     );
   }
 }
