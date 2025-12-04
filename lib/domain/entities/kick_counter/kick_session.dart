@@ -1,4 +1,5 @@
 import 'kick.dart';
+import 'pause_event.dart';
 
 /// Represents a kick counting session for tracking fetal movements.
 /// 
@@ -34,6 +35,10 @@ class KickSession {
   /// Users can add personal observations about the session
   final String? note;
 
+  /// All pause events recorded in this session
+  /// Sorted chronologically by pausedAt timestamp
+  final List<PauseEvent> pauseEvents;
+
   const KickSession({
     required this.id,
     required this.startTime,
@@ -44,6 +49,7 @@ class KickSession {
     required this.totalPausedDuration,
     required this.pauseCount,
     this.note,
+    this.pauseEvents = const [],
   });
 
   /// Whether the session is currently paused
@@ -83,6 +89,35 @@ class KickSession {
     );
   }
 
+  /// Calculate the duration from session start to the 10th kick.
+  /// 
+  /// This is the medically relevant metric for kick counting analytics.
+  /// Returns null if the session has fewer than 10 kicks.
+  /// 
+  /// The calculation:
+  /// 1. Takes the timestamp of the 10th kick (index 9)
+  /// 2. Subtracts the session start time
+  /// 3. Subtracts all pause durations that occurred BEFORE the 10th kick
+  ///    (i.e., pause events where kickCountAtPause < 10)
+  Duration? get durationToTenthKick {
+    if (kicks.length < 10) return null;
+
+    // Get the 10th kick (index 9)
+    final tenthKick = kicks[9];
+    
+    // Calculate elapsed time from start to 10th kick
+    var duration = tenthKick.timestamp.difference(startTime);
+    
+    // Subtract pause durations that occurred before the 10th kick
+    for (final pauseEvent in pauseEvents) {
+      if (pauseEvent.isBeforeTenthKick && pauseEvent.resumedAt != null) {
+        duration -= pauseEvent.duration;
+      }
+    }
+    
+    return duration;
+  }
+
   /// Create a copy with updated fields
   KickSession copyWith({
     String? id,
@@ -94,6 +129,7 @@ class KickSession {
     Duration? totalPausedDuration,
     int? pauseCount,
     String? note,
+    List<PauseEvent>? pauseEvents,
   }) {
     return KickSession(
       id: id ?? this.id,
@@ -105,6 +141,7 @@ class KickSession {
       totalPausedDuration: totalPausedDuration ?? this.totalPausedDuration,
       pauseCount: pauseCount ?? this.pauseCount,
       note: note ?? this.note,
+      pauseEvents: pauseEvents ?? this.pauseEvents,
     );
   }
 

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
+import 'package:zeyra/app/theme/app_icons.dart';
 import 'package:zeyra/shared/widgets/app_bottom_sheet.dart';
+import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_info_screen.dart';
 
 /// Result returned when session complete overlay is closed
 class SessionCompleteResult {
@@ -117,6 +120,81 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
           ),
         ),
         const SizedBox(height: AppSpacing.gapXL),
+        
+        // Warning for sessions with < 10 kicks
+        if (widget.kickCount < 10) ...[
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.paddingMD),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+              border: Border.all(
+                color: AppColors.warning,
+                width: AppSpacing.borderWidthThin,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      AppIcons.infoIcon,
+                      size: AppSpacing.iconSM,
+                      color: AppColors.warning,
+                    ),
+                    const SizedBox(width: AppSpacing.gapSM),
+                    Expanded(
+                      child: Text(
+                        'This session has fewer than 10 movements and won\'t be included in your pattern analysis.',
+                        style: AppTypography.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.gapMD),
+                Text(
+                  'If you\'re worried about reduced movements, contact your midwife or maternity unit right away.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.gapMD),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) => const KickCounterInfoScreen(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Text(
+                        'Learn more about baby movements',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.gapXS),
+                      Icon(
+                        AppIcons.arrowForward,
+                        size: AppSpacing.iconXS,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gapXL),
+        ],
         
         // Note input
         TextField(

@@ -6,4 +6,5 @@ part of 'kick_counter_dao.dart';
 mixin _$KickCounterDaoMixin on DatabaseAccessor<AppDatabase> {
   $KickSessionsTable get kickSessions => attachedDatabase.kickSessions;
   $KicksTable get kicks => attachedDatabase.kicks;
+  $PauseEventsTable get pauseEvents => attachedDatabase.pauseEvents;
 }

@@ -3,15 +3,16 @@ import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../models/kick_session_table.dart';
 import '../models/kick_table.dart';
+import '../models/pause_event_table.dart';
 import 'package:equatable/equatable.dart';
 
 part 'kick_counter_dao.g.dart';
 
 /// Data Access Object for kick counter operations.
 /// 
-/// Provides type-safe database queries for sessions and kicks,
-/// including complex operations like fetching sessions with their kicks.
-@DriftAccessor(tables: [KickSessions, Kicks])
+/// Provides type-safe database queries for sessions, kicks, and pause events,
+/// including complex operations like fetching sessions with their kicks and pause events.
+@DriftAccessor(tables: [KickSessions, Kicks, PauseEvents])
 class KickCounterDao extends DatabaseAccessor<AppDatabase>
     with _$KickCounterDaoMixin {
   KickCounterDao(super.db);
@@ -63,7 +64,7 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  /// Get a session with all its kicks.
+  /// Get a session with all its kicks and pause events.
   Future<KickSessionWithKicks?> getSessionWithKicks(String sessionId) async {
     final session = await (select(kickSessions)
           ..where((s) => s.id.equals(sessionId)))
@@ -76,9 +77,12 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
           ..orderBy([(k) => OrderingTerm.asc(k.sequenceNumber)]))
         .get();
 
+    final pauseEventsList = await getPauseEventsForSession(sessionId);
+
     return KickSessionWithKicks(
       session: session,
       kicks: kicksList,
+      pauseEvents: pauseEventsList,
     );
   }
 
@@ -125,6 +129,42 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
   }
 
   // --------------------------------------------------------------------------
+  // Pause Event Operations
+  // --------------------------------------------------------------------------
+
+  /// Insert a new pause event.
+  Future<PauseEventDto> insertPauseEvent(PauseEventDto pauseEvent) {
+    return into(pauseEvents).insertReturning(pauseEvent);
+  }
+
+  /// Update an existing pause event with resume timestamp.
+  Future<int> updatePauseEventResumed(String pauseEventId, int resumedAtMillis, int updatedAtMillis) {
+    return (update(pauseEvents)..where((p) => p.id.equals(pauseEventId)))
+        .write(PauseEventsCompanion(
+          resumedAtMillis: Value(resumedAtMillis),
+          updatedAtMillis: Value(updatedAtMillis),
+        ));
+  }
+
+  /// Get all pause events for a session, ordered by pause time.
+  Future<List<PauseEventDto>> getPauseEventsForSession(String sessionId) {
+    return (select(pauseEvents)
+          ..where((p) => p.sessionId.equals(sessionId))
+          ..orderBy([(p) => OrderingTerm.asc(p.pausedAtMillis)]))
+        .get();
+  }
+
+  /// Get the currently active (unresolved) pause event for a session.
+  /// 
+  /// Returns null if no active pause event exists.
+  Future<PauseEventDto?> getActivePauseEvent(String sessionId) {
+    return (select(pauseEvents)
+          ..where((p) => p.sessionId.equals(sessionId) & p.resumedAtMillis.isNull())
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  // --------------------------------------------------------------------------
   // History & Pagination
   // --------------------------------------------------------------------------
 
@@ -160,13 +200,15 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
 
     final sessions = await query.get();
 
-    // Fetch kicks for each session
+    // Fetch kicks and pause events for each session
     final result = <KickSessionWithKicks>[];
     for (final session in sessions) {
       final kicksList = await getKicksForSession(session.id);
+      final pauseEventsList = await getPauseEventsForSession(session.id);
       result.add(KickSessionWithKicks(
         session: session,
         kicks: kicksList,
+        pauseEvents: pauseEventsList,
       ));
     }
 
@@ -174,23 +216,25 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
   }
 }
 
-/// Composite data class for a session with its kicks.
+/// Composite data class for a session with its kicks and pause events.
 /// 
 /// Used to return complete session data in a single query operation.
 class KickSessionWithKicks extends Equatable {
   final KickSessionDto session;
   final List<KickDto> kicks;
+  final List<PauseEventDto> pauseEvents;
 
   const KickSessionWithKicks({
     required this.session,
     required this.kicks,
+    this.pauseEvents = const [],
   });
 
   @override
-  List<Object?> get props => [session, kicks];
+  List<Object?> get props => [session, kicks, pauseEvents];
 
   @override
   String toString() =>
-      'KickSessionWithKicks(session: ${session.id}, kicks: ${kicks.length})';
+      'KickSessionWithKicks(session: ${session.id}, kicks: ${kicks.length}, pauseEvents: ${pauseEvents.length})';
 }
 

@@ -12,7 +12,9 @@ import 'package:zeyra/features/kick_counter/logic/kick_history_provider.dart';
 import 'package:zeyra/features/kick_counter/ui/screens/kick_active_session_screen.dart';
 import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_info_screen.dart';
 import 'package:zeyra/features/kick_counter/ui/widgets/session_detail_overlay.dart';
+import 'package:zeyra/features/kick_counter/ui/widgets/kick_duration_graph_card.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
+import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
 
 class KickCounterHistoryScreen extends ConsumerStatefulWidget {
@@ -64,6 +66,13 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
                   _buildInfoCard(),
                   const SizedBox(height: AppSpacing.gapXL),
 
+                  // Graph card
+                  if (historyState.analytics != null)
+                    KickDurationGraphCard(
+                      allSessions: history,
+                    ),
+                  const SizedBox(height: AppSpacing.gapXL),
+
                   Text(
                     'Session History',
                     style: AppTypography.headlineSmall,
@@ -73,51 +82,62 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
                   if (history.isEmpty)
                     _buildEmptyState()
                   else
-                    ...history.map((session) => _SessionHistoryItem(
-                      session: session,
-                      onTap: () => _showSessionDetail(session),
-                    )),
+                    ...history.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final session = entry.value;
+                      final sessionAnalytic = index < historyState.sessionAnalytics.length
+                          ? historyState.sessionAnalytics[index]
+                          : null;
+                      return _SessionHistoryItem(
+                        session: session,
+                        sessionAnalytics: sessionAnalytic,
+                        onTap: () => _showSessionDetail(session),
+                      );
+                    }),
                 ],
               ),
             ),
       // Hide FAB if there's an active session (show banner instead)
       floatingActionButton: activeSession == null 
-        ? FloatingActionButton.extended( // TODO: Lower padding top-bottom
-        onPressed: () {
-          Navigator.of(context).push(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) => const KickActiveSessionScreen(),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                const begin = Offset(0.0, 1.0);
-                const end = Offset.zero;
-                const curve = Curves.easeInOut;
-                final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                return SlideTransition(
-                  position: animation.drive(tween),
-                  child: child,
-                );
-              },
-              transitionDuration: AppEffects.durationSlow,
-              reverseTransitionDuration: AppEffects.durationSlow,        // Disappearing animation
-            ),
-          );
-        },
-        backgroundColor: AppColors.primary,
-        elevation: AppSpacing.elevationSM,
-        shape: RoundedRectangleBorder(
-          borderRadius: AppEffects.roundedCircle,
+        ? ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: AppSpacing.buttonHeightLG,
+          maxHeight: AppSpacing.buttonHeightLG,
         ),
-        icon: const Padding(
-          padding: EdgeInsets.only(left: AppSpacing.paddingSM),
-          child: Icon(AppIcons.add, size: AppSpacing.iconMD, color: AppColors.white),
-        ),
-        label: Padding(
-          padding: EdgeInsets.only(
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.of(context).push(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) => const KickActiveSessionScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(0.0, 1.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+                  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
+                transitionDuration: AppEffects.durationSlow,
+                reverseTransitionDuration: AppEffects.durationSlow,
+              ),
+            );
+          },
+          backgroundColor: AppColors.primary,
+          elevation: AppSpacing.elevationSM,
+          extendedPadding: const EdgeInsets.only(
+            left: AppSpacing.paddingMD,
             right: AppSpacing.paddingLG,
-            top: AppSpacing.paddingXS,
-            bottom: AppSpacing.paddingXS,
+            top: 0,
+            bottom: 0,
           ),
-          child: Text(
+          extendedIconLabelSpacing: AppSpacing.gapSM,
+          shape: RoundedRectangleBorder(
+            borderRadius: AppEffects.roundedCircle,
+          ),
+          icon: const Icon(AppIcons.add, size: AppSpacing.iconMD, color: AppColors.white),
+          label: Text(
             'Start Tracking',
             style: AppTypography.labelLarge.copyWith(color: AppColors.white),
           ),
@@ -138,31 +158,48 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
   }
 
   Widget _buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.paddingLG),
-      decoration: BoxDecoration(
-        color: AppColors.primaryLight,
-        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'If you\'re ever worried about your baby\'s movements, contact your midwife or maternity unit right away.',
-              style: AppTypography.bodyMedium
-            ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (context) => const KickCounterInfoScreen(),
           ),
-          const SizedBox(width: AppSpacing.gapMD),
-          Icon(AppIcons.infoIcon, color: AppColors.primary, size: AppSpacing.iconMD),
-        ],
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.paddingLG),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'If you\'re ever worried about your baby\'s movements, contact your midwife or maternity unit right away.',
+                style: AppTypography.bodyMedium
+              ),
+            ),
+            const SizedBox(width: AppSpacing.gapMD),
+            Icon(AppIcons.infoIcon, color: AppColors.primary, size: AppSpacing.iconMD),
+          ],
+        ),
       ),
     );
   }
 
   void _showSessionDetail(KickSession session) async {
+    // Find the session analytics for this session
+    final historyState = ref.read(kickHistoryProvider);
+    final sessionIndex = historyState.history.indexOf(session);
+    final sessionAnalytic = sessionIndex >= 0 && sessionIndex < historyState.sessionAnalytics.length
+        ? historyState.sessionAnalytics[sessionIndex]
+        : null;
+    
     final result = await SessionDetailOverlay.show(
       context: context,
       session: session,
+      sessionAnalytics: sessionAnalytic,
     );
     
     if (result != null && mounted) {
@@ -205,10 +242,12 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
 
 class _SessionHistoryItem extends StatelessWidget {
   final KickSession session;
+  final KickSessionAnalytics? sessionAnalytics;
   final VoidCallback onTap;
 
   const _SessionHistoryItem({
     required this.session,
+    this.sessionAnalytics,
     required this.onTap,
   });
 
@@ -233,72 +272,141 @@ class _SessionHistoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final durationMin = session.activeDuration.inMinutes;
+    // For sessions with 10+ kicks, show time to 10 movements (matches graph/outlier detection)
+    // For incomplete sessions, show active duration
+    final hasMinimumKicks = sessionAnalytics?.hasMinimumKicks ?? (session.kicks.length >= 10);
+    final durationSeconds = hasMinimumKicks && session.durationToTenthKick != null
+        ? session.durationToTenthKick!.inSeconds
+        : session.activeDuration.inSeconds;
+    // Round to nearest minute for display
+    final durationMin = durationSeconds > 0 ? ((durationSeconds + 30) / 60).floor().clamp(1, 999) : 1;
     final hasNote = session.note != null && session.note!.isNotEmpty;
+    final isOutlier = sessionAnalytics?.isOutlier ?? false;
+
+    // Determine stripe color and status label for abnormal sessions
+    Color? stripeColor;
+    String? statusLabel;
+    IconData? statusIcon;
+    
+    if (!hasMinimumKicks) {
+      stripeColor = AppColors.warning;
+      statusLabel = 'Incomplete';
+      statusIcon = AppIcons.warningIcon;
+    } else if (isOutlier) {
+      stripeColor = AppColors.warningLight;
+      statusLabel = 'Long Session';
+      statusIcon = AppIcons.schedule;
+    }
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.marginMD),
-        padding: const EdgeInsets.all(AppSpacing.paddingLG),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppEffects.radiusLG),
           boxShadow: AppEffects.shadowXS,
         ),
-        child: Row(
-          children: [
-            // Icon Container
-            Container(
-              width: AppSpacing.xxxl,
-              height: AppSpacing.xxxl,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: AppEffects.roundedCircle,
-              ),
-              child: Icon(AppIcons.favorite, fill: 1, color: AppColors.primary, size: AppSpacing.iconSM),
-            ),
-            const SizedBox(width: AppSpacing.gapMD),
-            
-            // Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDate(session.startTime),
-                        style: AppTypography.bodyLarge,
-                      ),
-                      Text(
-                        '$durationMin min',
-                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ],
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // Left stripe indicator (only for abnormal sessions)
+              if (stripeColor != null)
+                Container(
+                  width: AppSpacing.borderWidthThick,
+                  decoration: BoxDecoration(
+                    color: stripeColor.withValues(alpha: 0.5),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(AppEffects.radiusLG),
+                      bottomLeft: Radius.circular(AppEffects.radiusLG),
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                ),
+              
+              // Main content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.paddingLG),
+                  child: Row(
                     children: [
-                      Text(
-                        '${session.kickCount} movements counted',
-                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                      ),
-                      if (hasNote) ...[
-                        const SizedBox(width: AppSpacing.gapSM),
-                        Icon(
-                          AppIcons.chat,
-                          size: AppSpacing.iconXS,
-                          color: AppColors.iconDefault,
+                      // Icon Container
+                      Container(
+                        width: AppSpacing.xxxl,
+                        height: AppSpacing.xxxl,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius: AppEffects.roundedCircle,
                         ),
-                      ],
+                        child: Icon(AppIcons.favorite, fill: 1, color: AppColors.primary, size: AppSpacing.iconSM),
+                      ),
+                      const SizedBox(width: AppSpacing.gapMD),
+                      
+                      // Details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _formatDate(session.startTime),
+                                  style: AppTypography.bodyLarge,
+                                ),
+                                Text(
+                                  '$durationMin min',
+                                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.gapXS),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Left side: movement count and note icon
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${session.kickCount} movements',
+                                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                    ),
+                                    if (hasNote) ...[
+                                      const SizedBox(width: AppSpacing.gapSM),
+                                      Icon(
+                                        AppIcons.chat,
+                                        size: AppSpacing.iconXXS,
+                                        color: AppColors.iconDefault,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                // Right side: status label (only for abnormal sessions)
+                                if (statusLabel != null && statusIcon != null)
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        statusIcon,
+                                        size: AppSpacing.iconXXS,
+                                        color: stripeColor,
+                                      ),
+                                      const SizedBox(width: AppSpacing.gapXS),
+                                      Text(
+                                        statusLabel,
+                                        style: AppTypography.labelSmall.copyWith(color: stripeColor),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

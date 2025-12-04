@@ -2,6 +2,7 @@ import '../../domain/entities/kick_counter/kick.dart';
 import '../../domain/entities/kick_counter/kick_session.dart';
 import '../local/app_database.dart';
 import '../local/daos/kick_counter_dao.dart';
+import 'pause_event_mapper.dart';
 
 /// Mapper for converting between domain entities and DTOs.
 /// 
@@ -49,6 +50,7 @@ class KickSessionMapper {
       ),
       pauseCount: dto.session.pauseCount,
       note: note,
+      pauseEvents: PauseEventMapper.toDomainList(dto.pauseEvents),
     );
   }
 

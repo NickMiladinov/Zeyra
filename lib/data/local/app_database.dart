@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'daos/kick_counter_dao.dart';
 import 'models/kick_session_table.dart';
 import 'models/kick_table.dart';
+import 'models/pause_event_table.dart';
 
 part 'app_database.g.dart';
 
@@ -20,6 +21,7 @@ part 'app_database.g.dart';
     // Kick counter feature
     KickSessions,
     Kicks,
+    PauseEvents,
   ],
   daos: [
     // Kick counter DAO
@@ -33,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,15 +44,10 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Migration strategy for future schema versions
-          // Add migrations here as schema evolves
-          // Example:
-          // if (from == 1 && to == 2) {
-          //   await m.addColumn(kicks, kicks.newColumn);
-          // }
-          // if (from <= 2 && to == 3) {
-          //   await m.createTable(newTable);
-          // }
+          // Migration from version 1 to 2: Add pause_events table
+          if (from < 2) {
+            await m.createTable(pauseEvents);
+          }
         },
         beforeOpen: (details) async {
           // Enable foreign key constraints

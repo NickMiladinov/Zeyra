@@ -22,8 +22,9 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     
     mockSecureStorage = MockFlutterSecureStorage();
+    // Valid 32-byte key encoded in base64 (AES-256 requires exactly 32 bytes)
     when(() => mockSecureStorage.read(key: any(named: 'key')))
-        .thenAnswer((_) async => 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1jaGFycw==');
+        .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
     
     database = AppDatabase.forTesting(NativeDatabase.memory());
     encryptionService = EncryptionService(secureStorage: mockSecureStorage);

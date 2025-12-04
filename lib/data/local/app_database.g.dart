@@ -691,7 +691,9 @@ class $KicksTable extends Kicks with TableInfo<$KicksTable, KickDto> {
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'REFERENCES kick_sessions(id) ON DELETE CASCADE',
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES kick_sessions (id) ON DELETE CASCADE',
+    ),
   );
   static const VerificationMeta _timestampMillisMeta = const VerificationMeta(
     'timestampMillis',
@@ -1069,11 +1071,523 @@ class KicksCompanion extends UpdateCompanion<KickDto> {
   }
 }
 
+class $PauseEventsTable extends PauseEvents
+    with TableInfo<$PauseEventsTable, PauseEventDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PauseEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES kick_sessions (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _pausedAtMillisMeta = const VerificationMeta(
+    'pausedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> pausedAtMillis = GeneratedColumn<int>(
+    'paused_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _resumedAtMillisMeta = const VerificationMeta(
+    'resumedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> resumedAtMillis = GeneratedColumn<int>(
+    'resumed_at_millis',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _kickCountAtPauseMeta = const VerificationMeta(
+    'kickCountAtPause',
+  );
+  @override
+  late final GeneratedColumn<int> kickCountAtPause = GeneratedColumn<int>(
+    'kick_count_at_pause',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    pausedAtMillis,
+    resumedAtMillis,
+    kickCountAtPause,
+    createdAtMillis,
+    updatedAtMillis,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pause_events';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PauseEventDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('paused_at_millis')) {
+      context.handle(
+        _pausedAtMillisMeta,
+        pausedAtMillis.isAcceptableOrUnknown(
+          data['paused_at_millis']!,
+          _pausedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pausedAtMillisMeta);
+    }
+    if (data.containsKey('resumed_at_millis')) {
+      context.handle(
+        _resumedAtMillisMeta,
+        resumedAtMillis.isAcceptableOrUnknown(
+          data['resumed_at_millis']!,
+          _resumedAtMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('kick_count_at_pause')) {
+      context.handle(
+        _kickCountAtPauseMeta,
+        kickCountAtPause.isAcceptableOrUnknown(
+          data['kick_count_at_pause']!,
+          _kickCountAtPauseMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_kickCountAtPauseMeta);
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PauseEventDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PauseEventDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      pausedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}paused_at_millis'],
+      )!,
+      resumedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resumed_at_millis'],
+      ),
+      kickCountAtPause: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}kick_count_at_pause'],
+      )!,
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+    );
+  }
+
+  @override
+  $PauseEventsTable createAlias(String alias) {
+    return $PauseEventsTable(attachedDatabase, alias);
+  }
+}
+
+class PauseEventDto extends DataClass implements Insertable<PauseEventDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// Foreign key to parent session
+  /// Cascade delete ensures pause events are removed when session is deleted
+  final String sessionId;
+
+  /// Timestamp when the session was paused (stored as millis since epoch)
+  final int pausedAtMillis;
+
+  /// Timestamp when the session was resumed (null if still paused or session ended while paused)
+  /// Stored as millis since epoch for precision
+  final int? resumedAtMillis;
+
+  /// Number of kicks recorded BEFORE this pause started
+  /// Used to determine which pauses should be excluded from time-to-10 calculation
+  final int kickCountAtPause;
+
+  /// Timestamp when record was created (stored as millis since epoch)
+  final int createdAtMillis;
+
+  /// Timestamp when record was last updated (stored as millis since epoch)
+  final int updatedAtMillis;
+  const PauseEventDto({
+    required this.id,
+    required this.sessionId,
+    required this.pausedAtMillis,
+    this.resumedAtMillis,
+    required this.kickCountAtPause,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['paused_at_millis'] = Variable<int>(pausedAtMillis);
+    if (!nullToAbsent || resumedAtMillis != null) {
+      map['resumed_at_millis'] = Variable<int>(resumedAtMillis);
+    }
+    map['kick_count_at_pause'] = Variable<int>(kickCountAtPause);
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    return map;
+  }
+
+  PauseEventsCompanion toCompanion(bool nullToAbsent) {
+    return PauseEventsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      pausedAtMillis: Value(pausedAtMillis),
+      resumedAtMillis: resumedAtMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(resumedAtMillis),
+      kickCountAtPause: Value(kickCountAtPause),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+    );
+  }
+
+  factory PauseEventDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PauseEventDto(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      pausedAtMillis: serializer.fromJson<int>(json['pausedAtMillis']),
+      resumedAtMillis: serializer.fromJson<int?>(json['resumedAtMillis']),
+      kickCountAtPause: serializer.fromJson<int>(json['kickCountAtPause']),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'pausedAtMillis': serializer.toJson<int>(pausedAtMillis),
+      'resumedAtMillis': serializer.toJson<int?>(resumedAtMillis),
+      'kickCountAtPause': serializer.toJson<int>(kickCountAtPause),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+    };
+  }
+
+  PauseEventDto copyWith({
+    String? id,
+    String? sessionId,
+    int? pausedAtMillis,
+    Value<int?> resumedAtMillis = const Value.absent(),
+    int? kickCountAtPause,
+    int? createdAtMillis,
+    int? updatedAtMillis,
+  }) => PauseEventDto(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    pausedAtMillis: pausedAtMillis ?? this.pausedAtMillis,
+    resumedAtMillis: resumedAtMillis.present
+        ? resumedAtMillis.value
+        : this.resumedAtMillis,
+    kickCountAtPause: kickCountAtPause ?? this.kickCountAtPause,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+  );
+  PauseEventDto copyWithCompanion(PauseEventsCompanion data) {
+    return PauseEventDto(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      pausedAtMillis: data.pausedAtMillis.present
+          ? data.pausedAtMillis.value
+          : this.pausedAtMillis,
+      resumedAtMillis: data.resumedAtMillis.present
+          ? data.resumedAtMillis.value
+          : this.resumedAtMillis,
+      kickCountAtPause: data.kickCountAtPause.present
+          ? data.kickCountAtPause.value
+          : this.kickCountAtPause,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PauseEventDto(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('pausedAtMillis: $pausedAtMillis, ')
+          ..write('resumedAtMillis: $resumedAtMillis, ')
+          ..write('kickCountAtPause: $kickCountAtPause, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    pausedAtMillis,
+    resumedAtMillis,
+    kickCountAtPause,
+    createdAtMillis,
+    updatedAtMillis,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PauseEventDto &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.pausedAtMillis == this.pausedAtMillis &&
+          other.resumedAtMillis == this.resumedAtMillis &&
+          other.kickCountAtPause == this.kickCountAtPause &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis);
+}
+
+class PauseEventsCompanion extends UpdateCompanion<PauseEventDto> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<int> pausedAtMillis;
+  final Value<int?> resumedAtMillis;
+  final Value<int> kickCountAtPause;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<int> rowid;
+  const PauseEventsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.pausedAtMillis = const Value.absent(),
+    this.resumedAtMillis = const Value.absent(),
+    this.kickCountAtPause = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PauseEventsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required int pausedAtMillis,
+    this.resumedAtMillis = const Value.absent(),
+    required int kickCountAtPause,
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sessionId = Value(sessionId),
+       pausedAtMillis = Value(pausedAtMillis),
+       kickCountAtPause = Value(kickCountAtPause),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis);
+  static Insertable<PauseEventDto> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<int>? pausedAtMillis,
+    Expression<int>? resumedAtMillis,
+    Expression<int>? kickCountAtPause,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (pausedAtMillis != null) 'paused_at_millis': pausedAtMillis,
+      if (resumedAtMillis != null) 'resumed_at_millis': resumedAtMillis,
+      if (kickCountAtPause != null) 'kick_count_at_pause': kickCountAtPause,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PauseEventsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<int>? pausedAtMillis,
+    Value<int?>? resumedAtMillis,
+    Value<int>? kickCountAtPause,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<int>? rowid,
+  }) {
+    return PauseEventsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      pausedAtMillis: pausedAtMillis ?? this.pausedAtMillis,
+      resumedAtMillis: resumedAtMillis ?? this.resumedAtMillis,
+      kickCountAtPause: kickCountAtPause ?? this.kickCountAtPause,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (pausedAtMillis.present) {
+      map['paused_at_millis'] = Variable<int>(pausedAtMillis.value);
+    }
+    if (resumedAtMillis.present) {
+      map['resumed_at_millis'] = Variable<int>(resumedAtMillis.value);
+    }
+    if (kickCountAtPause.present) {
+      map['kick_count_at_pause'] = Variable<int>(kickCountAtPause.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PauseEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('pausedAtMillis: $pausedAtMillis, ')
+          ..write('resumedAtMillis: $resumedAtMillis, ')
+          ..write('kickCountAtPause: $kickCountAtPause, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $KickSessionsTable kickSessions = $KickSessionsTable(this);
   late final $KicksTable kicks = $KicksTable(this);
+  late final $PauseEventsTable pauseEvents = $PauseEventsTable(this);
   late final KickCounterDao kickCounterDao = KickCounterDao(
     this as AppDatabase,
   );
@@ -1081,7 +1595,28 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [kickSessions, kicks];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    kickSessions,
+    kicks,
+    pauseEvents,
+  ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'kick_sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('kicks', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'kick_sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pause_events', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$KickSessionsTableCreateCompanionBuilder =
@@ -1112,6 +1647,51 @@ typedef $$KickSessionsTableUpdateCompanionBuilder =
       Value<int> updatedAtMillis,
       Value<int> rowid,
     });
+
+final class $$KickSessionsTableReferences
+    extends BaseReferences<_$AppDatabase, $KickSessionsTable, KickSessionDto> {
+  $$KickSessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$KicksTable, List<KickDto>> _kicksRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.kicks,
+    aliasName: $_aliasNameGenerator(db.kickSessions.id, db.kicks.sessionId),
+  );
+
+  $$KicksTableProcessedTableManager get kicksRefs {
+    final manager = $$KicksTableTableManager(
+      $_db,
+      $_db.kicks,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_kicksRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PauseEventsTable, List<PauseEventDto>>
+  _pauseEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.pauseEvents,
+    aliasName: $_aliasNameGenerator(
+      db.kickSessions.id,
+      db.pauseEvents.sessionId,
+    ),
+  );
+
+  $$PauseEventsTableProcessedTableManager get pauseEventsRefs {
+    final manager = $$PauseEventsTableTableManager(
+      $_db,
+      $_db.pauseEvents,
+    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_pauseEventsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$KickSessionsTableFilterComposer
     extends Composer<_$AppDatabase, $KickSessionsTable> {
@@ -1171,6 +1751,56 @@ class $$KickSessionsTableFilterComposer
     column: $table.updatedAtMillis,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> kicksRefs(
+    Expression<bool> Function($$KicksTableFilterComposer f) f,
+  ) {
+    final $$KicksTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.kicks,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KicksTableFilterComposer(
+            $db: $db,
+            $table: $db.kicks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> pauseEventsRefs(
+    Expression<bool> Function($$PauseEventsTableFilterComposer f) f,
+  ) {
+    final $$PauseEventsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pauseEvents,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PauseEventsTableFilterComposer(
+            $db: $db,
+            $table: $db.pauseEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$KickSessionsTableOrderingComposer
@@ -1285,6 +1915,56 @@ class $$KickSessionsTableAnnotationComposer
     column: $table.updatedAtMillis,
     builder: (column) => column,
   );
+
+  Expression<T> kicksRefs<T extends Object>(
+    Expression<T> Function($$KicksTableAnnotationComposer a) f,
+  ) {
+    final $$KicksTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.kicks,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KicksTableAnnotationComposer(
+            $db: $db,
+            $table: $db.kicks,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> pauseEventsRefs<T extends Object>(
+    Expression<T> Function($$PauseEventsTableAnnotationComposer a) f,
+  ) {
+    final $$PauseEventsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pauseEvents,
+      getReferencedColumn: (t) => t.sessionId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PauseEventsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.pauseEvents,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$KickSessionsTableTableManager
@@ -1298,12 +1978,9 @@ class $$KickSessionsTableTableManager
           $$KickSessionsTableAnnotationComposer,
           $$KickSessionsTableCreateCompanionBuilder,
           $$KickSessionsTableUpdateCompanionBuilder,
-          (
-            KickSessionDto,
-            BaseReferences<_$AppDatabase, $KickSessionsTable, KickSessionDto>,
-          ),
+          (KickSessionDto, $$KickSessionsTableReferences),
           KickSessionDto,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool kicksRefs, bool pauseEventsRefs})
         > {
   $$KickSessionsTableTableManager(_$AppDatabase db, $KickSessionsTable table)
     : super(
@@ -1369,9 +2046,70 @@ class $$KickSessionsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$KickSessionsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback:
+              ({kicksRefs = false, pauseEventsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (kicksRefs) db.kicks,
+                    if (pauseEventsRefs) db.pauseEvents,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (kicksRefs)
+                        await $_getPrefetchedData<
+                          KickSessionDto,
+                          $KickSessionsTable,
+                          KickDto
+                        >(
+                          currentTable: table,
+                          referencedTable: $$KickSessionsTableReferences
+                              ._kicksRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$KickSessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).kicksRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (pauseEventsRefs)
+                        await $_getPrefetchedData<
+                          KickSessionDto,
+                          $KickSessionsTable,
+                          PauseEventDto
+                        >(
+                          currentTable: table,
+                          referencedTable: $$KickSessionsTableReferences
+                              ._pauseEventsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$KickSessionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pauseEventsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.sessionId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
         ),
       );
 }
@@ -1386,12 +2124,9 @@ typedef $$KickSessionsTableProcessedTableManager =
       $$KickSessionsTableAnnotationComposer,
       $$KickSessionsTableCreateCompanionBuilder,
       $$KickSessionsTableUpdateCompanionBuilder,
-      (
-        KickSessionDto,
-        BaseReferences<_$AppDatabase, $KickSessionsTable, KickSessionDto>,
-      ),
+      (KickSessionDto, $$KickSessionsTableReferences),
       KickSessionDto,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool kicksRefs, bool pauseEventsRefs})
     >;
 typedef $$KicksTableCreateCompanionBuilder =
     KicksCompanion Function({
@@ -1412,6 +2147,30 @@ typedef $$KicksTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
+final class $$KicksTableReferences
+    extends BaseReferences<_$AppDatabase, $KicksTable, KickDto> {
+  $$KicksTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $KickSessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.kickSessions.createAlias(
+        $_aliasNameGenerator(db.kicks.sessionId, db.kickSessions.id),
+      );
+
+  $$KickSessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$KickSessionsTableTableManager(
+      $_db,
+      $_db.kickSessions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
 class $$KicksTableFilterComposer extends Composer<_$AppDatabase, $KicksTable> {
   $$KicksTableFilterComposer({
     required super.$db,
@@ -1422,11 +2181,6 @@ class $$KicksTableFilterComposer extends Composer<_$AppDatabase, $KicksTable> {
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get sessionId => $composableBuilder(
-    column: $table.sessionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1444,6 +2198,29 @@ class $$KicksTableFilterComposer extends Composer<_$AppDatabase, $KicksTable> {
     column: $table.perceivedStrength,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$KickSessionsTableFilterComposer get sessionId {
+    final $$KickSessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KicksTableOrderingComposer
@@ -1457,11 +2234,6 @@ class $$KicksTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get sessionId => $composableBuilder(
-    column: $table.sessionId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1479,6 +2251,29 @@ class $$KicksTableOrderingComposer
     column: $table.perceivedStrength,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$KickSessionsTableOrderingComposer get sessionId {
+    final $$KickSessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KicksTableAnnotationComposer
@@ -1492,9 +2287,6 @@ class $$KicksTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
   GeneratedColumn<int> get timestampMillis => $composableBuilder(
     column: $table.timestampMillis,
@@ -1510,6 +2302,29 @@ class $$KicksTableAnnotationComposer
     column: $table.perceivedStrength,
     builder: (column) => column,
   );
+
+  $$KickSessionsTableAnnotationComposer get sessionId {
+    final $$KickSessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$KicksTableTableManager
@@ -1523,9 +2338,9 @@ class $$KicksTableTableManager
           $$KicksTableAnnotationComposer,
           $$KicksTableCreateCompanionBuilder,
           $$KicksTableUpdateCompanionBuilder,
-          (KickDto, BaseReferences<_$AppDatabase, $KicksTable, KickDto>),
+          (KickDto, $$KicksTableReferences),
           KickDto,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool sessionId})
         > {
   $$KicksTableTableManager(_$AppDatabase db, $KicksTable table)
     : super(
@@ -1571,9 +2386,52 @@ class $$KicksTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) =>
+                    (e.readTable(table), $$KicksTableReferences(db, table, e)),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable: $$KicksTableReferences
+                                    ._sessionIdTable(db),
+                                referencedColumn: $$KicksTableReferences
+                                    ._sessionIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
         ),
       );
 }
@@ -1588,9 +2446,376 @@ typedef $$KicksTableProcessedTableManager =
       $$KicksTableAnnotationComposer,
       $$KicksTableCreateCompanionBuilder,
       $$KicksTableUpdateCompanionBuilder,
-      (KickDto, BaseReferences<_$AppDatabase, $KicksTable, KickDto>),
+      (KickDto, $$KicksTableReferences),
       KickDto,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool sessionId})
+    >;
+typedef $$PauseEventsTableCreateCompanionBuilder =
+    PauseEventsCompanion Function({
+      required String id,
+      required String sessionId,
+      required int pausedAtMillis,
+      Value<int?> resumedAtMillis,
+      required int kickCountAtPause,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<int> rowid,
+    });
+typedef $$PauseEventsTableUpdateCompanionBuilder =
+    PauseEventsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<int> pausedAtMillis,
+      Value<int?> resumedAtMillis,
+      Value<int> kickCountAtPause,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<int> rowid,
+    });
+
+final class $$PauseEventsTableReferences
+    extends BaseReferences<_$AppDatabase, $PauseEventsTable, PauseEventDto> {
+  $$PauseEventsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $KickSessionsTable _sessionIdTable(_$AppDatabase db) =>
+      db.kickSessions.createAlias(
+        $_aliasNameGenerator(db.pauseEvents.sessionId, db.kickSessions.id),
+      );
+
+  $$KickSessionsTableProcessedTableManager get sessionId {
+    final $_column = $_itemColumn<String>('session_id')!;
+
+    final manager = $$KickSessionsTableTableManager(
+      $_db,
+      $_db.kickSessions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PauseEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $PauseEventsTable> {
+  $$PauseEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pausedAtMillis => $composableBuilder(
+    column: $table.pausedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resumedAtMillis => $composableBuilder(
+    column: $table.resumedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get kickCountAtPause => $composableBuilder(
+    column: $table.kickCountAtPause,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$KickSessionsTableFilterComposer get sessionId {
+    final $$KickSessionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableFilterComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PauseEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PauseEventsTable> {
+  $$PauseEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pausedAtMillis => $composableBuilder(
+    column: $table.pausedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resumedAtMillis => $composableBuilder(
+    column: $table.resumedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get kickCountAtPause => $composableBuilder(
+    column: $table.kickCountAtPause,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$KickSessionsTableOrderingComposer get sessionId {
+    final $$KickSessionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PauseEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PauseEventsTable> {
+  $$PauseEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get pausedAtMillis => $composableBuilder(
+    column: $table.pausedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resumedAtMillis => $composableBuilder(
+    column: $table.resumedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get kickCountAtPause => $composableBuilder(
+    column: $table.kickCountAtPause,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+
+  $$KickSessionsTableAnnotationComposer get sessionId {
+    final $$KickSessionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.sessionId,
+      referencedTable: $db.kickSessions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$KickSessionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.kickSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PauseEventsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PauseEventsTable,
+          PauseEventDto,
+          $$PauseEventsTableFilterComposer,
+          $$PauseEventsTableOrderingComposer,
+          $$PauseEventsTableAnnotationComposer,
+          $$PauseEventsTableCreateCompanionBuilder,
+          $$PauseEventsTableUpdateCompanionBuilder,
+          (PauseEventDto, $$PauseEventsTableReferences),
+          PauseEventDto,
+          PrefetchHooks Function({bool sessionId})
+        > {
+  $$PauseEventsTableTableManager(_$AppDatabase db, $PauseEventsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PauseEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PauseEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PauseEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<int> pausedAtMillis = const Value.absent(),
+                Value<int?> resumedAtMillis = const Value.absent(),
+                Value<int> kickCountAtPause = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PauseEventsCompanion(
+                id: id,
+                sessionId: sessionId,
+                pausedAtMillis: pausedAtMillis,
+                resumedAtMillis: resumedAtMillis,
+                kickCountAtPause: kickCountAtPause,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sessionId,
+                required int pausedAtMillis,
+                Value<int?> resumedAtMillis = const Value.absent(),
+                required int kickCountAtPause,
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<int> rowid = const Value.absent(),
+              }) => PauseEventsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                pausedAtMillis: pausedAtMillis,
+                resumedAtMillis: resumedAtMillis,
+                kickCountAtPause: kickCountAtPause,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PauseEventsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({sessionId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (sessionId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.sessionId,
+                                referencedTable: $$PauseEventsTableReferences
+                                    ._sessionIdTable(db),
+                                referencedColumn: $$PauseEventsTableReferences
+                                    ._sessionIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PauseEventsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PauseEventsTable,
+      PauseEventDto,
+      $$PauseEventsTableFilterComposer,
+      $$PauseEventsTableOrderingComposer,
+      $$PauseEventsTableAnnotationComposer,
+      $$PauseEventsTableCreateCompanionBuilder,
+      $$PauseEventsTableUpdateCompanionBuilder,
+      (PauseEventDto, $$PauseEventsTableReferences),
+      PauseEventDto,
+      PrefetchHooks Function({bool sessionId})
     >;
 
 class $AppDatabaseManager {
@@ -1600,4 +2825,6 @@ class $AppDatabaseManager {
       $$KickSessionsTableTableManager(_db, _db.kickSessions);
   $$KicksTableTableManager get kicks =>
       $$KicksTableTableManager(_db, _db.kicks);
+  $$PauseEventsTableTableManager get pauseEvents =>
+      $$PauseEventsTableTableManager(_db, _db.pauseEvents);
 }

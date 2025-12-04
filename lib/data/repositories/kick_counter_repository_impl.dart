@@ -8,6 +8,7 @@ import '../../domain/repositories/kick_counter_repository.dart';
 import '../local/app_database.dart';
 import '../local/daos/kick_counter_dao.dart';
 import '../mappers/kick_session_mapper.dart';
+import '../mappers/pause_event_mapper.dart';
 
 /// Implementation of KickCounterRepository using Drift and encryption.
 /// 
@@ -63,6 +64,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       totalPausedDuration: Duration(milliseconds: session.totalPausedMillis),
       pauseCount: session.pauseCount,
       note: null,
+      pauseEvents: const [],
     );
   }
 
@@ -91,7 +93,10 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
     }
 
-    // Build session with decrypted kicks
+    // Map pause events to domain entities
+    final pauseEvents = PauseEventMapper.toDomainList(sessionWithKicks.pauseEvents);
+
+    // Build session with decrypted kicks and pause events
     return KickSession(
       id: sessionWithKicks.session.id,
       startTime: DateTime.fromMillisecondsSinceEpoch(
@@ -111,6 +116,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       ),
       pauseCount: sessionWithKicks.session.pauseCount,
       note: decryptedNote,
+      pauseEvents: pauseEvents,
     );
   }
 
@@ -273,47 +279,75 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
 
   @override
   Future<void> pauseSession(String sessionId) async {
-    final sessionDto = await _dao.getSessionWithKicks(sessionId);
-    if (sessionDto == null) return;
+    return _dao.transaction(() async {
+      final sessionDto = await _dao.getSessionWithKicks(sessionId);
+      if (sessionDto == null) return;
 
-    // Only set pausedAt if not already paused
-    if (sessionDto.session.pausedAtMillis != null) return;
+      // Only set pausedAt if not already paused
+      if (sessionDto.session.pausedAtMillis != null) return;
 
-    final now = DateTime.now();
-    await _dao.updateSessionFields(
-      sessionId,
-      KickSessionsCompanion(
-        pausedAtMillis: Value(now.millisecondsSinceEpoch),
-        updatedAtMillis: Value(now.millisecondsSinceEpoch),
-      ),
-    );
+      final now = DateTime.now();
+      
+      // Create pause event record
+      final pauseEventDto = PauseEventDto(
+        id: _uuid.v4(),
+        sessionId: sessionId,
+        pausedAtMillis: now.millisecondsSinceEpoch,
+        resumedAtMillis: null, // Will be set on resume
+        kickCountAtPause: sessionDto.kicks.length,
+        createdAtMillis: now.millisecondsSinceEpoch,
+        updatedAtMillis: now.millisecondsSinceEpoch,
+      );
+      
+      await _dao.insertPauseEvent(pauseEventDto);
+      
+      await _dao.updateSessionFields(
+        sessionId,
+        KickSessionsCompanion(
+          pausedAtMillis: Value(now.millisecondsSinceEpoch),
+          updatedAtMillis: Value(now.millisecondsSinceEpoch),
+        ),
+      );
+    });
   }
 
   @override
   Future<void> resumeSession(String sessionId) async {
-    final sessionDto = await _dao.getSessionWithKicks(sessionId);
-    if (sessionDto == null) return;
+    return _dao.transaction(() async {
+      final sessionDto = await _dao.getSessionWithKicks(sessionId);
+      if (sessionDto == null) return;
 
-    final pausedAtMillis = sessionDto.session.pausedAtMillis;
-    if (pausedAtMillis == null) return; // Not paused, nothing to do
+      final pausedAtMillis = sessionDto.session.pausedAtMillis;
+      if (pausedAtMillis == null) return; // Not paused, nothing to do
 
-    // Calculate elapsed pause duration
-    final now = DateTime.now();
-    final pausedAt = DateTime.fromMillisecondsSinceEpoch(pausedAtMillis);
-    final pauseDuration = now.difference(pausedAt);
+      // Calculate elapsed pause duration
+      final now = DateTime.now();
+      final pausedAt = DateTime.fromMillisecondsSinceEpoch(pausedAtMillis);
+      final pauseDuration = now.difference(pausedAt);
 
-    // Update session with accumulated pause time
-    await _dao.updateSessionFields(
-      sessionId,
-      KickSessionsCompanion(
-        pausedAtMillis: const Value(null), // Clear pausedAt
-        totalPausedMillis: Value(
-          sessionDto.session.totalPausedMillis + pauseDuration.inMilliseconds,
+      // Update the active pause event with resume timestamp
+      final activePauseEvent = await _dao.getActivePauseEvent(sessionId);
+      if (activePauseEvent != null) {
+        await _dao.updatePauseEventResumed(
+          activePauseEvent.id,
+          now.millisecondsSinceEpoch,
+          now.millisecondsSinceEpoch,
+        );
+      }
+
+      // Update session with accumulated pause time
+      await _dao.updateSessionFields(
+        sessionId,
+        KickSessionsCompanion(
+          pausedAtMillis: const Value(null), // Clear pausedAt
+          totalPausedMillis: Value(
+            sessionDto.session.totalPausedMillis + pauseDuration.inMilliseconds,
+          ),
+          pauseCount: Value(sessionDto.session.pauseCount + 1),
+          updatedAtMillis: Value(now.millisecondsSinceEpoch),
         ),
-        pauseCount: Value(sessionDto.session.pauseCount + 1),
-        updatedAtMillis: Value(now.millisecondsSinceEpoch),
-      ),
-    );
+      );
+    });
   }
 
   // --------------------------------------------------------------------------
@@ -349,7 +383,10 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
       }
 
-      // Build session with decrypted kicks
+      // Map pause events to domain entities
+      final pauseEvents = PauseEventMapper.toDomainList(sessionWithKicks.pauseEvents);
+
+      // Build session with decrypted kicks and pause events
       decryptedSessions.add(KickSession(
         id: sessionWithKicks.session.id,
         startTime: DateTime.fromMillisecondsSinceEpoch(
@@ -369,6 +406,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         ),
         pauseCount: sessionWithKicks.session.pauseCount,
         note: decryptedNote,
+        pauseEvents: pauseEvents,
       ));
     }
 

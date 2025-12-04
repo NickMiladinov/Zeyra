@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import 'kick_session_table.dart';
+
 /// Drift table for individual kicks within a session.
 /// 
 /// Each kick represents a single detected fetal movement with timestamp,
@@ -11,9 +13,7 @@ class Kicks extends Table {
 
   /// Foreign key to parent session
   /// Cascade delete ensures kicks are removed when session is deleted
-  TextColumn get sessionId => text().customConstraint(
-        'REFERENCES kick_sessions(id) ON DELETE CASCADE',
-      )();
+  TextColumn get sessionId => text().references(KickSessions, #id, onDelete: KeyAction.cascade)();
 
   /// Timestamp when the kick was recorded (stored as millis since epoch for precision)
   /// Used for calculating time between kicks and patterns

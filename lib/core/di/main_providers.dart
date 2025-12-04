@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/local/app_database.dart';
 import '../../data/repositories/kick_counter_repository_impl.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
+import '../../domain/usecases/kick_counter/calculate_analytics_usecase.dart';
 import '../../domain/usecases/kick_counter/manage_session_usecase.dart';
 import '../services/encryption_service.dart';
 
@@ -54,4 +55,11 @@ final manageSessionUseCaseProvider = Provider<ManageSessionUseCase>((ref) {
   final repository = ref.watch(kickCounterRepositoryProvider);
   
   return ManageSessionUseCase(repository: repository);
+});
+
+/// Provider for the calculate analytics use case.
+/// 
+/// Handles statistical calculations for kick counter analytics.
+final calculateAnalyticsUseCaseProvider = Provider<CalculateAnalyticsUseCase>((ref) {
+  return CalculateAnalyticsUseCase();
 });

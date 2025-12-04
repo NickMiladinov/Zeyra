@@ -28,7 +28,9 @@ dependencies:
   drift: ^2.16.0 # Local database with type-safe queries
   drift_flutter: ^0.1.0 # Flutter integration for Drift
   flutter_secure_storage: ^9.0.0 # Secure storage for encryption keys
-  crypto: ^3.0.3 # Cryptographic operations
+  crypto: ^3.0.3 # Cryptographic operations (hashing only)
+  cryptography: ^2.7.0 # AES-GCM encryption
+  cryptography_flutter: ^2.3.2 # Native platform acceleration for crypto
   equatable: ^2.0.7 # Value equality
 
   
@@ -37,6 +39,7 @@ dependencies:
   material_symbols_icons: ^4.2785.1 # Material Symbols with fill, weight, grade support
   flutter_svg: ^2.0.10 # SVG rendering for custom icons
   shared_preferences: ^2.5.3 # TODO: remove this dependency when user account db has been made
+  fl_chart: ^0.69.0 # Charts and graphs
 
 dev_dependencies:
   flutter_test:

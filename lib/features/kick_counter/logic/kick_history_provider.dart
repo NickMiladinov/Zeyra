@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
+import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
+import 'kick_analytics_provider.dart';
 
 // ----------------------------------------------------------------------------
 // State Class
@@ -10,26 +12,30 @@ import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 class KickHistoryState {
   final List<KickSession> history;
   final bool isLoading;
-  final Duration? typicalRange; // Average time to 10 kicks (or standard goal)
+  final KickHistoryAnalytics? analytics;
+  final List<KickSessionAnalytics> sessionAnalytics;
   final String? error;
 
   const KickHistoryState({
     this.history = const [],
     this.isLoading = false,
-    this.typicalRange,
+    this.analytics,
+    this.sessionAnalytics = const [],
     this.error,
   });
 
   KickHistoryState copyWith({
     List<KickSession>? history,
     bool? isLoading,
-    Duration? typicalRange,
+    KickHistoryAnalytics? analytics,
+    List<KickSessionAnalytics>? sessionAnalytics,
     String? error,
   }) {
     return KickHistoryState(
       history: history ?? this.history,
       isLoading: isLoading ?? this.isLoading,
-      typicalRange: typicalRange ?? this.typicalRange,
+      analytics: analytics ?? this.analytics,
+      sessionAnalytics: sessionAnalytics ?? this.sessionAnalytics,
       error: error,
     );
   }
@@ -41,8 +47,10 @@ class KickHistoryState {
 
 class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
   final ManageSessionUseCase _manageSessionUseCase;
+  final KickAnalyticsNotifier _analyticsNotifier;
 
-  KickHistoryNotifier(this._manageSessionUseCase) : super(const KickHistoryState()) {
+  KickHistoryNotifier(this._manageSessionUseCase, this._analyticsNotifier) 
+      : super(const KickHistoryState()) {
     loadHistory();
   }
 
@@ -50,12 +58,16 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final history = await _manageSessionUseCase.getSessionHistory(limit: 50);
-      final typical = _calculateTypicalRange(history);
+      
+      // Calculate analytics
+      _analyticsNotifier.calculateAnalytics(history);
+      final analyticsState = _analyticsNotifier.state;
       
       state = state.copyWith(
         history: history,
         isLoading: false,
-        typicalRange: typical,
+        analytics: analyticsState.historyAnalytics,
+        sessionAnalytics: analyticsState.sessionAnalytics,
       );
     } catch (e) {
       state = state.copyWith(
@@ -97,30 +109,6 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
     }
   }
 
-  /// Calculate "Typical Range" - Average time to reach 10 kicks
-  Duration? _calculateTypicalRange(List<KickSession> sessions) {
-    // Filter completed sessions that reached at least 10 kicks
-    final validSessions = sessions.where((s) => 
-      !s.isActive && 
-      s.endTime != null && 
-      s.kickCount >= 10
-    ).toList();
-
-    if (validSessions.isEmpty) return null;
-
-    // For each session, find time to 10th kick (or end if we treat completed as valid goal met)
-    // If we want stricter "time to 10th kick", we'd need to look at the 10th kick timestamp.
-    // But session.activeDuration is a good proxy if user ends at 10 kicks generally.
-    // Let's be precise: 10th kick timestamp - start time - pauses before 10th kick.
-    // Limitation: KickSession doesn't expose pause timeline easily to calc duration at exact kick index easily without replaying.
-    // Simplification: Use activeDuration of the session, assuming users stop shortly after 10.
-    
-    final totalMilliseconds = validSessions.fold<int>(0, (sum, session) {
-      return sum + session.activeDuration.inMilliseconds;
-    });
-
-    return Duration(milliseconds: totalMilliseconds ~/ validSessions.length);
-  }
 }
 
 // ----------------------------------------------------------------------------
@@ -129,6 +117,7 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
 
 final kickHistoryProvider = StateNotifierProvider<KickHistoryNotifier, KickHistoryState>((ref) {
   final manageSessionUseCase = ref.watch(manageSessionUseCaseProvider);
-  return KickHistoryNotifier(manageSessionUseCase);
+  final analyticsNotifier = ref.watch(kickAnalyticsProvider.notifier);
+  return KickHistoryNotifier(manageSessionUseCase, analyticsNotifier);
 });
 

@@ -3,6 +3,7 @@ import 'package:zeyra/core/services/encryption_service.dart';
 import 'package:zeyra/data/local/daos/kick_counter_dao.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
+import 'package:zeyra/domain/entities/kick_counter/pause_event.dart';
 import 'package:zeyra/domain/repositories/kick_counter_repository.dart';
 
 // ----------------------------------------------------------------------------
@@ -48,6 +49,45 @@ class FakeKick {
   }
 }
 
+/// Fake data builders for PauseEvent entities.
+class FakePauseEvent {
+  /// Create a simple pause event with default or custom values.
+  static PauseEvent simple({
+    String? id,
+    String? sessionId,
+    DateTime? pausedAt,
+    DateTime? resumedAt,
+    int? kickCountAtPause,
+  }) {
+    return PauseEvent(
+      id: id ?? 'pause-1',
+      sessionId: sessionId ?? 'session-1',
+      pausedAt: pausedAt ?? DateTime(2024, 1, 1, 10, 5),
+      resumedAt: resumedAt,
+      kickCountAtPause: kickCountAtPause ?? 5,
+    );
+  }
+
+  /// Generate a batch of pause events with sequential times.
+  static List<PauseEvent> batch(
+    int count, {
+    String? sessionId,
+    DateTime? startTime,
+  }) {
+    final start = startTime ?? DateTime(2024, 1, 1, 10, 0);
+    return List.generate(
+      count,
+      (index) => PauseEvent(
+        id: 'pause-${index + 1}',
+        sessionId: sessionId ?? 'session-1',
+        pausedAt: start.add(Duration(minutes: index * 10)),
+        resumedAt: start.add(Duration(minutes: index * 10 + 2)),
+        kickCountAtPause: index * 3,
+      ),
+    );
+  }
+}
+
 /// Fake data builders for KickSession entities.
 class FakeKickSession {
   /// Create a simple session with default or custom values.
@@ -61,6 +101,7 @@ class FakeKickSession {
     Duration? totalPausedDuration,
     int? pauseCount,
     String? note,
+    List<PauseEvent>? pauseEvents,
   }) {
     return KickSession(
       id: id ?? 'session-1',
@@ -72,6 +113,7 @@ class FakeKickSession {
       totalPausedDuration: totalPausedDuration ?? Duration.zero,
       pauseCount: pauseCount ?? 0,
       note: note,
+      pauseEvents: pauseEvents ?? const [],
     );
   }
 
@@ -81,6 +123,7 @@ class FakeKickSession {
     int pauseCount = 1,
     List<Kick>? kicks,
     String? note,
+    List<PauseEvent>? pauseEvents,
   }) {
     return KickSession(
       id: 'session-paused',
@@ -92,6 +135,7 @@ class FakeKickSession {
       totalPausedDuration: totalPaused,
       pauseCount: pauseCount,
       note: note,
+      pauseEvents: pauseEvents ?? const [],
     );
   }
 
@@ -107,6 +151,7 @@ class FakeKickSession {
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
       note: note,
+      pauseEvents: const [],
     );
   }
 
@@ -122,6 +167,7 @@ class FakeKickSession {
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
       note: note,
+      pauseEvents: const [],
     );
   }
 
@@ -137,6 +183,7 @@ class FakeKickSession {
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
       note: note,
+      pauseEvents: const [],
     );
   }
 
@@ -157,6 +204,7 @@ class FakeKickSession {
       totalPausedDuration: Duration.zero,
       pauseCount: 0,
       note: note,
+      pauseEvents: const [],
     );
   }
 }

@@ -28,8 +28,9 @@ void main() {
     
     // Setup mock secure storage
     mockSecureStorage = MockFlutterSecureStorage();
+    // Valid 32-byte key encoded in base64 (AES-256 requires exactly 32 bytes)
     when(() => mockSecureStorage.read(key: any(named: 'key')))
-        .thenAnswer((_) async => 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1jaGFycw=='); // Base64 encoded 32-char key
+        .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
     
     // Create in-memory database and encryption service with mock storage
     database = AppDatabase.forTesting(NativeDatabase.memory());

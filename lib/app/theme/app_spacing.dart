@@ -75,6 +75,7 @@ class AppSpacing {
   
   /// Screen edge padding (vertical)
   static const double screenPaddingVertical = 32.0;
+  static const double screenPaddingVerticalXL = 40.0;
   
   /// Content max width for tablets/desktop
   static const double contentMaxWidth = 600.0;

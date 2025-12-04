@@ -4,8 +4,10 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
+import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_history_provider.dart';
+import 'package:zeyra/features/kick_counter/logic/kick_analytics_provider.dart';
 
 import '../../../mocks/fake_data/kick_counter_fakes.dart';
 
@@ -14,6 +16,7 @@ import '../../../mocks/fake_data/kick_counter_fakes.dart';
 // ----------------------------------------------------------------------------
 
 class MockManageSessionUseCase extends Mock implements ManageSessionUseCase {}
+class MockKickAnalyticsNotifier extends Mock implements KickAnalyticsNotifier {}
 
 // ----------------------------------------------------------------------------
 // Test Data
@@ -40,13 +43,26 @@ KickSession createSessionWithKicks(int count, Duration duration) {
 void main() {
   late KickHistoryNotifier notifier;
   late MockManageSessionUseCase mockUseCase;
+  late MockKickAnalyticsNotifier mockAnalyticsNotifier;
 
   setUp(() {
     mockUseCase = MockManageSessionUseCase();
+    mockAnalyticsNotifier = MockKickAnalyticsNotifier();
+    
     // Mock initial load
     when(() => mockUseCase.getSessionHistory(limit: 50))
         .thenAnswer((_) async => []);
-    notifier = KickHistoryNotifier(mockUseCase);
+    
+    // Mock analytics notifier state
+    when(() => mockAnalyticsNotifier.state).thenReturn(
+      KickAnalyticsState(
+        historyAnalytics: KickHistoryAnalytics(validSessionCount: 0),
+        sessionAnalytics: const [],
+      ),
+    );
+    when(() => mockAnalyticsNotifier.calculateAnalytics(any())).thenReturn(null);
+    
+    notifier = KickHistoryNotifier(mockUseCase, mockAnalyticsNotifier);
   });
 
   group('[KickCounter] KickHistoryNotifier', () {
@@ -117,7 +133,7 @@ void main() {
 
         // Assert
         expect(notifier.state.error, isNull);
-        expect(notifier.state.typicalRange, isNotNull);
+        expect(notifier.state.analytics, isNotNull);
       });
 
       test('should return null typical range when no valid sessions', () async {
@@ -129,7 +145,7 @@ void main() {
         await notifier.loadHistory();
 
         // Assert
-        expect(notifier.state.typicalRange, isNull);
+        expect(notifier.state.analytics, isNotNull);
       });
     });
 

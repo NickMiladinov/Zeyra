@@ -5,6 +5,7 @@ import 'package:zeyra/app/theme/app_effects.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_icons.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
+import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/shared/widgets/app_bottom_sheet.dart';
 import 'package:zeyra/shared/widgets/app_dialog.dart';
 
@@ -28,20 +29,26 @@ class SessionDetailResult {
 /// Overlay showing session details with edit/delete options
 class SessionDetailOverlay extends StatelessWidget {
   final KickSession session;
+  final KickSessionAnalytics? sessionAnalytics;
 
   const SessionDetailOverlay({
     super.key,
     required this.session,
+    this.sessionAnalytics,
   });
 
   /// Show the session detail overlay
   static Future<SessionDetailResult?> show({
     required BuildContext context,
     required KickSession session,
+    KickSessionAnalytics? sessionAnalytics,
   }) async {
     return await AppBottomSheet.show<SessionDetailResult>(
       context: context,
-      child: SessionDetailOverlay(session: session),
+      child: SessionDetailOverlay(
+        session: session,
+        sessionAnalytics: sessionAnalytics,
+      ),
       isDismissible: true,
       enableDrag: true,
     );
@@ -74,6 +81,18 @@ class SessionDetailOverlay extends StatelessWidget {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${months[date.month - 1]} ${date.day}';
+  }
+
+  /// Get duration display - uses durationToTenthKick for valid sessions,
+  /// activeDuration for incomplete sessions. Rounds to nearest minute.
+  String _getDurationDisplay() {
+    final hasMinimumKicks = sessionAnalytics?.hasMinimumKicks ?? (session.kicks.length >= 10);
+    final durationSeconds = hasMinimumKicks && session.durationToTenthKick != null
+        ? session.durationToTenthKick!.inSeconds
+        : session.activeDuration.inSeconds;
+    // Round to nearest minute
+    final minutes = durationSeconds > 0 ? ((durationSeconds + 30) / 60).floor().clamp(1, 999) : 1;
+    return '$minutes';
   }
 
   @override
@@ -147,15 +166,66 @@ class SessionDetailOverlay extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.gapSM),
+        const SizedBox(height: AppSpacing.gapLG),
         
-        // Divider after date row
-        Divider(
-          color: AppColors.divider,
-          thickness: AppSpacing.borderWidthThin,
-          height: AppSpacing.borderWidthThin,
-        ),
-        const SizedBox(height: AppSpacing.gapXL),
+        // Warning card for abnormal sessions
+        if (sessionAnalytics != null && (!sessionAnalytics!.hasMinimumKicks || sessionAnalytics!.isOutlier)) ...[
+          if (!sessionAnalytics!.hasMinimumKicks)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.paddingLG),
+              decoration: BoxDecoration(
+                color: AppColors.warningLight.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    AppIcons.warningIcon,
+                    size: AppSpacing.iconSM,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: AppSpacing.gapSM),
+                  Expanded(
+                    child: Text(
+                      'Count to 10 movements for the session to be part of your analytics',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (sessionAnalytics!.isOutlier)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.paddingLG),
+              decoration: BoxDecoration(
+                color: AppColors.warningLight.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    AppIcons.warningIcon,
+                    size: AppSpacing.iconLG,
+                    color: AppColors.warning,
+                  ),
+                  const SizedBox(width: AppSpacing.gapMD),
+                  Expanded(
+                    child: Text(
+                      'This session took longer than usual. If you\'re worried about reduced movements, contact your midwife or maternity unit.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: AppSpacing.gapLG),
+        ],
         
         // Stats cards
         Row(
@@ -164,13 +234,16 @@ class SessionDetailOverlay extends StatelessWidget {
               child: _StatCard(
                 value: '${session.kickCount}',
                 label: 'Movements',
+                isHighlighted: sessionAnalytics?.hasMinimumKicks == false,
               ),
             ),
             const SizedBox(width: AppSpacing.gapMD),
             Expanded(
               child: _StatCard(
-                value: session.activeDuration.inMinutes.toString(),
+                // For sessions with 10+ kicks, show time to 10 movements (matches graph)
+                value: _getDurationDisplay(),
                 label: 'Minutes',
+                isHighlighted: sessionAnalytics?.isOutlier == true && sessionAnalytics?.hasMinimumKicks == true,
               ),
             ),
           ],
@@ -247,10 +320,12 @@ class SessionDetailOverlay extends StatelessWidget {
 class _StatCard extends StatelessWidget {
   final String value;
   final String label;
+  final bool isHighlighted;
 
   const _StatCard({
     required this.value,
     required this.label,
+    this.isHighlighted = false,
   });
 
   @override
@@ -260,6 +335,12 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+        border: isHighlighted
+            ? Border.all(
+                color: AppColors.warningLight.withValues(alpha: 0.5),
+                width: AppSpacing.borderWidthMedium,
+              )
+            : null,
       ),
       child: Column(
         children: [
