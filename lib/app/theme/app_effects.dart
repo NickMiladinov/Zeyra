@@ -97,6 +97,15 @@ class AppEffects {
     ),
   ];
 
+  /// Shadow for top edge (bottom navigation bar)
+  static List<BoxShadow> get shadowTop => [
+    BoxShadow(
+      color: AppColors.black.withValues(alpha: 0.05),
+      offset: const Offset(0, -1),
+      blurRadius: 12,
+    ),
+  ];
+
   // ============================================================================
   // BORDERS
   // ============================================================================
@@ -163,22 +172,14 @@ class AppEffects {
     ],
   );
 
-  // TODO: Add custom gradients from Figma
-  // Example:
-  // static LinearGradient get gradientHero => const LinearGradient(
-  //   begin: Alignment.topCenter,
-  //   end: Alignment.bottomCenter,
-  //   colors: [Color(0xFF...), Color(0xFF...)],
-  // );
-
   // ============================================================================
   // BLURS (Backdrop filters)
   // ============================================================================
   /// Blur values for frosted glass effects
   static const double blurNone = 0.0;
-  static const double blurLight = 4.0; // TODO: Replace
-  static const double blurMedium = 8.0; // TODO: Replace
-  static const double blurHeavy = 16.0; // TODO: Replace
+  static const double blurLight = 4.0;
+  static const double blurMedium = 8.0;
+  static const double blurHeavy = 16.0;
 
   // ============================================================================
   // OPACITY
@@ -197,6 +198,8 @@ class AppEffects {
   static const Duration durationFast = Duration(milliseconds: 150);
   static const Duration durationNormal = Duration(milliseconds: 300);
   static const Duration durationSlow = Duration(milliseconds: 500);
+  static const Duration durationVerySlow = Duration(milliseconds: 750);
+  static const Duration durationVeryVerySlow = Duration(milliseconds: 1000);
   
   /// Animation curves
   static const Curve curveDefault = Curves.easeInOut;

@@ -34,12 +34,16 @@ Zeyra follows a **Clean Architecture** approach adapted for Flutter, designed fo
 
 ### Overview
 Zeyra prioritizes user privacy and compliance with **UK GDPR** by keeping all sensitive data **on-device** and encrypting it at rest and in transit.
-Encryption is handled using a combination of cryptography + cryptography_flutter.
+Encryption is handled using **AES-256-GCM** via the `cryptography` and `cryptography_flutter` packages.
 
-### Approach
+### Implementation
 
 1. **Encryption at Rest**
-   - All sensitive user data (e.g., personal info, biomarker data, medical files) stored locally via **Drift** or **Sqflite** will be encrypted using **AES-256**.
+   - All sensitive user data (e.g., personal info, biomarker data, medical files) stored locally via **Drift** is encrypted using **AES-256-GCM**.
+   - **AES-GCM provides**:
+     - **Confidentiality**: Data is encrypted and unreadable without the key
+     - **Authentication**: Built-in authentication tag detects tampering
+     - **Performance**: Hardware acceleration via platform-native APIs (Android Keystore / iOS CryptoKit)
    - Encryption keys are stored securely using **flutter_secure_storage**, which relies on:
      - **Android Keystore System**
      - **iOS Keychain**
@@ -49,15 +53,22 @@ Encryption is handled using a combination of cryptography + cryptography_flutter
    - The app ensures temporary decrypted copies are cleared from device memory immediately after use.
 
 3. **Key Management**
-   - Keys are generated per user device.
-   - Cloud sync (when added in premium version) will never upload raw keys.
-   - Supabase auth only handles authentication; no raw health or biometric data is stored remotely in v1.0.
+   - 256-bit keys are generated per user device using cryptographically secure random generation
+   - Keys never leave the device's secure storage
+   - Cloud sync (when added in premium version) will never upload raw keys
+   - Supabase auth only handles authentication; no raw health or biometric data is stored remotely in v1.0
 
-4. **Encryption Helpers**
-   - Implemented as a shared utility
+4. **Encryption Service**
+   - Implemented in `lib/core/services/encryption_service.dart`
+   - Uses `AesGcm.with256bits()` algorithm from the `cryptography` package
+   - Each encryption uses a random 12-byte nonce for security
+   - Output format: `[12-byte nonce][ciphertext][16-byte auth tag]` (base64 encoded)
+   - Tamper detection: Any modification to encrypted data will cause decryption to fail
 
 5. **Future-proofing**
-   - The encryption layer is abstracted so that in future updates (e.g., for FIPS 140-2 compliance), the crypto backend can be replaced without affecting repositories or entities.
+   - The encryption layer is abstracted through the `EncryptionService` class
+   - Repositories use the service via dependency injection
+   - In future updates (e.g., for FIPS 140-2 compliance), the crypto backend can be replaced without affecting repositories or entities
 
 ---
 

@@ -20,6 +20,7 @@ class AppIcons {
   /// Path to custom baby feet SVG icon
   static const String _babyFeetSvgPath = 'assets/icons/baby_feet.svg';
   static const String _babyFeetFilledSvgPath = 'assets/icons/baby_feet_filled.svg';
+  static const String _babyFootSvgPath = 'assets/icons/baby_foot.svg';
 
   // ============================================================================
   // ICON CONFIGURATION
@@ -309,6 +310,10 @@ class AppIcons {
     return svgIcon(_babyFeetFilledSvgPath, size: size, color: color ?? defaultColor);
   }
 
+  static Widget babyFoot({double? size, Color? color}) {
+    return svgIcon(_babyFootSvgPath, size: size, color: color ?? defaultColor);
+  }
+
   // ============================================================================
   // COMMON APP ICONS (Material Symbols Rounded)
   // ============================================================================
@@ -327,6 +332,9 @@ class AppIcons {
   static const IconData add = Symbols.add_2_rounded;
   static const IconData remove = Symbols.remove_rounded;
   static const IconData edit = Symbols.edit_rounded;
+  static const IconData stop = Symbols.stop_rounded;
+  static const IconData pause = Symbols.pause_rounded;
+  static const IconData play = Symbols.play_arrow_rounded;
   static const IconData delete = Symbols.delete_rounded;
   static const IconData undo = Symbols.undo_rounded;
   static const IconData refresh = Symbols.refresh_rounded;
@@ -344,6 +352,7 @@ class AppIcons {
   static const IconData calendar = Symbols.calendar_month_rounded;
   static const IconData schedule = Symbols.schedule_rounded;
   static const IconData event = Symbols.event_rounded;
+  static const IconData history = Symbols.history_rounded;
   
   // File & Document icons
   static const IconData upload = Symbols.upload_rounded;

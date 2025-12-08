@@ -14,6 +14,5 @@ class TestConfig {
   static const String testUserEmail = 'test@example.com';
   static const String testUserPassword = 'testPassword123';
   
-  // TODO: Add more test configuration as needed
 }
 

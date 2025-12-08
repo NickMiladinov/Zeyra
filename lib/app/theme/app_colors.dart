@@ -51,33 +51,33 @@ class AppColors {
   static const Color textDisabled = Color(0xFFE0E0E0);
   
   /// Border and divider colors
-  static const Color border = Color(0xFFE0E0E0);
+  static const Color border = backgroundGrey100;
   static const Color borderPrimary = Color.fromARGB(52, 77, 182, 172);
   static const Color borderSecondary = Color.fromARGB(52, 255, 171, 145);
-  static const Color divider = Color(0xFFE0E0E0);
+  static const Color divider = backgroundGrey100;
 
   // ============================================================================
   // SEMANTIC COLORS (Status/Feedback)
   // ============================================================================
   /// Success color (e.g., confirmations, positive states)
-  static const Color success = Color(0xFF4CAF50); // TODO: Replace
-  static const Color successLight = Color(0xFF81C784); // TODO: Replace
+  static const Color success = Color(0xFF4CAF50);
+  static const Color successLight = Color(0xFF81C784);
   static const Color successDark = Color(0xFF2E7D32);
   
   /// Warning color (e.g., alerts, caution)
-  static const Color warning = Color(0xFFFF9800); // TODO: Replace
-  static const Color warningLight = Color(0xFFFFB74D); // TODO: Replace
+  static const Color warning = Color(0xFFFF9800);
+  static const Color warningLight = Color(0xFFFFB74D);
   static const Color warningDark = Color(0xFFED6C02);
   
   /// Error color (e.g., errors, destructive actions)
-  static const Color error = Color(0xFFF44336); // TODO: Replace
-  static const Color errorLight = Color(0xFFE57373); // TODO: Replace
+  static const Color error = Color(0xFFF44336);
+  static const Color errorLight = Color(0xFFE57373);
   static const Color errorDark = Color(0xFFD32F2F);
   
   /// Info color (e.g., informational messages)
-  static const Color info = Color(0xFF2196F3); // TODO: Replace
-  static const Color infoLight = Color(0xFF64B5F6); // TODO: Replace
-  static const Color infoDark = Color(0xFF1976D2); // TODO: Replace
+  static const Color info = Color(0xFF2196F3);
+  static const Color infoLight = Color(0xFF64B5F6);
+  static const Color infoDark = Color(0xFF1976D2);
 
   // ============================================================================
   // PREGNANCY/HEALTH APP SPECIFIC COLORS
@@ -117,5 +117,16 @@ class AppColors {
   
   /// Transparent
   static const Color transparent = Color(0x00000000);
+
+  // Icon colors
+  static const Color iconPrimary = primary;
+  static const Color iconSecondary = secondary;
+  static const Color iconDefault = backgroundGrey500;
+  static const Color iconDark = textPrimary;
+  static const Color iconLight = white;
+  static const Color iconError = error;
+  static const Color iconSuccess = success;
+  static const Color iconWarning = warning;
+  static const Color iconInfo = info;
 }
 

@@ -61,6 +61,8 @@ class AppSpacing {
   static const double gapMD = md;
   static const double gapLG = lg;
   static const double gapXL = xl;
+  static const double gapXXL = xxl;
+  static const double gapXXXL = xxxl;
 
   // ============================================================================
   // LAYOUT SPACING
@@ -73,6 +75,7 @@ class AppSpacing {
   
   /// Screen edge padding (vertical)
   static const double screenPaddingVertical = 32.0;
+  static const double screenPaddingVerticalXL = 40.0;
   
   /// Content max width for tablets/desktop
   static const double contentMaxWidth = 600.0;
@@ -95,6 +98,7 @@ class AppSpacing {
   static const double buttonHeightLG = 48.0;
   static const double buttonHeightXL = 52.0;
   static const double buttonHeightXXL = 56.0;
+  static const double buttonHeightXXXL = 64.0;
   
   /// Input field heights
   static const double inputHeightSM = 40.0;
@@ -108,12 +112,16 @@ class AppSpacing {
   static const double iconMD = 28.0;
   static const double iconLG = 32.0;
   static const double iconXL = 36.0;
+  static const double iconXXL = 40.0;
   
   /// App bar height
   static const double appBarHeight = 56.0;
   
-  /// Bottom navigation bar height
-  static const double bottomNavHeight = 56.0;
+  /// Bottom navigation bar height (with comfortable padding)
+  static const double bottomNavHeight = 80.0;
+  
+  /// Bottom navigation item height
+  static const double bottomNavItemHeight = 48.0;
   
   /// Tab bar height
   static const double tabBarHeight = 56.0;

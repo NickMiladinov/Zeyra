@@ -211,17 +211,9 @@ class AppTheme {
       // ----------------------------------------------------------------------------
       // BOTTOM NAVIGATION BAR
       // ----------------------------------------------------------------------------
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
-        selectedLabelStyle: AppTypography.labelSmall.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: AppTypography.labelSmall,
-        elevation: AppSpacing.elevationLG,
-        type: BottomNavigationBarType.fixed,
-      ),
+      // ⚠️ DO NOT USE Material's BottomNavigationBar widget directly.
+      // Use AppBottomNavBar from shared/widgets/app_bottom_nav_bar.dart instead.
+      // The bottom navigation theme has been intentionally removed to enforce custom widget usage.
 
       // ----------------------------------------------------------------------------
       // DIALOG
@@ -389,17 +381,5 @@ class AppTheme {
       fontFamily: AppTypography.secondaryFontFamily,
     );
   }
-
-  // ============================================================================
-  // DARK THEME (Optional - Add if needed)
-  // ============================================================================
-  // TODO: Implement dark theme if your app supports it
-  // static ThemeData get darkTheme {
-  //   return ThemeData(
-  //     useMaterial3: true,
-  //     brightness: Brightness.dark,
-  //     // ... similar structure to lightTheme but with dark colors
-  //   );
-  // }
 }
 

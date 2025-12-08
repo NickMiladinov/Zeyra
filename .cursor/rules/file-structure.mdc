@@ -69,6 +69,10 @@ lib/
 │   │   ├── logic/
 │   │   └── ui/
 │
+│   ├── kick_counter/                 # Kick counter
+│   │   ├── logic/
+│   │   └── ui/
+│
 │   ├── ai_chat/                      # AI assistant
 │   │   ├── logic/
 │   │   └── ui/

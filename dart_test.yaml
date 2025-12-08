@@ -1,0 +1,57 @@
+# dart_test.yaml - Test configuration for Zeyra app
+
+# Test presets for easy running from CLI
+presets:
+  # Run all kick counter tests
+  kick_counter:
+    paths:
+      - test/runners/kick_counter/all_test.dart
+  
+  # Run only unit tests (fast, no integration/performance)
+  unit:
+    paths:
+      - test/domain/
+      - test/data/
+    exclude_tags: integration
+  
+  # Run only integration tests
+  integration:
+    paths:
+      - test/integration/
+  
+  # Run performance tests (usually skip in CI)
+  performance:
+    paths:
+      - test/performance/
+
+# Global test configuration
+timeout: 30s  # Default timeout for all tests
+
+# Configure test output
+reporter: expanded  # More detailed output
+
+# Tag-specific configuration
+tags:
+  kick_counter:
+    # Standard timeout for kick counter tests
+  
+  widgets:
+    # Widget tests (UI component tests)
+  
+  tooltip:
+    # Tooltip-specific tests
+  
+  performance:
+    # Performance tests get longer timeout
+    timeout: 2m
+  
+  integration:
+    # Integration tests may need more time
+    timeout: 1m
+
+# Paths to exclude from test discovery
+exclude_paths:
+  - test/harness/
+  - test/mocks/
+  - test/plans/
+

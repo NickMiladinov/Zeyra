@@ -17,6 +17,7 @@ Follow feature-based test structure mirroring `lib/features/`.
 - File names: `<class>_test.dart`
 - Test group: `'[Feature] <Behavior>'`
 - Test name: `'should <expected behavior> when <condition>'`
+- **Tags**: When adding new `@Tags([...])` to test files, always add them to `dart_test.yaml` under the `tags:` section.
 
 # MOCKING
 - Use `mocktail` for mocks.
@@ -36,7 +37,15 @@ Follow feature-based test structure mirroring `lib/features/`.
 - Use `verify()` for mock verification.
 - Avoid brittle widget tree matchers — use keys and finders.
 
-# DOCUMENTATION
-Reference:
+# DOCUMENTATION & MAINTENANCE
+- **Test Plans**: Every feature MUST have a corresponding `test/plans/<feature>_test_plan.md`.
+- **Test Runners**: Every feature MUST have runners in `test/runners/<feature>/` (quick, unit, all).
+- **Global Runners**: Maintain `test/runners/all_widget_tests.dart` for all widget tests.
+- **Consistency**: When adding a new test file:
+  1. Update the feature's `test_plan.md` with new test groups and cases.
+  2. Import and execute the new test file in the corresponding `test/runners` files.
+  3. If it's a widget test, add it to `test/runners/all_widget_tests.dart`.
+  4. Ensure `@Tags(['feature_name'])` is present in the new test file.
+- Reference:
 - **docs/architecture/system_design.md** for architecture coverage expectations.
 - **docs/architecture/data_flow.md** for correct repository and entity boundaries.
