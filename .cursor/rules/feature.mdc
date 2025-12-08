@@ -3,50 +3,81 @@ alwaysApply: false
 ---
 Defines how to create a **new feature module** consistent with system design.
 
+## Quick Reference
+
+| What | Where |
+|------|-------|
+| Domain entities | `lib/domain/entities/<feature>/` |
+| Repository interface | `lib/domain/repositories/<feature>_repository.dart` |
+| Repository impl | `lib/data/repositories/<feature>_repository_impl.dart` |
+| DAO | `lib/data/local/daos/<feature>_dao.dart` |
+| Mappers | `lib/data/mappers/<entity>_mapper.dart` |
+| Providers | `lib/features/<feature>/logic/` |
+| Test plan | `test/plans/<feature>_test_plan.md` |
+| Fake builders | `test/mocks/fake_data/<feature>_fakes.dart` |
+| Test runners | `test/runners/<feature>/` |
+
 # FEATURE CREATION WORKFLOW
 
-## STEP 1: Create Folder Structure
-Under `lib/features/<feature_name>/`, create:
-logic/
-ui/
+## Files to Create (per feature)
 
-## STEP 2: Define Domain Layer
-- Create pure **entities** in `domain/entities/` (no Flutter/Drift imports).
-- Define **repository interface** in `domain/repositories/`.
-- Define **use cases** in `domain/usecases/` following one-action-per-class rule.
-- Ensure domain models align with **docs/architecture/data_flow.md** and **docs/data/data_model.md**.
+| Layer | Location | Files |
+|-------|----------|-------|
+| Domain Entities | `lib/domain/entities/<feature>/` | `<entity>.dart`, `<feature>_constants.dart` |
+| Domain Exceptions | `lib/domain/exceptions/` | `<feature>_exception.dart` |
+| Domain Repository | `lib/domain/repositories/` | `<feature>_repository.dart` |
+| Domain Use Cases | `lib/domain/usecases/<feature>/` | One file per use case |
+| Data Tables | `lib/data/local/models/` | `<entity>_table.dart` |
+| Data DAO | `lib/data/local/daos/` | `<feature>_dao.dart` |
+| Data Mappers | `lib/data/mappers/` | `<entity>_mapper.dart` |
+| Data Repository | `lib/data/repositories/` | `<feature>_repository_impl.dart` |
+| Feature Logic | `lib/features/<feature>/logic/` | Providers + state |
+| Feature UI | `lib/features/<feature>/ui/` | Screens + widgets |
 
-## STEP 3: Implement Data Layer
-- Create **DTOs and Drift tables** in `data/models/`.
-- Implement **repository** in `data/repositories/` that maps DTO ↔ domain entity.
-- Implement **services** if API or local logic is needed.
-- Add tests for repository logic (mock dependencies).
+## Feature Creation Workflow
 
-## STEP 4: Add Logic Layer
-- Implement **Riverpod providers/state notifiers** in `logic/`.
-- Providers depend on repositories via DI (`core/di/main_providers.dart`).
+### STEP 1: Domain Layer (Pure Dart)
+- Entities in `domain/entities/<feature>/`
+- Repository interface in `domain/repositories/`
+- Use cases in `domain/usecases/<feature>/`
+- Exceptions in `domain/exceptions/`
+- Constants in `domain/entities/<feature>/`
 
-## STEP 5: Build UI Layer
-- Create screens, widgets, and forms under `ui/`.
-- Use providers to read/update data.
-- Follow design tokens and accessibility guidelines.
+### STEP 2: Data Layer
+- Drift tables in `data/local/models/`
+- DAO in `data/local/daos/`
+- Mappers in `data/mappers/`
+- Repository impl in `data/repositories/`
 
-## STEP 6: Testing
-- Add:
-  - Unit tests for domain/usecases
-  - Repository tests for data mapping
-  - Widget tests for UI states
-- Use `testing.mdc` rules for naming and structure.
+### STEP 3: Feature Layer
+- Logic (providers/state) in `features/<feature>/logic/`
+- UI (screens/widgets) in `features/<feature>/ui/`
 
-## STEP 7: Integration
-- Register providers in `core/di/main_providers.dart`.
-- Add navigation routes in `app/router/`.
-- Ensure localization if user-facing.
+### STEP 4: Integration
+- Register providers in `core/di/main_providers.dart`
+- Add routes in `app/router/`
 
-## STEP 8: Review
-- Verify naming follows `dart-rules.mdc`.
-- Ensure repository boundaries follow **system_design.md**.
-- Add doc comments for all public classes and methods.
+### STEP 5: Testing
+- Test plan, fakes, runners, and tests (see Testing Checklist)
+
+## Testing Checklist
+
+1. **Create test plan**: `test/plans/<feature>_test_plan.md`
+2. **Create fake builders**: `test/mocks/fake_data/<feature>_fakes.dart`
+3. **Export mocks**: Add to `test/mocks/mock_repositories.dart`
+4. **Add tag to dart_test.yaml**: Under `tags:` section
+5. **Tag all test files**: `@Tags(['<feature>'])`
+6. **Create test runners**: `test/runners/<feature>/` (quick, unit, all)
+7. **Write tests** (in order):
+   - Domain entity tests
+   - Domain exception tests
+   - Domain use case tests (mock repository)
+   - Data mapper tests
+   - Data DAO tests (in-memory DB)
+   - Data repository tests
+   - Logic/provider tests
+   - Integration tests (optional)
+   - Performance tests (optional)
 
 # FEATURE NAMING RULES
 - Feature names in snake_case → `file_upload`, `biomarkers`, `timeline`

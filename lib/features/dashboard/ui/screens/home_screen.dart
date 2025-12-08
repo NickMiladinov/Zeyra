@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase for auth
 
@@ -57,6 +58,26 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.grey[700]),
               ),
               // Add more introductory elements or quick actions here later
+              
+              // Sentry test button (debug builds only)
+              if (kDebugMode) ...[
+                const SizedBox(height: 40),
+                ElevatedButton(
+                  onPressed: () {
+                    throw StateError('This is test exception');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Verify Sentry Setup'),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Debug only: Test Sentry error reporting',
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
             ],
           ),
         ),

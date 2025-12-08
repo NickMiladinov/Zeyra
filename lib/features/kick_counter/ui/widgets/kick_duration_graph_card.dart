@@ -13,21 +13,25 @@ import 'package:zeyra/shared/widgets/app_progress_unlock_banner.dart';
 
 /// Widget displaying a bar graph of time to 10 movements.
 /// 
-/// Shows the last 7 valid sessions (sessions with >= 10 kicks) with:
+/// Shows a progress unlock banner until there are 7 valid sessions.
+/// Once unlocked, displays the last 7 valid sessions (sessions with >= 10 kicks) with:
 /// - Bar chart showing duration in minutes
-/// - Average line (when >= 7 sessions)
+/// - Average line
 /// - Outlier highlighting based on GRAPH-SPECIFIC safe range
-/// - Progress unlock banner (when < 7 sessions)
 /// 
 /// The graph uses its own analytics calculation where all 7 displayed sessions
 /// are evaluated against one safe range calculated from the 14 valid sessions
 /// that occurred before the newest displayed session.
 class KickDurationGraphCard extends ConsumerWidget {
   final List<KickSession> allSessions;
+  
+  /// Optional key to attach to the card container for tooltip highlighting.
+  final GlobalKey? highlightKey;
 
   const KickDurationGraphCard({
     super.key,
     required this.allSessions,
+    this.highlightKey,
   });
 
   @override
@@ -58,6 +62,7 @@ class KickDurationGraphCard extends ConsumerWidget {
     final displayAnalytics = graphSessionAnalytics.reversed.toList();
 
     return Container(
+      key: highlightKey, // Apply highlight key directly to the container
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.paddingLG),
       decoration: BoxDecoration(
@@ -84,10 +89,6 @@ class KickDurationGraphCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.gapMD),
 
-          // Legend (only when enough data for average)
-          if (analytics.hasEnoughDataForAnalytics)
-            _buildLegend(),
-
           // Show unlock banner when < 7 valid sessions
           if (!analytics.hasEnoughDataForAnalytics)
             AppProgressUnlockBanner(
@@ -97,12 +98,10 @@ class KickDurationGraphCard extends ConsumerWidget {
                   'Record {remaining} more complete sessions (10+ movements) to see your baby\'s average pattern',
             ),
           
-          // Show empty state only when NO valid sessions, otherwise show graph
-          if (displaySessions.isEmpty)
-            _buildEmptyState()
-          else ...[
-            if (!analytics.hasEnoughDataForAnalytics)
-              const SizedBox(height: AppSpacing.gapMD),
+          // Only show graph when unlocked (>= 7 valid sessions)
+          if (analytics.hasEnoughDataForAnalytics) ...[
+            _buildLegend(),
+            const SizedBox(height: AppSpacing.gapMD),
             _buildGraph(displaySessions, displayAnalytics, analytics),
           ],
         ],
@@ -167,19 +166,6 @@ class KickDurationGraphCard extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      height: 200,
-      alignment: Alignment.center,
-      child: Text(
-        'No sessions with 10+ movements yet',
-        style: AppTypography.bodyMedium.copyWith(
-          color: AppColors.textSecondary,
-        ),
       ),
     );
   }

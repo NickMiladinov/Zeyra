@@ -17,6 +17,7 @@ Follow feature-based test structure mirroring `lib/features/`.
 - File names: `<class>_test.dart`
 - Test group: `'[Feature] <Behavior>'`
 - Test name: `'should <expected behavior> when <condition>'`
+- **Tags**: When adding new `@Tags([...])` to test files, always add them to `dart_test.yaml` under the `tags:` section.
 
 # MOCKING
 - Use `mocktail` for mocks.

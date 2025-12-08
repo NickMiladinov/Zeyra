@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/core/services/encryption_service.dart';
+import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
@@ -14,11 +15,13 @@ import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 
 // Mock for FlutterSecureStorage
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
   late EncryptionService encryptionService;
   late MockFlutterSecureStorage mockSecureStorage;
+  late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
   late ManageSessionUseCase useCase;
 
@@ -32,6 +35,8 @@ void main() {
     when(() => mockSecureStorage.read(key: any(named: 'key')))
         .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
     
+    mockLogger = MockLoggingService();
+    
     // Create in-memory database and encryption service with mock storage
     database = AppDatabase.forTesting(NativeDatabase.memory());
     encryptionService = EncryptionService(secureStorage: mockSecureStorage);
@@ -40,6 +45,7 @@ void main() {
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
       encryptionService: encryptionService,
+      logger: mockLogger,
     );
     
     useCase = ManageSessionUseCase(repository: repository);

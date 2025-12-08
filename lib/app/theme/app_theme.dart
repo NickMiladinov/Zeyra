@@ -381,17 +381,5 @@ class AppTheme {
       fontFamily: AppTypography.secondaryFontFamily,
     );
   }
-
-  // ============================================================================
-  // DARK THEME (Optional - Add if needed)
-  // ============================================================================
-  // TODO: Implement dark theme if your app supports it
-  // static ThemeData get darkTheme {
-  //   return ThemeData(
-  //     useMaterial3: true,
-  //     brightness: Brightness.dark,
-  //     // ... similar structure to lightTheme but with dark colors
-  //   );
-  // }
 }
 

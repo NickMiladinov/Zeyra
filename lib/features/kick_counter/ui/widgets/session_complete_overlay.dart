@@ -74,7 +74,9 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
   }
 
   String _formatDuration() {
-    final minutes = widget.duration.inMinutes;
+    // Round to nearest minute (minimum 1 minute)
+    final seconds = widget.duration.inSeconds;
+    final minutes = seconds > 0 ? ((seconds + 30) / 60).floor().clamp(1, 999) : 1;
     return '$minutes minute${minutes == 1 ? '' : 's'}';
   }
 

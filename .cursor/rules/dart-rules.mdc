@@ -79,6 +79,9 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 
 # DEPENDENCY INJECTION
 - Register all global providers in `core/di/main_providers.dart`.
+- **All async service initialization must happen in `DIGraph.initialize()`** in `core/di/di_graph.dart`.
+- Service initialization order is critical - documented in `di_graph.dart` (do not change).
+- Access initialized services via providers or `DIGraph.*` getters.
 - Never use singletons outside DI.
 - Avoid runtime service locators; prefer compile-time DI.
 

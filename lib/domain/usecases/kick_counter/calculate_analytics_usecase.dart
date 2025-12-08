@@ -240,7 +240,10 @@ class CalculateAnalyticsUseCase {
     }
 
     // Calculate overall history analytics from all valid sessions
-    final overallAnalytics = calculateHistoryAnalytics(sessions);
+    // Return empty analytics if not enough data for meaningful analysis
+    final overallAnalytics = hasEnoughData
+        ? calculateHistoryAnalytics(sessions)
+        : const KickHistoryAnalytics(validSessionCount: 0);
 
     return (overallAnalytics, sessionAnalyticsList);
   }

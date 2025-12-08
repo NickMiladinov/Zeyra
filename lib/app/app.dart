@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 import 'package:zeyra/features/auth/ui/widgets/auth_gate.dart';
 import 'package:zeyra/features/kick_counter/ui/widgets/kick_counter_banner_overlay.dart';
 import 'package:zeyra/app/theme/app_theme.dart';
+import 'package:zeyra/main.dart' show logger;
 
 class App extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
@@ -19,6 +21,10 @@ class App extends StatelessWidget {
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         home: const AuthGate(),
+        // Navigation observer for logging route changes
+        navigatorObservers: [
+          TalkerRouteObserver(logger.talker),
+        ],
         // Wrap all routes with KickCounterBannerOverlay for global banner visibility
         builder: (context, child) {
           return KickCounterBannerOverlay(

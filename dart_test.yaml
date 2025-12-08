@@ -35,6 +35,12 @@ tags:
   kick_counter:
     # Standard timeout for kick counter tests
   
+  widgets:
+    # Widget tests (UI component tests)
+  
+  tooltip:
+    # Tooltip-specific tests
+  
   performance:
     # Performance tests get longer timeout
     timeout: 2m

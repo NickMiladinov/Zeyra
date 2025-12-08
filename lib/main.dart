@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:zeyra/core/constants/app_constants.dart';
-import 'package:zeyra/app/app.dart'; // Import the App widget
-import 'package:zeyra/core/services/app_auth_listener.dart'; // Import the new listener
+import 'package:zeyra/app/app.dart';
+import 'package:zeyra/core/di/di_graph.dart';
+import 'package:zeyra/core/monitoring/logging_service.dart';
 
-// Global NavigatorKey - can be used by App widget
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+// Global logging service instance
+// Initialized by DIGraph.initialize() during app startup
+late final LoggingService logger;
 
+/// App entry point.
+/// 
+/// Initializes all services via DIGraph before starting the app.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await AppConstants.loadEnv();
+  // Initialize all services and get the navigator key
+  // This handles: environment, Sentry, logging, encryption, Supabase, auth listener, preferences
+  final navigatorKey = await DIGraph.initialize();
 
-  // Initialize Supabase with values from AppConstants
-  await Supabase.initialize(
-    url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
-  );
-
-  // Initialize and start the global authentication listener.
-  AppAuthListener(navigatorKey: navigatorKey).init();
-
-  // Run the App widget, which contains ProviderScope and MaterialApp
-  runApp(App(navigatorKey: navigatorKey)); // Pass navigatorKey to App
+  // Run the app with the initialized navigator key
+  runApp(App(navigatorKey: navigatorKey));
 }

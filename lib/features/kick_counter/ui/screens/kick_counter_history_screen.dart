@@ -16,6 +16,9 @@ import 'package:zeyra/features/kick_counter/ui/widgets/kick_duration_graph_card.
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
+import 'package:zeyra/shared/widgets/app_jit_tooltip.dart';
+import 'package:zeyra/shared/providers/tooltip_provider.dart';
+import 'package:zeyra/shared/providers/navigation_provider.dart';
 
 class KickCounterHistoryScreen extends ConsumerStatefulWidget {
   const KickCounterHistoryScreen({super.key});
@@ -25,7 +28,172 @@ class KickCounterHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScreen> {
+  // GlobalKeys for tooltip highlighting - created fresh each time to avoid stale references
+  late final GlobalKey _firstSessionCardKey;
+  late final GlobalKey _graphCardKey;
   
+  // Track if tooltips have been checked this session
+  bool _tooltipsChecked = false;
+  
+  // Queue of pending tooltips to show sequentially
+  final List<_TooltipData> _tooltipQueue = [];
+  bool _isShowingTooltip = false;
+
+  // Track previous history state to detect relevant changes
+  int _previousHistoryCount = 0;
+  int _previousValidSessionCount = 0;
+
+  // TODO: Remove this flag before release - for testing tooltips on every session
+  static const bool _skipShownCheck = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create fresh GlobalKeys to avoid any stale state from previous screen instances
+    _firstSessionCardKey = GlobalKey(debugLabel: 'firstSessionCard');
+    _graphCardKey = GlobalKey(debugLabel: 'graphCard');
+    
+    // Schedule initial tooltip check after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndShowTooltips();
+    });
+    
+    // Listen for history changes to re-check tooltips when relevant conditions are met
+    // (e.g., first session recorded while on this screen)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _setupHistoryListener();
+    });
+  }
+  
+  /// Set up a listener for history changes to trigger tooltip re-checks.
+  /// 
+  /// This handles the case where a user completes their first session
+  /// and stays on the history screen - the tooltip should appear when
+  /// the history updates, not only on screen entry.
+  void _setupHistoryListener() {
+    ref.listenManual(kickHistoryProvider, (previous, next) {
+      if (!mounted) return;
+      
+      final history = next.history;
+      final validSessionCount = history
+          .where((s) => s.kicks.length >= 10 && s.durationToTenthKick != null)
+          .length;
+      
+      // Check if relevant conditions for tooltips have been met
+      final firstSessionJustRecorded = _previousHistoryCount == 0 && history.isNotEmpty;
+      final graphJustUnlocked = _previousValidSessionCount < 7 && validSessionCount >= 7;
+      
+      // Update tracked counts
+      _previousHistoryCount = history.length;
+      _previousValidSessionCount = validSessionCount;
+      
+      // Re-trigger tooltip check if a relevant condition was just met
+      if (firstSessionJustRecorded || graphJustUnlocked) {
+        _tooltipsChecked = false; // Allow re-check
+        // Small delay to ensure UI has updated with new data
+        Future.delayed(const Duration(milliseconds: 200), () {
+          if (mounted) _checkAndShowTooltips();
+        });
+      }
+    });
+  }
+
+  /// Check conditions and queue appropriate tooltips.
+  void _checkAndShowTooltips() {
+    if (_tooltipsChecked) return;
+    _tooltipsChecked = true;
+
+    final tooltipState = ref.read(tooltipProvider);
+    final historyState = ref.read(kickHistoryProvider);
+    final history = historyState.history;
+
+    // Don't show tooltips if still loading (unless skipping check for testing)
+    if (!_skipShownCheck && (!tooltipState.isLoaded || historyState.isLoading)) {
+      // Retry after a short delay
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        _tooltipsChecked = false;
+        _checkAndShowTooltips();
+      });
+      return;
+    }
+
+    // Wait for history to load even in test mode
+    if (historyState.isLoading) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        _tooltipsChecked = false;
+        _checkAndShowTooltips();
+      });
+      return;
+    }
+
+    // Count valid sessions (10+ kicks)
+    final validSessionCount = history
+        .where((s) => s.kicks.length >= 10 && s.durationToTenthKick != null)
+        .length;
+
+    // Helper to check if tooltip should show
+    bool shouldShow(String tooltipId, bool conditionMet) {
+      if (_skipShownCheck) return conditionMet;
+      return tooltipState.shouldShow(tooltipId, conditionMet);
+    }
+
+    // Queue tooltips in priority order (graph unlocked first, then first session)
+    if (shouldShow(KickCounterTooltipIds.graphUnlocked, validSessionCount >= 7)) {
+      _tooltipQueue.add(_TooltipData(
+        id: KickCounterTooltipIds.graphUnlocked,
+        targetKey: _graphCardKey,
+        config: const JitTooltipConfig(
+          title: 'We\'ve found their rhythm! 🎉',
+          message: 'The green shaded area is your baby\'s \'Safe Range\'. If sessions take longer than this, let your midwife or maternity unit know.',
+          position: TooltipPosition.below,
+        ),
+      ));
+    }
+
+    if (shouldShow(KickCounterTooltipIds.firstSession, history.isNotEmpty)) {
+      _tooltipQueue.add(_TooltipData(
+        id: KickCounterTooltipIds.firstSession,
+        targetKey: _firstSessionCardKey,
+        config: const JitTooltipConfig(
+          message: 'Tap any session to view details, add notes, or delete it.',
+          position: TooltipPosition.below,
+        ),
+      ));
+    }
+
+    // Start showing tooltips from the queue
+    _showNextTooltip();
+  }
+
+  /// Show the next tooltip in the queue, if any.
+  void _showNextTooltip() {
+    if (!mounted || _isShowingTooltip || _tooltipQueue.isEmpty) return;
+
+    _isShowingTooltip = true;
+    final tooltipData = _tooltipQueue.removeAt(0);
+
+    AppJitTooltip.show(
+      context: context,
+      targetKey: tooltipData.targetKey,
+      config: tooltipData.config,
+      onDismiss: () {
+        // Mark tooltip as shown (persists to SharedPreferences)
+        ref.read(tooltipProvider.notifier).dismissTooltip(tooltipData.id);
+        
+        _isShowingTooltip = false;
+        
+        // Show next tooltip after a brief delay for smooth transition
+        if (_tooltipQueue.isNotEmpty) {
+          Future.delayed(const Duration(milliseconds: 300), () {
+            if (mounted) _showNextTooltip();
+          });
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final historyState = ref.watch(kickHistoryProvider);
@@ -66,10 +234,11 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
                   _buildInfoCard(),
                   const SizedBox(height: AppSpacing.gapXL),
 
-                  // Graph card
+                  // Graph card (key passed directly to container for tooltip highlighting)
                   if (historyState.analytics != null)
                     KickDurationGraphCard(
                       allSessions: history,
+                      highlightKey: _graphCardKey,
                     ),
                   const SizedBox(height: AppSpacing.gapXL),
 
@@ -92,6 +261,8 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
                         session: session,
                         sessionAnalytics: sessionAnalytic,
                         onTap: () => _showSessionDetail(session),
+                        // Pass key for first item only (for tooltip highlighting)
+                        highlightKey: index == 0 ? _firstSessionCardKey : null,
                       );
                     }),
                 ],
@@ -105,6 +276,8 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
           maxHeight: AppSpacing.buttonHeightLG,
         ),
         child: FloatingActionButton.extended(
+          // Unique hero tag to prevent conflicts during page transitions
+          heroTag: 'kick_counter_start_tracking_fab',
           onPressed: () {
             Navigator.of(context).push(
               PageRouteBuilder(
@@ -147,11 +320,11 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 3, // Tools tab
         onTap: (index) {
-          // TODO: Handle navigation based on index
-          // For now, just pop if navigating away
-          if (index != 3) {
-            Navigator.of(context).pop();
-          }
+          // Always navigate back to MainScreen when tapping any tab
+          // This provides consistent behavior: tapping the current tab
+          // (Tools) goes back to the main Tools screen
+          final navService = NavigationService(context, ref);
+          navService.navigateToTab(index);
         },
       ),
     );
@@ -240,15 +413,31 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
   }
 }
 
+/// Helper class to hold tooltip data for the queue.
+class _TooltipData {
+  final String id;
+  final GlobalKey targetKey;
+  final JitTooltipConfig config;
+
+  const _TooltipData({
+    required this.id,
+    required this.targetKey,
+    required this.config,
+  });
+}
+
 class _SessionHistoryItem extends StatelessWidget {
   final KickSession session;
   final KickSessionAnalytics? sessionAnalytics;
   final VoidCallback onTap;
+  /// Optional key to attach to the card for tooltip highlighting.
+  final GlobalKey? highlightKey;
 
   const _SessionHistoryItem({
     required this.session,
     this.sessionAnalytics,
     required this.onTap,
+    this.highlightKey,
   });
 
   String _formatDate(DateTime date) {
@@ -298,116 +487,125 @@ class _SessionHistoryItem extends StatelessWidget {
       statusIcon = AppIcons.schedule;
     }
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppSpacing.marginMD),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppEffects.radiusLG),
-          boxShadow: AppEffects.shadowXS,
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            children: [
-              // Left stripe indicator (only for abnormal sessions)
-              if (stripeColor != null)
-                Container(
-                  width: AppSpacing.borderWidthThick,
-                  decoration: BoxDecoration(
-                    color: stripeColor.withValues(alpha: 0.5),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(AppEffects.radiusLG),
-                      bottomLeft: Radius.circular(AppEffects.radiusLG),
-                    ),
-                  ),
-                ),
-              
-              // Main content
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.paddingLG),
-                  child: Row(
-                    children: [
-                      // Icon Container
-                      Container(
-                        width: AppSpacing.xxxl,
-                        height: AppSpacing.xxxl,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryLight,
-                          borderRadius: AppEffects.roundedCircle,
-                        ),
-                        child: Icon(AppIcons.favorite, fill: 1, color: AppColors.primary, size: AppSpacing.iconSM),
-                      ),
-                      const SizedBox(width: AppSpacing.gapMD),
-                      
-                      // Details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  _formatDate(session.startTime),
-                                  style: AppTypography.bodyLarge,
-                                ),
-                                Text(
-                                  '$durationMin min',
-                                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.gapXS),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Left side: movement count and note icon
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${session.kickCount} movements',
-                                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
-                                    ),
-                                    if (hasNote) ...[
-                                      const SizedBox(width: AppSpacing.gapSM),
-                                      Icon(
-                                        AppIcons.chat,
-                                        size: AppSpacing.iconXXS,
-                                        color: AppColors.iconDefault,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                // Right side: status label (only for abnormal sessions)
-                                if (statusLabel != null && statusIcon != null)
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        statusIcon,
-                                        size: AppSpacing.iconXXS,
-                                        color: stripeColor,
-                                      ),
-                                      const SizedBox(width: AppSpacing.gapXS),
-                                      Text(
-                                        statusLabel,
-                                        style: AppTypography.labelSmall.copyWith(color: stripeColor),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+    // Build the card - key is on the container itself (not including margin)
+    // Explicit width ensures consistent highlight positioning in tooltip
+    final card = Container(
+      key: highlightKey,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+        boxShadow: AppEffects.shadowXS,
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            // Left stripe indicator (only for abnormal sessions)
+            if (stripeColor != null)
+              Container(
+                width: AppSpacing.borderWidthThick,
+                decoration: BoxDecoration(
+                  color: stripeColor.withValues(alpha: 0.5),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppEffects.radiusLG),
+                    bottomLeft: Radius.circular(AppEffects.radiusLG),
                   ),
                 ),
               ),
-            ],
-          ),
+            
+            // Main content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.paddingLG),
+                child: Row(
+                  children: [
+                    // Icon Container
+                    Container(
+                      width: AppSpacing.xxxl,
+                      height: AppSpacing.xxxl,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: AppEffects.roundedCircle,
+                      ),
+                      child: Icon(AppIcons.favorite, fill: 1, color: AppColors.primary, size: AppSpacing.iconSM),
+                    ),
+                    const SizedBox(width: AppSpacing.gapMD),
+                    
+                    // Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _formatDate(session.startTime),
+                                style: AppTypography.bodyLarge,
+                              ),
+                              Text(
+                                '$durationMin min',
+                                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.gapXS),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Left side: movement count and note icon
+                              Row(
+                                children: [
+                                  Text(
+                                    '${session.kickCount} movements',
+                                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                  if (hasNote) ...[
+                                    const SizedBox(width: AppSpacing.gapSM),
+                                    Icon(
+                                      AppIcons.chat,
+                                      size: AppSpacing.iconXXS,
+                                      color: AppColors.iconDefault,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              // Right side: status label (only for abnormal sessions)
+                              if (statusLabel != null && statusIcon != null)
+                                Row(
+                                  children: [
+                                    Icon(
+                                      statusIcon,
+                                      size: AppSpacing.iconXXS,
+                                      color: stripeColor,
+                                    ),
+                                    const SizedBox(width: AppSpacing.gapXS),
+                                    Text(
+                                      statusLabel,
+                                      style: AppTypography.labelSmall.copyWith(color: stripeColor),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+
+    // Wrap with GestureDetector and add margin separately (margin not included in highlight)
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.marginMD),
+      child: GestureDetector(
+        onTap: onTap,
+        child: card,
       ),
     );
   }

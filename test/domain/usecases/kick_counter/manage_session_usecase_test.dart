@@ -6,14 +6,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_counter_constants.dart';
 import 'package:zeyra/domain/exceptions/kick_counter_exception.dart';
-import 'package:zeyra/domain/repositories/kick_counter_repository.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 
 import '../../../mocks/fake_data/kick_counter_fakes.dart';
-
-// Mock repository
-class MockKickCounterRepository extends Mock
-    implements KickCounterRepository {}
 
 void main() {
   late MockKickCounterRepository mockRepository;

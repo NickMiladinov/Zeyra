@@ -2,20 +2,24 @@
 library;
 
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/core/services/encryption_service.dart';
+import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
+class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
   late EncryptionService encryptionService;
   late MockFlutterSecureStorage mockSecureStorage;
+  late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
 
   setUp(() async {
@@ -26,6 +30,8 @@ void main() {
     when(() => mockSecureStorage.read(key: any(named: 'key')))
         .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
     
+    mockLogger = MockLoggingService();
+    
     database = AppDatabase.forTesting(NativeDatabase.memory());
     encryptionService = EncryptionService(secureStorage: mockSecureStorage);
     await encryptionService.initialize();
@@ -33,6 +39,7 @@ void main() {
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
       encryptionService: encryptionService,
+      logger: mockLogger,
     );
   });
 
@@ -84,7 +91,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(30000),
             reason: 'Creating 500 sessions took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Created 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Created 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 60)));
 
       test('should retrieve 500 sessions efficiently', () async {
@@ -107,7 +114,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(5000),
             reason: 'Retrieving 500 sessions took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Retrieved 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Retrieved 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 30)));
 
       test('should paginate through 500 sessions efficiently', () async {
@@ -147,7 +154,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(10000),
             reason: 'Paginating 500 sessions took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Paginated 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Paginated 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 60)));
 
       test('should handle deletion of 500 sessions efficiently', () async {
@@ -173,7 +180,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(15000),
             reason: 'Deleting 500 sessions took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Deleted 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Deleted 500 sessions in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 45)));
     });
 
@@ -206,7 +213,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(5000),
             reason: 'Adding 100 kicks took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Added 100 kicks in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Added 100 kicks in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 15)));
 
       test('should retrieve session with 100 kicks efficiently', () async {
@@ -228,7 +235,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(3000),
             reason: '10 retrievals of 100-kick session took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Retrieved 100-kick session 10 times in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Retrieved 100-kick session 10 times in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 15)));
 
       test('should calculate statistics on 100-kick session efficiently',
@@ -257,7 +264,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(5000),
             reason: '50 stat calculations took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Calculated stats 50 times in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Calculated stats 50 times in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 20)));
 
       test('should handle undo operations on 100-kick session efficiently',
@@ -281,7 +288,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(3000),
             reason: 'Removing 50 kicks took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Removed 50 kicks in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Removed 50 kicks in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 15)));
     });
 
@@ -317,7 +324,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(20000),
             reason: '50 sessions with 50 kicks each took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Created 50 sessions with 50 kicks each in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Created 50 sessions with 50 kicks each in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(minutes: 2)));
 
       test('should handle rapid pause/resume on 100-kick session', () async {
@@ -345,7 +352,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(10000),
             reason: '100 kicks with 9 pauses took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ 100 kicks with 9 pause/resume cycles in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ 100 kicks with 9 pause/resume cycles in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 30)));
 
       test('should handle querying history with varying limits', () async {
@@ -369,7 +376,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(3000),
             reason: 'Multiple limit queries took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Varied limit queries in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Varied limit queries in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 30)));
     });
 
@@ -396,7 +403,7 @@ void main() {
         }
         createStopwatch.stop();
         
-        print('  Setup: Created 10 sessions with 100 kicks in ${createStopwatch.elapsedMilliseconds}ms');
+        debugPrint('  Setup: Created 10 sessions with 100 kicks in ${createStopwatch.elapsedMilliseconds}ms');
         
         // Act - Retrieve all sessions (requires decryption)
         final retrieveStopwatch = Stopwatch()..start();
@@ -414,7 +421,7 @@ void main() {
         expect(retrieveStopwatch.elapsedMilliseconds, lessThan(10000),
             reason: 'Decrypting 1000 kicks took ${retrieveStopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Encrypted/decrypted 1000 kicks - Create: ${createStopwatch.elapsedMilliseconds}ms, Retrieve: ${retrieveStopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Encrypted/decrypted 1000 kicks - Create: ${createStopwatch.elapsedMilliseconds}ms, Retrieve: ${retrieveStopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(minutes: 2)));
     });
 
@@ -443,7 +450,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(15000),
             reason: '500 loads took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Loaded session 500 times in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Loaded session 500 times in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(seconds: 45)));
 
       test('should handle history queries without accumulating memory',
@@ -469,7 +476,7 @@ void main() {
         expect(stopwatch.elapsedMilliseconds, lessThan(20000),
             reason: '100 history queries took ${stopwatch.elapsedMilliseconds}ms');
         
-        print('✓ Queried history 100 times in ${stopwatch.elapsedMilliseconds}ms');
+        debugPrint('✓ Queried history 100 times in ${stopwatch.elapsedMilliseconds}ms');
       }, timeout: const Timeout(Duration(minutes: 1)));
     });
   });

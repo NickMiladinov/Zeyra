@@ -10,7 +10,6 @@ class Fixtures {
     return await file.readAsString();
   }
 
-  // TODO: Add specific fixture loaders as needed
   // Example:
   // static Future<UserProfile> loadUserProfile() async {
   //   final json = await loadFixture('user_profile.json');

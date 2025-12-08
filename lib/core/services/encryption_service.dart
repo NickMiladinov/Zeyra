@@ -14,6 +14,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// - Confidentiality (encryption)
 /// - Authentication (tamper detection via auth tag)
 /// - Performance (hardware acceleration via cryptography_flutter)
+/// 
+/// **Initialization:** This service is initialized in `DIGraph.initialize()` during app startup.
+/// Access via `encryptionServiceProvider` or `DIGraph.encryptionService`.
 class EncryptionService {
   static const String _keyStorageKey = 'zeyra_encryption_key';
 

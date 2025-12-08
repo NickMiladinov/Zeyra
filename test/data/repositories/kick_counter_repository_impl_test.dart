@@ -5,24 +5,29 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/core/services/encryption_service.dart';
+import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
 class MockEncryptionService extends Mock implements EncryptionService {}
+class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
   late MockEncryptionService mockEncryptionService;
+  late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
 
   setUp(() {
     // Create in-memory database for testing
     database = AppDatabase.forTesting(NativeDatabase.memory());
     mockEncryptionService = MockEncryptionService();
+    mockLogger = MockLoggingService();
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
       encryptionService: mockEncryptionService,
+      logger: mockLogger,
     );
 
     // Register fallback values

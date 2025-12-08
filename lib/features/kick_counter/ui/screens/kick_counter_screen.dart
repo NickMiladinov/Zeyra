@@ -18,38 +18,28 @@ class KickCounterScreen extends ConsumerStatefulWidget {
 
 class _KickCounterScreenState extends ConsumerState<KickCounterScreen> {
   bool _hasShownOverlay = false;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _maybeShowIntroOverlay();
-  }
-
-  void _maybeShowIntroOverlay() {
-    // Prevent showing multiple times during rebuild
-    if (_hasShownOverlay) return;
-
-    final hasStarted = ref.read(kickCounterOnboardingProvider);
-
-    // Wait for the preference to be loaded
-    if (hasStarted == null) return;
-
-    // TODO: Temporarily showing overlay every time for testing.
-    // Revert to: if (!hasStarted) { ... }
-    // to only show on first launch.
-    
-    // Show overlay after the current frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_hasShownOverlay) {
-        _hasShownOverlay = true;
-        KickCounterIntroOverlay.show(context);
-      }
-    });
-  }
+  bool? _previousHasStarted;
 
   @override
   Widget build(BuildContext context) {
     final hasStarted = ref.watch(kickCounterOnboardingProvider);
+
+    // Check if we should show the intro overlay when the provider transitions
+    // from loading (null) to loaded (false = never started)
+    if (!_hasShownOverlay && 
+        _previousHasStarted == null && 
+        hasStarted == false) {
+      _hasShownOverlay = true;
+      // Show overlay after the current frame to avoid build-time navigation
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          KickCounterIntroOverlay.show(context);
+        }
+      });
+    }
+    
+    // Track previous value for detecting transitions
+    _previousHasStarted = hasStarted;
 
     if (hasStarted == null) {
       // Loading state for preference

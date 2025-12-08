@@ -12,8 +12,12 @@ dependencies:
     sdk: flutter
   supabase_flutter: ^2.0.0 # Check for the latest version
   flutter_dotenv: ^5.0.0 # Check for the latest version
-  logger: ^2.0.0 # Check for the latest version
   flutter_riverpod: ^2.6.1 # For state management
+  
+  # Logging and monitoring
+  talker: ^4.1.0 # Advanced logging framework
+  talker_flutter: ^4.1.0 # Flutter UI for Talker logs
+  sentry_flutter: ^8.0.0 # Error tracking and monitoring
 
   # File handling and security
   file_picker: ^8.0.0 # Check for the latest version
@@ -23,6 +27,7 @@ dependencies:
 
   intl: ^0.20.2 # For date formatting
   meta: ^1.12.0 # For annotations like @visibleForTesting
+  package_info_plus: ^8.0.0 # For reading app version automatically
   
   # Database and encryption
   drift: ^2.16.0 # Local database with type-safe queries

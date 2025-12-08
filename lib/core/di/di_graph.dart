@@ -1,14 +1,174 @@
 /// Explicit DI graph visualizer/initializer.
 /// 
 /// This file provides visibility into the dependency injection graph
-/// and handles initialization of the DI container if needed.
+/// and handles initialization of all async services during app startup.
+/// 
+/// **Initialization Order (CRITICAL - DO NOT CHANGE):**
+/// 1. Environment variables (required by other services)
+/// 2. Sentry (to catch errors from subsequent initializations)
+/// 3. Logging (depends on Sentry)
+/// 4. Encryption (for medical data security)
+/// 5. Supabase (backend & auth)
+/// 6. Auth listener (depends on Supabase)
+/// 7. SharedPreferences → TooltipPreferencesService
+/// 
 library;
 
+import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../constants/app_constants.dart';
+import '../monitoring/logging_service.dart';
+import '../monitoring/sentry_service.dart';
+import '../services/app_auth_listener.dart';
+import '../services/encryption_service.dart';
+import '../services/tooltip_preferences_service.dart';
+import '../../main.dart' show logger;
+
 class DIGraph {
+  // Singleton instances of initialized services
+  static SentryService? _sentryService;
+  static EncryptionService? _encryptionService;
+  static TooltipPreferencesService? _tooltipPreferencesService;
+  static AppAuthListener? _appAuthListener;
+  
+  /// Get the initialized Sentry service.
+  static SentryService get sentryService {
+    if (_sentryService == null) {
+      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+    }
+    return _sentryService!;
+  }
+  
+  /// Get the initialized encryption service.
+  static EncryptionService get encryptionService {
+    if (_encryptionService == null) {
+      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+    }
+    return _encryptionService!;
+  }
+  
+  /// Get the initialized tooltip preferences service.
+  static TooltipPreferencesService get tooltipPreferencesService {
+    if (_tooltipPreferencesService == null) {
+      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+    }
+    return _tooltipPreferencesService!;
+  }
+
+  /// Check if Supabase is properly initialized and available.
+  static bool get isSupabaseAvailable {
+    try {
+      // Try to access Supabase instance to verify it's initialized
+      // This will throw if Supabase.initialize() hasn't been called
+      final _ = Supabase.instance.client.auth;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Initialize the dependency injection graph.
-  /// Call this method during app startup if any DI setup is required.
-  static Future<void> initialize() async {
-    // TODO: Add any DI initialization logic here
+  /// 
+  /// **Must be called in main() before runApp().**
+  /// 
+  /// Initializes all async services in the correct dependency order.
+  /// Returns the global navigator key for use in the app.
+  static Future<GlobalKey<NavigatorState>> initialize() async {
+    // Create global navigator key
+    final navigatorKey = GlobalKey<NavigatorState>();
+
+    // 1. Load environment variables (required by Sentry and Supabase)
+    await AppConstants.loadEnv();
+
+    // 2. Get app version for Sentry release tracking
+    final packageInfo = await PackageInfo.fromPlatform();
+    final appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+
+    // 3. Initialize Sentry for remote error tracking (FIRST - catches all errors)
+    _sentryService = SentryService();
+    await _sentryService!.initialize(
+      dsn: AppConstants.sentryDsn,
+      release: appVersion,
+    );
+
+    // 4. Initialize logging service (depends on Sentry)
+    logger = LoggingService(sentryService: _sentryService!);
+    logger.info('App starting - DIGraph initialization');
+
+    // 5. Initialize encryption service (for medical data security)
+    _encryptionService = EncryptionService();
+    try {
+      await _encryptionService!.initialize();
+      logger.info('Encryption service initialized');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to initialize encryption service',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Critical failure - encryption is required for medical data
+      rethrow;
+    }
+
+    // 6. Initialize Supabase (backend & auth)
+    bool supabaseInitialized = false;
+    try {
+      await Supabase.initialize(
+        url: AppConstants.supabaseUrl,
+        anonKey: AppConstants.supabaseAnonKey,
+        authOptions: const FlutterAuthClientOptions(
+          // Auto-refresh tokens before they expire
+          autoRefreshToken: true,
+        ),
+        // Configure realtime client options for better resilience
+        realtimeClientOptions: const RealtimeClientOptions(
+          eventsPerSecond: 2,
+        ),
+      );
+      supabaseInitialized = true;
+      logger.info('Supabase initialized');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to initialize Supabase - auth will be unavailable',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Continue app startup even if Supabase fails
+      // User will be shown login screen but won't be able to authenticate
+    }
+
+    // 7. Initialize and start global authentication listener (depends on Supabase)
+    // Only initialize if Supabase is available
+    if (supabaseInitialized && isSupabaseAvailable) {
+      _appAuthListener = AppAuthListener(navigatorKey: navigatorKey);
+      _appAuthListener!.init();
+      logger.info('Auth listener initialized');
+    } else {
+      logger.warning(
+        'Auth listener NOT initialized - Supabase unavailable. '
+        'User will see login screen but cannot authenticate until network is restored.',
+      );
+    }
+
+    // 8. Initialize SharedPreferences for tooltip preferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _tooltipPreferencesService = TooltipPreferencesService(prefs);
+      logger.info('Tooltip preferences service initialized');
+    } catch (e, stackTrace) {
+      logger.error(
+        'Failed to initialize tooltip preferences',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      // Non-critical - app can continue without tooltip tracking
+    }
+
+    logger.info('DIGraph initialization complete');
+    return navigatorKey;
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/services/encryption_service.dart';
+import '../../core/monitoring/logging_service.dart';
 import '../../domain/entities/kick_counter/kick.dart';
 import '../../domain/entities/kick_counter/kick_session.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
@@ -17,14 +18,17 @@ import '../mappers/pause_event_mapper.dart';
 class KickCounterRepositoryImpl implements KickCounterRepository {
   final KickCounterDao _dao;
   final EncryptionService _encryptionService;
+  final LoggingService _logger;
   final Uuid _uuid;
 
   KickCounterRepositoryImpl({
     required KickCounterDao dao,
     required EncryptionService encryptionService,
+    required LoggingService logger,
     Uuid? uuid,
   })  : _dao = dao,
         _encryptionService = encryptionService,
+        _logger = logger,
         _uuid = uuid ?? const Uuid();
 
   // --------------------------------------------------------------------------
@@ -33,39 +37,54 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
 
   @override
   Future<KickSession> createSession() async {
-    final now = DateTime.now();
-    final session = KickSessionDto(
-      id: _uuid.v4(),
-      startTimeMillis: now.millisecondsSinceEpoch,
-      endTimeMillis: null,
-      isActive: true,
-      pausedAtMillis: null,
-      totalPausedMillis: 0,
-      pauseCount: 0,
-      note: null,
-      createdAtMillis: now.millisecondsSinceEpoch,
-      updatedAtMillis: now.millisecondsSinceEpoch,
-    );
+    _logger.debug('Creating new kick session');
+    
+    try {
+      final now = DateTime.now();
+      final session = KickSessionDto(
+        id: _uuid.v4(),
+        startTimeMillis: now.millisecondsSinceEpoch,
+        endTimeMillis: null,
+        isActive: true,
+        pausedAtMillis: null,
+        totalPausedMillis: 0,
+        pauseCount: 0,
+        note: null,
+        createdAtMillis: now.millisecondsSinceEpoch,
+        updatedAtMillis: now.millisecondsSinceEpoch,
+      );
 
-    await _dao.insertSession(session);
+      await _dao.insertSession(session);
+      
+      _logger.info('Kick session created successfully');
+      _logger.logDatabaseOperation('INSERT', table: 'kick_sessions', success: true);
 
-    // Return domain entity with empty kicks list
-    return KickSession(
-      id: session.id,
-      startTime: DateTime.fromMillisecondsSinceEpoch(session.startTimeMillis),
-      endTime: session.endTimeMillis != null
-          ? DateTime.fromMillisecondsSinceEpoch(session.endTimeMillis!)
-          : null,
-      isActive: session.isActive,
-      kicks: const [],
-      pausedAt: session.pausedAtMillis != null
-          ? DateTime.fromMillisecondsSinceEpoch(session.pausedAtMillis!)
-          : null,
-      totalPausedDuration: Duration(milliseconds: session.totalPausedMillis),
-      pauseCount: session.pauseCount,
-      note: null,
-      pauseEvents: const [],
-    );
+      // Return domain entity with empty kicks list
+      return KickSession(
+        id: session.id,
+        startTime: DateTime.fromMillisecondsSinceEpoch(session.startTimeMillis),
+        endTime: session.endTimeMillis != null
+            ? DateTime.fromMillisecondsSinceEpoch(session.endTimeMillis!)
+            : null,
+        isActive: session.isActive,
+        kicks: const [],
+        pausedAt: session.pausedAtMillis != null
+            ? DateTime.fromMillisecondsSinceEpoch(session.pausedAtMillis!)
+            : null,
+        totalPausedDuration: Duration(milliseconds: session.totalPausedMillis),
+        pauseCount: session.pauseCount,
+        note: null,
+        pauseEvents: const [],
+      );
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to create kick session',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _logger.logDatabaseOperation('INSERT', table: 'kick_sessions', success: false, error: e);
+      rethrow;
+    }
   }
 
   @override
@@ -122,31 +141,51 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
 
   @override
   Future<void> endSession(String sessionId) async {
-    final sessionDto = await _dao.getSessionWithKicks(sessionId);
-    if (sessionDto == null) return;
+    _logger.debug('Ending kick session');
+    
+    try {
+      final sessionDto = await _dao.getSessionWithKicks(sessionId);
+      if (sessionDto == null) {
+        _logger.warning('Attempted to end non-existent session');
+        return;
+      }
 
-    final now = DateTime.now();
-    
-    // If session is currently paused, add remaining pause time before ending
-    int additionalPauseMillis = 0;
-    if (sessionDto.session.pausedAtMillis != null) {
-      final pausedAt = DateTime.fromMillisecondsSinceEpoch(
-          sessionDto.session.pausedAtMillis!);
-      additionalPauseMillis = now.difference(pausedAt).inMilliseconds;
-    }
-    
-    await _dao.updateSessionFields(
-      sessionId,
-      KickSessionsCompanion(
-        endTimeMillis: Value(now.millisecondsSinceEpoch),
-        isActive: const Value(false),
-        pausedAtMillis: const Value(null), // Clear pausedAt when ending
-        totalPausedMillis: Value(
-          sessionDto.session.totalPausedMillis + additionalPauseMillis,
+      final now = DateTime.now();
+      
+      // If session is currently paused, add remaining pause time before ending
+      int additionalPauseMillis = 0;
+      if (sessionDto.session.pausedAtMillis != null) {
+        final pausedAt = DateTime.fromMillisecondsSinceEpoch(
+            sessionDto.session.pausedAtMillis!);
+        additionalPauseMillis = now.difference(pausedAt).inMilliseconds;
+      }
+      
+      await _dao.updateSessionFields(
+        sessionId,
+        KickSessionsCompanion(
+          endTimeMillis: Value(now.millisecondsSinceEpoch),
+          isActive: const Value(false),
+          pausedAtMillis: const Value(null), // Clear pausedAt when ending
+          totalPausedMillis: Value(
+            sessionDto.session.totalPausedMillis + additionalPauseMillis,
+          ),
+          updatedAtMillis: Value(now.millisecondsSinceEpoch),
         ),
-        updatedAtMillis: Value(now.millisecondsSinceEpoch),
-      ),
-    );
+      );
+      
+      _logger.info('Kick session ended successfully', data: {
+        'kick_count': sessionDto.kicks.length,
+      });
+      _logger.logDatabaseOperation('UPDATE', table: 'kick_sessions', success: true);
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to end kick session',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _logger.logDatabaseOperation('UPDATE', table: 'kick_sessions', success: false, error: e);
+      rethrow;
+    }
   }
 
   @override
@@ -230,42 +269,59 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
 
   @override
   Future<Kick> addKick(String sessionId, MovementStrength strength) async {
-    return _dao.transaction(() async {
-      // Get current kick count to determine sequence number
-      final kickCount = await _dao.getKickCount(sessionId);
+    _logger.debug('Adding kick to session');
+    
+    try {
+      return await _dao.transaction(() async {
+        // Get current kick count to determine sequence number
+        final kickCount = await _dao.getKickCount(sessionId);
 
-      // Encrypt strength
-      final encryptedStrength = await _encryptionService.encrypt(
-        KickSessionMapper.movementStrengthToString(strength),
-      );
+        // Encrypt strength
+        final encryptedStrength = await _encryptionService.encrypt(
+          KickSessionMapper.movementStrengthToString(strength),
+        );
 
-      // Create kick DTO
-      final now = DateTime.now();
-      final kickDto = KickDto(
-        id: _uuid.v4(),
-        sessionId: sessionId,
-        timestampMillis: now.millisecondsSinceEpoch,
-        sequenceNumber: kickCount + 1,
-        perceivedStrength: encryptedStrength,
-      );
+        // Create kick DTO
+        final now = DateTime.now();
+        final kickDto = KickDto(
+          id: _uuid.v4(),
+          sessionId: sessionId,
+          timestampMillis: now.millisecondsSinceEpoch,
+          sequenceNumber: kickCount + 1,
+          perceivedStrength: encryptedStrength,
+        );
 
-      await _dao.insertKick(kickDto);
-      await _dao.updateSessionFields(
-        sessionId,
-        KickSessionsCompanion(
-          updatedAtMillis: Value(now.millisecondsSinceEpoch),
-        ),
-      );
+        await _dao.insertKick(kickDto);
+        await _dao.updateSessionFields(
+          sessionId,
+          KickSessionsCompanion(
+            updatedAtMillis: Value(now.millisecondsSinceEpoch),
+          ),
+        );
 
-      // Return domain entity
-      return Kick(
-        id: kickDto.id,
-        sessionId: kickDto.sessionId,
-        timestamp: DateTime.fromMillisecondsSinceEpoch(kickDto.timestampMillis),
-        sequenceNumber: kickDto.sequenceNumber,
-        perceivedStrength: strength,
+        _logger.debug('Kick added successfully', data: {
+          'sequence_number': kickCount + 1,
+        });
+        _logger.logDatabaseOperation('INSERT', table: 'kicks', success: true);
+
+        // Return domain entity
+        return Kick(
+          id: kickDto.id,
+          sessionId: kickDto.sessionId,
+          timestamp: DateTime.fromMillisecondsSinceEpoch(kickDto.timestampMillis),
+          sequenceNumber: kickDto.sequenceNumber,
+          perceivedStrength: strength,
+        );
+      });
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to add kick',
+        error: e,
+        stackTrace: stackTrace,
       );
-    });
+      _logger.logDatabaseOperation('INSERT', table: 'kicks', success: false, error: e);
+      rethrow;
+    }
   }
 
   @override
