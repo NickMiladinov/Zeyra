@@ -9,9 +9,9 @@ import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
 void main() {
   group('[KickCounter] KickSessionMapper', () {
-    // Helper functions for test
-    String decryptStrength(String encrypted) =>
-        encrypted.replaceFirst('encrypted_', '');
+    // NOTE: With SQLCipher full database encryption, no field-level
+    // encryption/decryption is needed. Data is stored as plaintext in the
+    // encrypted database.
 
     test('should map KickSessionDto to KickSession domain entity', () {
       // Arrange
@@ -32,7 +32,7 @@ void main() {
           sessionId: 'session-1',
           timestampMillis: DateTime(2024, 1, 1, 10, 5).millisecondsSinceEpoch,
           sequenceNumber: 1,
-          perceivedStrength: 'encrypted_moderate',
+          perceivedStrength: 'moderate',
         ),
       ];
       final dtoWithKicks = KickSessionWithKicks(
@@ -41,10 +41,7 @@ void main() {
       );
 
       // Act
-      final domain = KickSessionMapper.toDomain(
-        dtoWithKicks,
-        decryptStrength,
-      );
+      final domain = KickSessionMapper.toDomain(dtoWithKicks);
 
       // Assert
       expect(domain.id, equals('session-1'));
@@ -76,10 +73,7 @@ void main() {
       );
 
       // Act
-      final domain = KickSessionMapper.toDomain(
-        dtoWithKicks,
-        decryptStrength,
-      );
+      final domain = KickSessionMapper.toDomain(dtoWithKicks);
 
       // Assert
       expect(
@@ -88,18 +82,18 @@ void main() {
       );
     });
 
-    test('should map Kick with decrypted strength', () {
+    test('should map Kick with strength', () {
       // Arrange
       final kickDto = KickDto(
         id: 'kick-1',
         sessionId: 'session-1',
         timestampMillis: DateTime(2024, 1, 1, 10, 5).millisecondsSinceEpoch,
         sequenceNumber: 1,
-        perceivedStrength: 'encrypted_strong',
+        perceivedStrength: 'strong',
       );
 
       // Act
-      final kick = KickSessionMapper.kickToDomain(kickDto, 'strong');
+      final kick = KickSessionMapper.kickToDomain(kickDto);
 
       // Assert
       expect(kick.id, equals('kick-1'));
@@ -128,10 +122,7 @@ void main() {
       );
 
       // Act
-      final domain = KickSessionMapper.toDomain(
-        dtoWithKicks,
-        decryptStrength,
-      );
+      final domain = KickSessionMapper.toDomain(dtoWithKicks);
 
       // Assert
       expect(domain.pausedAt, isNull);
@@ -157,10 +148,7 @@ void main() {
       );
 
       // Act
-      final domain = KickSessionMapper.toDomain(
-        dtoWithKicks,
-        decryptStrength,
-      );
+      final domain = KickSessionMapper.toDomain(dtoWithKicks);
 
       // Assert
       expect(domain.endTime, isNull);
@@ -174,11 +162,11 @@ void main() {
         sessionId: 'session-1',
         timestampMillis: DateTime(2024, 1, 1, 10, 5).millisecondsSinceEpoch,
         sequenceNumber: 1,
-        perceivedStrength: 'encrypted_weak',
+        perceivedStrength: 'weak',
       );
 
       // Act
-      final kick = KickSessionMapper.kickToDomain(kickDto, 'weak');
+      final kick = KickSessionMapper.kickToDomain(kickDto);
 
       // Assert
       expect(kick.perceivedStrength, equals(MovementStrength.weak));
@@ -191,11 +179,11 @@ void main() {
         sessionId: 'session-1',
         timestampMillis: DateTime(2024, 1, 1, 10, 5).millisecondsSinceEpoch,
         sequenceNumber: 1,
-        perceivedStrength: 'encrypted_moderate',
+        perceivedStrength: 'moderate',
       );
 
       // Act
-      final kick = KickSessionMapper.kickToDomain(kickDto, 'moderate');
+      final kick = KickSessionMapper.kickToDomain(kickDto);
 
       // Assert
       expect(kick.perceivedStrength, equals(MovementStrength.moderate));
@@ -218,4 +206,3 @@ void main() {
     });
   });
 }
-

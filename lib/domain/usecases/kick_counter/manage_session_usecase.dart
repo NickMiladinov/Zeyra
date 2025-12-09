@@ -1,3 +1,4 @@
+import '../../../core/utils/data_minimization.dart';
 import '../../entities/kick_counter/kick.dart';
 import '../../entities/kick_counter/kick_counter_constants.dart';
 import '../../entities/kick_counter/kick_session.dart';
@@ -206,16 +207,28 @@ class ManageSessionUseCase {
   // --------------------------------------------------------------------------
 
   /// Get historical kick counting sessions.
-  /// 
+  ///
   /// [limit] - Optional maximum number of sessions to return
   /// [before] - Optional timestamp to get sessions before
-  /// 
+  ///
   /// Returns sessions ordered by startTime descending (most recent first).
   Future<List<KickSession>> getSessionHistory({
     int? limit,
     DateTime? before,
   }) async {
     return await _repository.getSessionHistory(limit: limit, before: before);
+  }
+
+  /// Delete old sessions beyond the retention period.
+  ///
+  /// Removes sessions older than [maxDays] (defaults to GDPR-compliant 365 days).
+  /// This helps comply with data minimization principles by not retaining
+  /// medical data longer than necessary.
+  ///
+  /// Returns the number of sessions deleted.
+  Future<int> deleteOldSessions([int? maxDays]) async {
+    final cutoffDate = DataRetentionHelper.retentionCutoffDate(maxDays);
+    return await _repository.deleteSessionsOlderThan(cutoffDate);
   }
 
   // --------------------------------------------------------------------------

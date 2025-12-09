@@ -103,10 +103,249 @@ graph TD
   Service --> External[Supabase / OS / APIs]
 
 
-## Payment Flow (Needs to be checked often, do not rely on locally stored payment info)
+---
+
+## 🔐 Authentication & Session Flow
+
+### New User Login Flow
+```
+User opens app
+    │
+    ▼
+AuthGate checks Supabase session → No session found
+    │
+    ▼
+Show Supabase Login Screen (Google / Apple / Email)
+    │
+    ▼
+User authenticates successfully
+    │
+    ▼
+SessionManager.onSupabaseAuth(user) called
+    │
+    ├─► Get authId from Supabase user
+    │
+    ├─► Check if database exists for this authId
+    │       │
+    │       └─► NO: First-time user
+    │               │
+    │               ├─► Create database file: zeyra_<authId>.db
+    │               ├─► Generate encryption key: zeyra_key_<authId>
+    │               ├─► Store key in secure storage
+    │               └─► Initialize UserProfile, UserSettings, SessionState
+    │
+    ├─► DatabaseEncryptionService.getKeyForUser(authId)
+    │       └─► Load or generate SQLCipher key
+    │
+    ├─► DatabaseLockService.unlock(authId)
+    │       └─► Open database connection
+    │
+    ├─► SessionState = ACTIVE
+    │
+    └─► InactivityService.start()
+            └─► Begin monitoring user activity
+```
+
+### Returning User Flow (with Biometrics)
+```
+User opens app
+    │
+    ▼
+AuthGate checks Supabase session → Valid session found
+    │
+    ▼
+SessionManager.initialize()
+    │
+    ├─► Get authId from session
+    │
+    ├─► Check if local database exists → YES
+    │
+    ├─► Check if device supports biometrics → YES
+    │
+    └─► SessionState = REQUIRES_LOCAL_AUTH
+            │
+            ▼
+    Show Lock Screen with biometric prompt
+            │
+            ▼
+    LocalAuthService.authenticate()
+            │
+    ┌───────┴───────┐
+    │               │
+SUCCESS          FAILED
+    │               │
+    ▼               ▼
+SessionManager   Increment failedAuthAttempts
+.onLocalAuth()        │
+    │           ┌─────┴─────┐
+    │           │           │
+    │        < 3 times   >= 3 times
+    │           │           │
+    │           ▼           ▼
+    │      Show retry   SessionState = REQUIRES_LOGIN
+    │      prompt       (require Supabase password)
+    │
+    ├─► DatabaseEncryptionService.getKeyForUser(authId)
+    │
+    ├─► DatabaseLockService.unlock(authId)
+    │
+    ├─► SessionState = ACTIVE
+    │
+    └─► InactivityService.start()
+```
+
+### Inactivity Lock Flow
+```
+User is active (SessionState = ACTIVE)
+    │
+    ▼
+InactivityService monitors:
+  • Touch events (via root Listener widget)
+  • App lifecycle (via WidgetsBindingObserver)
+    │
+    ├─► On any user activity: Reset inactivity timer
+    │
+    └─► Timer expires (5 min default) OR app backgrounded (1 min)
+            │
+            ▼
+    InactivityService.onTimeout()
+            │
+            ▼
+    SessionManager.lockSession()
+            │
+            ├─► InactivityService.stop()
+            │
+            ├─► DatabaseLockService.lock()
+            │       │
+            │       ├─► database.close()
+            │       └─► Clear database reference
+            │
+            ├─► DatabaseEncryptionService.clearCache()
+            │       └─► Clear key from memory
+            │
+            ├─► SessionState = REQUIRES_LOCAL_AUTH
+            │
+            └─► Navigate to Lock Screen
+```
+
+### Logout Flow
+```
+User taps "Logout" in Settings
+    │
+    ▼
+SessionManager.logout()
+    │
+    ├─► SessionManager.lockSession()
+    │       │
+    │       ├─► Database connection closed
+    │       └─► Encryption key cleared from memory
+    │
+    ├─► Supabase.auth.signOut()
+    │       └─► Clear Supabase session token
+    │
+    ├─► SessionState = REQUIRES_LOGIN
+    │
+    └─► Navigate to Login Screen
+
+NOTE: Database file and encryption key are NOT deleted.
+      User's data persists for offline access when they return.
+```
+
+---
+
+## 💾 Database Lifecycle
+
+### Database Creation (First Login)
+```
+SessionManager.onSupabaseAuth(user)
+    │
+    ├─► authId = user.id
+    │
+    ├─► databasePath = "zeyra_<authId>.db"
+    │
+    ├─► DatabaseEncryptionService.getKeyForUser(authId)
+    │       │
+    │       ├─► Check secure storage for zeyra_db_key_<authId>
+    │       │       └─► Not found (new user)
+    │       │
+    │       ├─► Generate 256-bit hex key (64 chars)
+    │       │
+    │       ├─► Store key in secure storage
+    │       │
+    │       └─► Cache key in memory
+    │
+    └─► DatabaseLockService.unlock(authId)
+            │
+            ├─► AppDatabase.forUser(authId)
+            │       └─► LazyDatabase creates file on first query
+            │
+            └─► Run initial schema creation (onCreate)
+```
+
+### Database Opening (Session Unlock)
+```
+SessionManager.onLocalAuth() OR onSupabaseAuth()
+    │
+    ├─► DatabaseEncryptionService.getKeyForUser(authId)
+    │       │
+    │       ├─► Read key from secure storage
+    │       │
+    │       └─► Cache key in memory
+    │
+    └─► DatabaseLockService.unlock(authId)
+            │
+            ├─► AppDatabase.forUser(authId)
+            │
+            └─► Verify connection: SELECT 1
+```
+
+### Database Closing (Session Lock)
+```
+SessionManager.lockSession()
+    │
+    ├─► DatabaseLockService.lock()
+    │       │
+    │       ├─► database.close()
+    │       │       └─► Flush pending writes, release file handle
+    │       │
+    │       └─► _database = null
+    │
+    └─► DatabaseEncryptionService.clearCache()
+            │
+            ├─► _cachedKey = null
+            │
+            └─► _currentUserId = null
+```
+
+### Database Deletion (Account Removal)
+```
+User confirms "Remove Account from Device"
+    │
+    ▼
+AccountManager.removeAccount(authId)
+    │
+    ├─► Confirm: "This will delete all local data for this account"
+    │
+    ├─► SessionManager.lockSession() (if this is current user)
+    │
+    ├─► DatabaseEncryptionService.deleteKeyForUser(authId)
+    │       └─► secureStorage.delete(zeyra_db_key_<authId>)
+    │
+    ├─► Delete database file
+    │       └─► File(zeyra_<authId>.db).delete()
+    │
+    └─► Remove from registry (if using multi-account registry)
+
+WARNING: This is irreversible. All encrypted data becomes unrecoverable.
+```
+
+---
+
+## 💳 Payment Flow (Needs to be checked often, do not rely on locally stored payment info)
+```
 User → opens app
      → signs in via Supabase OAuth
-     → taps “Upgrade to Premium”
+     → taps "Upgrade to Premium"
          ↓
 In-app Purchase flow (Play Store / App Store)
          ↓
@@ -119,5 +358,6 @@ App validates it locally (via `in_app_purchase`)
 Backend verifies with Google/Apple APIs and updates `Subscription` table
          ↓
 UserProfile.subscriptionStatus = 'active'
+```
 
 

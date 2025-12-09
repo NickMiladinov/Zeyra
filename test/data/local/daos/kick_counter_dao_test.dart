@@ -626,6 +626,192 @@ void main() {
         expect(result!.note, isNull);
       });
     });
+
+    // ------------------------------------------------------------------------
+    // Data Retention Tests
+    // ------------------------------------------------------------------------
+
+    group('deleteSessionsOlderThan', () {
+      test('should delete sessions older than cutoff date', () async {
+        // Arrange - Create 3 sessions at different times
+        final now = DateTime.now();
+        final oldSession1 = KickSessionDto(
+          id: 'old-session-1',
+          startTimeMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          endTimeMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          isActive: false,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+        );
+
+        final oldSession2 = KickSessionDto(
+          id: 'old-session-2',
+          startTimeMillis: now.subtract(const Duration(days: 370))
+              .millisecondsSinceEpoch,
+          endTimeMillis: now.subtract(const Duration(days: 370))
+              .millisecondsSinceEpoch,
+          isActive: false,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 370))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.subtract(const Duration(days: 370))
+              .millisecondsSinceEpoch,
+        );
+
+        final recentSession = KickSessionDto(
+          id: 'recent-session',
+          startTimeMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          endTimeMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          isActive: false,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(oldSession1);
+        await dao.insertSession(oldSession2);
+        await dao.insertSession(recentSession);
+
+        // Act - Delete sessions older than 365 days
+        final cutoffDate = now.subtract(const Duration(days: 365));
+        final deletedCount = await dao.deleteSessionsOlderThan(
+          cutoffDate.millisecondsSinceEpoch,
+        );
+
+        // Assert
+        expect(deletedCount, equals(2)); // Should delete both old sessions
+
+        // Verify only recent session remains
+        final remainingSessions = await dao.getSessionHistory();
+        expect(remainingSessions.length, equals(1));
+        expect(remainingSessions.first.session.id, equals('recent-session'));
+      });
+
+      test('should cascade delete kicks when deleting old sessions', () async {
+        // Arrange - Create old session with kicks
+        final now = DateTime.now();
+        final oldSession = KickSessionDto(
+          id: 'old-session-with-kicks',
+          startTimeMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          endTimeMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          isActive: false,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(oldSession);
+
+        // Add kicks to the old session
+        for (int i = 0; i < 5; i++) {
+          await dao.insertKick(KickDto(
+            id: 'kick-$i',
+            sessionId: 'old-session-with-kicks',
+            sequenceNumber: i,
+            timestampMillis: now.subtract(const Duration(days: 400))
+                .millisecondsSinceEpoch,
+            perceivedStrength: 'moderate',
+          ));
+        }
+
+        // Verify kicks exist
+        final kicksBeforeDelete = await dao.getKicksForSession('old-session-with-kicks');
+        expect(kicksBeforeDelete.length, equals(5));
+
+        // Act - Delete old sessions
+        final cutoffDate = now.subtract(const Duration(days: 365));
+        await dao.deleteSessionsOlderThan(cutoffDate.millisecondsSinceEpoch);
+
+        // Assert - Kicks should also be deleted (cascade)
+        final kicksAfterDelete = await dao.getKicksForSession('old-session-with-kicks');
+        expect(kicksAfterDelete.length, equals(0));
+      });
+
+      test('should return 0 when no sessions are older than cutoff', () async {
+        // Arrange - Create only recent sessions
+        final now = DateTime.now();
+        final recentSession = KickSessionDto(
+          id: 'recent-session',
+          startTimeMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          endTimeMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          isActive: false,
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.subtract(const Duration(days: 30))
+              .millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(recentSession);
+
+        // Act - Delete sessions older than 365 days
+        final cutoffDate = now.subtract(const Duration(days: 365));
+        final deletedCount = await dao.deleteSessionsOlderThan(
+          cutoffDate.millisecondsSinceEpoch,
+        );
+
+        // Assert
+        expect(deletedCount, equals(0));
+
+        // Verify session still exists
+        final remainingSessions = await dao.getSessionHistory();
+        expect(remainingSessions.length, equals(1));
+      });
+
+      test('should not delete active sessions even if old', () async {
+        // Arrange - Create old but active session
+        final now = DateTime.now();
+        final oldActiveSession = KickSessionDto(
+          id: 'old-active-session',
+          startTimeMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          endTimeMillis: null, // Not ended yet
+          isActive: true, // Still active
+          pausedAtMillis: null,
+          totalPausedMillis: 0,
+          pauseCount: 0,
+          createdAtMillis: now.subtract(const Duration(days: 400))
+              .millisecondsSinceEpoch,
+          updatedAtMillis: now.millisecondsSinceEpoch,
+        );
+
+        await dao.insertSession(oldActiveSession);
+
+        // Act - Delete sessions older than 365 days
+        final cutoffDate = now.subtract(const Duration(days: 365));
+        final deletedCount = await dao.deleteSessionsOlderThan(
+          cutoffDate.millisecondsSinceEpoch,
+        );
+
+        // Assert - Active sessions are deleted too (no filter on isActive in the method)
+        expect(deletedCount, equals(1));
+      });
+    });
   });
 }
 

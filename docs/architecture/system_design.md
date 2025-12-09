@@ -20,13 +20,17 @@ From top (UI) to bottom (storage / infra):
    - Repository Implementations, DAOs (Drift), Remote Data Sources (API clients)
 6. **Services & Infrastructure**
    - Networking, OCR, AI Engine
-   - EncryptionService, FileStorageService, NotificationService
+   - DatabaseEncryptionService, FileStorageService, NotificationService
    - SyncManager (queue, conflict resolution)
    - MigrationManager (schema migrations)
    - AuthService (Supabase auth/session management)
    - SubscriptionService (AppStore/PlayStore receipts)
    - BackgroundTaskManager (periodic sync, cleanup)
    - ErrorMonitoringService (crash + log reporting)
+   - **SessionManager** (session state, lock/unlock coordination)
+   - **DatabaseLockService** (database connection lifecycle)
+   - **LocalAuthService** (biometric/PIN authentication)
+   - **InactivityService** (touch/lifecycle monitoring, auto-lock)
 7. **Platform / External**
    - Supabase (auth, optional sync)
    - Apple/Google In-App Purchases
@@ -70,15 +74,21 @@ From top (UI) to bottom (storage / infra):
   - **Networking** – HTTP client, retry/interceptors.
   - **OCRService** – on-device text extraction.
   - **AIService** – local/remote model wrapper for chat and predictions.
-  - **EncryptionService** – secure field encryption/decryption.
+  - **DatabaseEncryptionService** – SQLCipher encryption key management, per-user key generation/retrieval.
   - **FileStorageService** – secure file handling, encrypted local storage.
   - **NotificationService** – local notifications and scheduling.
   - **SyncManager** – handles queued data sync, conflict resolution, and timestamps.
   - **MigrationManager** – Drift schema migrations and version tracking.
-  - **AuthService** – authentication, token management, session lifecycle.
+  - **AuthService** – authentication, token management, Supabase integration.
   - **ReceiptVerificationService** – purchase validation with stores.
   - **BackgroundTaskManager** – periodic background jobs, receipts verification.
   - **ErrorMonitoringService** – logs, crash reporting, diagnostics.
+
+#### Security Services (Session Management)
+  - **SessionManager** – Central coordinator for session state transitions; manages lock/unlock lifecycle; integrates with LocalAuthService, DatabaseLockService, and InactivityService.
+  - **DatabaseLockService** – Controls database connection lifecycle; opens/closes Drift database; enforces locked state by throwing `DatabaseLockedException`.
+  - **LocalAuthService** – Wrapper for `local_auth` package; handles Face ID, fingerprint, and device PIN authentication; reports success/failure to SessionManager.
+  - **InactivityService** – Monitors user activity via touch events and app lifecycle; triggers auto-lock after configurable timeout (default 5 min); detects app background state.
 
 ### Platform / External
 - Third-party and OS-level systems:
@@ -123,7 +133,7 @@ graph LR
   subgraph Services
     Net[Networking]
     OCR[OCR Service]
-    ENC[EncryptionService]
+    ENC[DatabaseEncryptionService]
     Files[FileStorageService]
     Notif[NotificationService]
     Sync[SyncManager]
@@ -131,6 +141,10 @@ graph LR
     Auth[AuthService]
     Receipt[ReceiptVerificationService]
     Err[ErrorMonitoringService]
+    Session[SessionManager]
+    DBLock[DatabaseLockService]
+    LocalAuth[LocalAuthService]
+    Inactivity[InactivityService]
   end
 
   subgraph External
@@ -153,3 +167,9 @@ graph LR
   Err --> RepoImpl
   Super --> UC
   Notif --> OS
+  Session --> DBLock
+  Session --> LocalAuth
+  Session --> Inactivity
+  Session --> ENC
+  DBLock --> DB
+  LocalAuth --> OS

@@ -5,18 +5,15 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:zeyra/core/services/encryption_service.dart';
 import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
-class MockEncryptionService extends Mock implements EncryptionService {}
 class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
-  late MockEncryptionService mockEncryptionService;
   late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
 
@@ -24,11 +21,9 @@ void main() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     database = AppDatabase.forTesting(NativeDatabase.memory());
     await database.customStatement('PRAGMA foreign_keys = ON');
-    mockEncryptionService = MockEncryptionService();
     mockLogger = MockLoggingService();
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
-      encryptionService: mockEncryptionService,
       logger: mockLogger,
     );
 
@@ -41,113 +36,9 @@ void main() {
   });
 
   group('[KickCounter] Repository Error Handling', () {
-    // ------------------------------------------------------------------------
-    // Encryption Failure Tests
-    // ------------------------------------------------------------------------
-
-    group('Encryption Failures', () {
-      test('should propagate encryption error when addKick fails to encrypt',
-          () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenThrow(Exception('Encryption failed'));
-
-        // Act & Assert
-        expect(
-          () => repository.addKick(session.id, MovementStrength.moderate),
-          throwsException,
-        );
-      });
-
-      test('should propagate encryption error with specific message',
-          () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenThrow(Exception('Encryption key not found'));
-
-        // Act & Assert
-        expect(
-          () => repository.addKick(session.id, MovementStrength.strong),
-          throwsA(
-            isA<Exception>().having(
-              (e) => e.toString(),
-              'message',
-              contains('Encryption key not found'),
-            ),
-          ),
-        );
-      });
-
-      test('should propagate decryption error when getActiveSession fails',
-          () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted_data');
-        await repository.addKick(session.id, MovementStrength.moderate);
-
-        // Mock decryption failure
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenThrow(Exception('Decryption failed'));
-
-        // Act & Assert
-        expect(
-          () => repository.getActiveSession(),
-          throwsException,
-        );
-      });
-
-      test('should propagate decryption error in getSessionHistory',
-          () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted_data');
-        await repository.addKick(session.id, MovementStrength.weak);
-        await repository.endSession(session.id);
-
-        // Mock decryption failure
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenThrow(Exception('Decryption failed'));
-
-        // Act & Assert
-        expect(
-          () => repository.getSessionHistory(),
-          throwsException,
-        );
-      });
-
-      test('should handle partial decryption failures in session with multiple kicks',
-          () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted_data');
-        
-        // Add 3 kicks
-        await repository.addKick(session.id, MovementStrength.weak);
-        await repository.addKick(session.id, MovementStrength.moderate);
-        await repository.addKick(session.id, MovementStrength.strong);
-
-        // First 2 decrypt successfully, 3rd fails
-        var callCount = 0;
-        when(() => mockEncryptionService.decrypt(any())).thenAnswer((_) async {
-          callCount++;
-          if (callCount >= 3) {
-            throw Exception('Decryption failed on 3rd kick');
-          }
-          return 'moderate';
-        });
-
-        // Act & Assert
-        expect(
-          () => repository.getActiveSession(),
-          throwsException,
-        );
-      });
-    });
+    // NOTE: Encryption failures are no longer tested here since we use
+    // SQLCipher for full database encryption. Encryption errors would
+    // prevent the entire database from being opened.
 
     // ------------------------------------------------------------------------
     // Null/Invalid ID Tests
@@ -246,8 +137,6 @@ void main() {
           () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted_moderate');
         
         // Act - Add kicks concurrently
         final futures = <Future<dynamic>>[];
@@ -258,8 +147,6 @@ void main() {
         await Future.wait(futures);
         
         // Assert
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
         final loadedSession = await repository.getActiveSession();
         expect(loadedSession!.kickCount, equals(5));
       });
@@ -286,23 +173,9 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('Data Corruption Scenarios', () {
-      test('should handle session with corrupted encrypted data', () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'valid_encrypted_data');
-        await repository.addKick(session.id, MovementStrength.moderate);
-        
-        // Simulate corrupted decryption
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'invalid_strength_value');
-        
-        // Act & Assert - Should throw when parsing invalid strength
-        expect(
-          () => repository.getActiveSession(),
-          throwsA(isA<Exception>()),
-        );
-      });
+      // NOTE: Encryption corruption tests removed since we use SQLCipher
+      // for full database encryption. Corrupted encryption would prevent
+      // the entire database from being opened.
 
       test('should handle negative timestamps gracefully', () async {
         // Arrange - Create a session with negative timestamp
@@ -434,43 +307,12 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('Batch Operation Errors', () {
-      test('should handle error when fetching large history', () async {
-        // Arrange - Create 50 sessions
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        
-        for (int i = 0; i < 50; i++) {
-          final session = await repository.createSession();
-          await repository.addKick(session.id, MovementStrength.moderate);
-          await repository.endSession(session.id);
-        }
-        
-        // Mock decryption failure in middle of batch
-        var callCount = 0;
-        when(() => mockEncryptionService.decrypt(any())).thenAnswer((_) async {
-          callCount++;
-          if (callCount == 25) {
-            throw Exception('Decryption failed mid-batch');
-          }
-          return 'moderate';
-        });
-        
-        // Act & Assert - Should propagate error
-        expect(
-          () => repository.getSessionHistory(),
-          throwsException,
-        );
-      });
+      // NOTE: Encryption batch failure tests removed since we use SQLCipher
+      // for full database encryption. Encryption happens at the database level.
 
       test('should handle database lock during batch operations', () async {
         // This is hard to simulate but we can test resilience
         // by performing many operations rapidly
-        
-        // Arrange
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
         
         // Act - Rapid operations
         final session1 = await repository.createSession();
@@ -512,13 +354,7 @@ void main() {
       });
 
       test('should handle repeated history queries', () async {
-        // Arrange
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-        
-        // Create a few sessions
+        // Arrange - Create a few sessions
         for (int i = 0; i < 5; i++) {
           final session = await repository.createSession();
           await repository.addKick(session.id, MovementStrength.moderate);

@@ -541,7 +541,7 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 
 ### 7.1 Kick Counter Full Flow (`test/integration/kick_counter/kick_counter_flow_test.dart`)
 
-**Purpose:** End-to-end testing of complete user flows with real EncryptionService and in-memory database.
+**Purpose:** End-to-end testing of complete user flows with in-memory database (unencrypted for tests; production uses SQLCipher).
 
 | Test # | Test Name | Description | User Flow |
 |--------|-----------|-------------|-----------|
@@ -674,11 +674,10 @@ flutter test test/domain/usecases/kick_counter/manage_session_usecase_test.dart
 ## Test Environment Setup
 
 ### Mocking Strategy
-- **MockEncryptionService:** Used in repository unit tests (mocktail)
+- **MockDatabaseEncryptionService:** Used when testing services that need encryption (mocktail)
 - **MockKickCounterRepository:** Used in use case tests (mocktail)
-- **MockFlutterSecureStorage:** Used in integration/performance tests to mock secure storage
-- **In-memory Drift database:** Used in repository, integration, and performance tests
-- **Real EncryptionService:** Used in integration and performance tests for encryption validation
+- **In-memory Drift database:** Used in repository, integration, and performance tests (unencrypted)
+- **Note:** Production uses SQLCipher for full database encryption; tests use unencrypted in-memory databases for simplicity
 
 ### Test Fixtures
 - **FakeKick.simple():** Creates fake Kick entities with default or custom values

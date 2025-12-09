@@ -239,6 +239,7 @@ class KickCounterNotifier extends StateNotifier<KickCounterState> {
 // ----------------------------------------------------------------------------
 
 final kickCounterProvider = StateNotifierProvider<KickCounterNotifier, KickCounterState>((ref) {
-  final useCase = ref.watch(manageSessionUseCaseProvider);
+  // Use .value! since the database must be initialized before UI accesses this
+  final useCase = ref.watch(manageSessionUseCaseProvider).value!;
   return KickCounterNotifier(useCase);
 });

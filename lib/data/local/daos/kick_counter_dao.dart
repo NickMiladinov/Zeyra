@@ -169,10 +169,10 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
   // --------------------------------------------------------------------------
 
   /// Get historical sessions with their kicks.
-  /// 
+  ///
   /// [limit] - Maximum number of sessions to return
   /// [before] - Only include sessions started before this timestamp
-  /// 
+  ///
   /// Returns sessions ordered by startTime descending (most recent first).
   Future<List<KickSessionWithKicks>> getSessionHistory({
     int? limit,
@@ -180,19 +180,19 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
   }) async {
     // Build query for sessions
     final query = select(kickSessions);
-    
+
     // Apply filters
     query.where((s) => s.isActive.equals(false));
     if (before != null) {
       query.where((s) => s.startTimeMillis.isSmallerThanValue(before.millisecondsSinceEpoch));
     }
-    
+
     // Order by most recent first, using createdAt as tiebreaker
     query.orderBy([
       (s) => OrderingTerm.desc(s.startTimeMillis),
       (s) => OrderingTerm.desc(s.createdAtMillis),
     ]);
-    
+
     // Apply limit if provided
     if (limit != null) {
       query.limit(limit);
@@ -213,6 +213,18 @@ class KickCounterDao extends DatabaseAccessor<AppDatabase>
     }
 
     return result;
+  }
+
+  /// Delete sessions older than the specified timestamp.
+  ///
+  /// [cutoffTimeMillis] - Sessions with startTime before this will be deleted
+  ///
+  /// Returns the number of sessions deleted.
+  /// Cascades to delete all associated kicks and pause events.
+  Future<int> deleteSessionsOlderThan(int cutoffTimeMillis) {
+    return (delete(kickSessions)
+          ..where((s) => s.startTimeMillis.isSmallerThanValue(cutoffTimeMillis)))
+        .go();
   }
 }
 

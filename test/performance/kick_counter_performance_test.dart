@@ -3,42 +3,32 @@ library;
 
 import 'package:drift/native.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:zeyra/core/services/encryption_service.dart';
 import 'package:zeyra/core/monitoring/logging_service.dart';
+import 'package:zeyra/core/utils/data_minimization.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
-class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
-  late EncryptionService encryptionService;
-  late MockFlutterSecureStorage mockSecureStorage;
   late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
 
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     
-    mockSecureStorage = MockFlutterSecureStorage();
-    // Valid 32-byte key encoded in base64 (AES-256 requires exactly 32 bytes)
-    when(() => mockSecureStorage.read(key: any(named: 'key')))
-        .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
-    
     mockLogger = MockLoggingService();
     
+    // Create in-memory database (unencrypted for tests)
+    // NOTE: Production uses SQLCipher for full database encryption
     database = AppDatabase.forTesting(NativeDatabase.memory());
-    encryptionService = EncryptionService(secureStorage: mockSecureStorage);
-    await encryptionService.initialize();
     
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
-      encryptionService: encryptionService,
       logger: mockLogger,
     );
   });
@@ -128,14 +118,14 @@ void main() {
           await Future.delayed(const Duration(milliseconds: 1));
         }
         
-        // Act - Paginate through in batches of 50
+        // Act - Paginate through in batches of maxHistorySessions
         final stopwatch = Stopwatch()..start();
         var totalRetrieved = 0;
         DateTime? beforeDate = now.add(const Duration(days: 1));
-        
+
         for (int page = 0; page < 10; page++) {
           final batch = await repository.getSessionHistory(
-            limit: 50,
+            limit: DataMinimizationDefaults.maxHistorySessions,
             before: beforeDate,
           );
           

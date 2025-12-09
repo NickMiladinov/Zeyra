@@ -2,10 +2,8 @@
 library;
 
 import 'package:drift/native.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:zeyra/core/services/encryption_service.dart';
 import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
@@ -13,14 +11,10 @@ import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/exceptions/kick_counter_exception.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 
-// Mock for FlutterSecureStorage
-class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
-  late EncryptionService encryptionService;
-  late MockFlutterSecureStorage mockSecureStorage;
   late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
   late ManageSessionUseCase useCase;
@@ -29,22 +23,14 @@ void main() {
     // Initialize Flutter binding for tests
     TestWidgetsFlutterBinding.ensureInitialized();
     
-    // Setup mock secure storage
-    mockSecureStorage = MockFlutterSecureStorage();
-    // Valid 32-byte key encoded in base64 (AES-256 requires exactly 32 bytes)
-    when(() => mockSecureStorage.read(key: any(named: 'key')))
-        .thenAnswer((_) async => 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=');
-    
     mockLogger = MockLoggingService();
     
-    // Create in-memory database and encryption service with mock storage
+    // Create in-memory database (unencrypted for tests)
+    // NOTE: Production uses SQLCipher for full database encryption
     database = AppDatabase.forTesting(NativeDatabase.memory());
-    encryptionService = EncryptionService(secureStorage: mockSecureStorage);
-    await encryptionService.initialize();
     
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
-      encryptionService: encryptionService,
       logger: mockLogger,
     );
     
@@ -240,7 +226,7 @@ void main() {
       expect(activeDuration.inMilliseconds, greaterThanOrEqualTo(150)); // At least 150ms
     });
 
-    test('should encrypt kick strength in database and decrypt on retrieval',
+    test('should store and retrieve kick strength correctly',
         () async {
       // 1. Create session
       final session = await useCase.startSession();
@@ -248,18 +234,19 @@ void main() {
       // 2. Add kick with strength = STRONG
       await useCase.recordKick(session.id, MovementStrength.strong);
 
-      // 3. Read directly from Drift DAO (should be encrypted)
+      // 3. Read directly from Drift DAO
+      // Note: In tests, the database is unencrypted (memory database)
+      // In production, SQLCipher encrypts the entire database at rest
       final sessionWithKicks = await database.kickCounterDao
           .getSessionWithKicks(session.id);
       expect(sessionWithKicks, isNotNull);
       expect(sessionWithKicks!.kicks.length, equals(1));
-      
-      // The encrypted string should not match the plain text
-      expect(sessionWithKicks.kicks.first.perceivedStrength,
-          isNot(equals('strong')));
+
+      // The strength is stored as a string representation in the database
+      expect(sessionWithKicks.kicks.first.perceivedStrength, equals('strong'));
       expect(sessionWithKicks.kicks.first.perceivedStrength, isNotEmpty);
 
-      // 4. Retrieve via repository (should be decrypted)
+      // 4. Retrieve via repository (mapper converts string to enum)
       final activeSession = await repository.getActiveSession();
       expect(activeSession!.kicks.length, equals(1));
       expect(activeSession.kicks.first.perceivedStrength,

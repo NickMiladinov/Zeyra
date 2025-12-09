@@ -32,10 +32,10 @@ dependencies:
   # Database and encryption
   drift: ^2.16.0 # Local database with type-safe queries
   drift_flutter: ^0.1.0 # Flutter integration for Drift
+  sqlite3: ^2.4.0 # SQLite3 bindings for configuring SQLCipher
+  sqlcipher_flutter_libs: ^0.6.0 # SQLCipher for full database encryption
   flutter_secure_storage: ^9.0.0 # Secure storage for encryption keys
   crypto: ^3.0.3 # Cryptographic operations (hashing only)
-  cryptography: ^2.7.0 # AES-GCM encryption
-  cryptography_flutter: ^2.3.2 # Native platform acceleration for crypto
   equatable: ^2.0.7 # Value equality
 
   

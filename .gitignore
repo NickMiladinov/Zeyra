@@ -10,6 +10,7 @@
 *.iml
 .idea/
 devtools_options.yaml
+.claude/
 
 
 # Flutter repo-specific

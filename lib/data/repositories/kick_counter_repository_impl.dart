@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../core/services/encryption_service.dart';
 import '../../core/monitoring/logging_service.dart';
 import '../../domain/entities/kick_counter/kick.dart';
 import '../../domain/entities/kick_counter/kick_session.dart';
@@ -11,23 +10,23 @@ import '../local/daos/kick_counter_dao.dart';
 import '../mappers/kick_session_mapper.dart';
 import '../mappers/pause_event_mapper.dart';
 
-/// Implementation of KickCounterRepository using Drift and encryption.
-/// 
-/// Handles all kick counter data operations with encrypted storage
-/// of sensitive medical data (perceived movement strength).
+/// Implementation of KickCounterRepository using Drift with SQLCipher encryption.
+///
+/// Handles all kick counter data operations. Data is protected by SQLCipher
+/// full database encryption - no field-level encryption is needed.
+///
+/// **Security:** The entire database is encrypted with AES-256 via SQLCipher.
+/// See [AppDatabase.encrypted] for encryption configuration details.
 class KickCounterRepositoryImpl implements KickCounterRepository {
   final KickCounterDao _dao;
-  final EncryptionService _encryptionService;
   final LoggingService _logger;
   final Uuid _uuid;
 
   KickCounterRepositoryImpl({
     required KickCounterDao dao,
-    required EncryptionService encryptionService,
     required LoggingService logger,
     Uuid? uuid,
   })  : _dao = dao,
-        _encryptionService = encryptionService,
         _logger = logger,
         _uuid = uuid ?? const Uuid();
 
@@ -38,7 +37,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
   @override
   Future<KickSession> createSession() async {
     _logger.debug('Creating new kick session');
-    
+
     try {
       final now = DateTime.now();
       final session = KickSessionDto(
@@ -55,7 +54,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       );
 
       await _dao.insertSession(session);
-      
+
       _logger.info('Kick session created successfully');
       _logger.logDatabaseOperation('INSERT', table: 'kick_sessions', success: true);
 
@@ -96,26 +95,15 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
     final sessionWithKicks = await _dao.getSessionWithKicks(sessionDto.id);
     if (sessionWithKicks == null) return null;
 
-    // Decrypt all kicks
-    final decryptedKicks = <Kick>[];
-    for (final kickDto in sessionWithKicks.kicks) {
-      final decryptedStrength =
-          await _encryptionService.decrypt(kickDto.perceivedStrength);
-      decryptedKicks.add(
-        KickSessionMapper.kickToDomain(kickDto, decryptedStrength),
-      );
-    }
-
-    // Decrypt note if present
-    String? decryptedNote;
-    if (sessionWithKicks.session.note != null) {
-      decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
-    }
+    // Map kicks to domain entities (no decryption needed - SQLCipher handles it)
+    final kicks = sessionWithKicks.kicks
+        .map((kickDto) => KickSessionMapper.kickToDomain(kickDto))
+        .toList();
 
     // Map pause events to domain entities
     final pauseEvents = PauseEventMapper.toDomainList(sessionWithKicks.pauseEvents);
 
-    // Build session with decrypted kicks and pause events
+    // Build session with kicks and pause events
     return KickSession(
       id: sessionWithKicks.session.id,
       startTime: DateTime.fromMillisecondsSinceEpoch(
@@ -125,7 +113,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
               sessionWithKicks.session.endTimeMillis!)
           : null,
       isActive: sessionWithKicks.session.isActive,
-      kicks: decryptedKicks,
+      kicks: kicks,
       pausedAt: sessionWithKicks.session.pausedAtMillis != null
           ? DateTime.fromMillisecondsSinceEpoch(
               sessionWithKicks.session.pausedAtMillis!)
@@ -134,7 +122,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         milliseconds: sessionWithKicks.session.totalPausedMillis,
       ),
       pauseCount: sessionWithKicks.session.pauseCount,
-      note: decryptedNote,
+      note: sessionWithKicks.session.note,
       pauseEvents: pauseEvents,
     );
   }
@@ -142,7 +130,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
   @override
   Future<void> endSession(String sessionId) async {
     _logger.debug('Ending kick session');
-    
+
     try {
       final sessionDto = await _dao.getSessionWithKicks(sessionId);
       if (sessionDto == null) {
@@ -151,7 +139,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       }
 
       final now = DateTime.now();
-      
+
       // If session is currently paused, add remaining pause time before ending
       int additionalPauseMillis = 0;
       if (sessionDto.session.pausedAtMillis != null) {
@@ -159,7 +147,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
             sessionDto.session.pausedAtMillis!);
         additionalPauseMillis = now.difference(pausedAt).inMilliseconds;
       }
-      
+
       await _dao.updateSessionFields(
         sessionId,
         KickSessionsCompanion(
@@ -172,7 +160,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
           updatedAtMillis: Value(now.millisecondsSinceEpoch),
         ),
       );
-      
+
       _logger.info('Kick session ended successfully', data: {
         'kick_count': sessionDto.kicks.length,
       });
@@ -198,23 +186,12 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
     final sessionWithKicks = await _dao.getSessionWithKicks(sessionId);
     if (sessionWithKicks == null) return null;
 
-    // Decrypt all kicks
-    final decryptedKicks = <Kick>[];
-    for (final kickDto in sessionWithKicks.kicks) {
-      final decryptedStrength =
-          await _encryptionService.decrypt(kickDto.perceivedStrength);
-      decryptedKicks.add(
-        KickSessionMapper.kickToDomain(kickDto, decryptedStrength),
-      );
-    }
+    // Map kicks to domain entities (no decryption needed - SQLCipher handles it)
+    final kicks = sessionWithKicks.kicks
+        .map((kickDto) => KickSessionMapper.kickToDomain(kickDto))
+        .toList();
 
-    // Decrypt note if present
-    String? decryptedNote;
-    if (sessionWithKicks.session.note != null) {
-      decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
-    }
-
-    // Build session with decrypted kicks
+    // Build session with kicks
     return KickSession(
       id: sessionWithKicks.session.id,
       startTime: DateTime.fromMillisecondsSinceEpoch(
@@ -224,7 +201,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
               sessionWithKicks.session.endTimeMillis!)
           : null,
       isActive: sessionWithKicks.session.isActive,
-      kicks: decryptedKicks,
+      kicks: kicks,
       pausedAt: sessionWithKicks.session.pausedAtMillis != null
           ? DateTime.fromMillisecondsSinceEpoch(
               sessionWithKicks.session.pausedAtMillis!)
@@ -233,24 +210,21 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         milliseconds: sessionWithKicks.session.totalPausedMillis,
       ),
       pauseCount: sessionWithKicks.session.pauseCount,
-      note: decryptedNote,
+      note: sessionWithKicks.session.note,
     );
   }
 
   @override
   Future<KickSession> updateSessionNote(String sessionId, String? note) async {
-    // Encrypt note if present
-    String? encryptedNote;
-    if (note != null && note.isNotEmpty) {
-      encryptedNote = await _encryptionService.encrypt(note);
-    }
+    // Update session (note is stored as plaintext - SQLCipher encrypts the DB)
+    // Treat empty string as null (clearing the note)
+    final normalizedNote = (note == null || note.isEmpty) ? null : note;
 
-    // Update session
     final now = DateTime.now();
     await _dao.updateSessionFields(
       sessionId,
       KickSessionsCompanion(
-        note: Value(encryptedNote),
+        note: Value(normalizedNote),
         updatedAtMillis: Value(now.millisecondsSinceEpoch),
       ),
     );
@@ -270,25 +244,20 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
   @override
   Future<Kick> addKick(String sessionId, MovementStrength strength) async {
     _logger.debug('Adding kick to session');
-    
+
     try {
       return await _dao.transaction(() async {
         // Get current kick count to determine sequence number
         final kickCount = await _dao.getKickCount(sessionId);
 
-        // Encrypt strength
-        final encryptedStrength = await _encryptionService.encrypt(
-          KickSessionMapper.movementStrengthToString(strength),
-        );
-
-        // Create kick DTO
+        // Create kick DTO (strength stored as plaintext - SQLCipher encrypts the DB)
         final now = DateTime.now();
         final kickDto = KickDto(
           id: _uuid.v4(),
           sessionId: sessionId,
           timestampMillis: now.millisecondsSinceEpoch,
           sequenceNumber: kickCount + 1,
-          perceivedStrength: encryptedStrength,
+          perceivedStrength: KickSessionMapper.movementStrengthToString(strength),
         );
 
         await _dao.insertKick(kickDto);
@@ -343,7 +312,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       if (sessionDto.session.pausedAtMillis != null) return;
 
       final now = DateTime.now();
-      
+
       // Create pause event record
       final pauseEventDto = PauseEventDto(
         id: _uuid.v4(),
@@ -354,9 +323,9 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
         createdAtMillis: now.millisecondsSinceEpoch,
         updatedAtMillis: now.millisecondsSinceEpoch,
       );
-      
+
       await _dao.insertPauseEvent(pauseEventDto);
-      
+
       await _dao.updateSessionFields(
         sessionId,
         KickSessionsCompanion(
@@ -420,30 +389,18 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
       before: before,
     );
 
-    // Decrypt all sessions
-    final decryptedSessions = <KickSession>[];
-    for (final sessionWithKicks in sessionsWithKicks) {
-      // Decrypt all kicks for this session
-      final decryptedKicks = <Kick>[];
-      for (final kickDto in sessionWithKicks.kicks) {
-        final decryptedStrength =
-            await _encryptionService.decrypt(kickDto.perceivedStrength);
-        decryptedKicks.add(
-          KickSessionMapper.kickToDomain(kickDto, decryptedStrength),
-        );
-      }
-
-      // Decrypt note if present
-      String? decryptedNote;
-      if (sessionWithKicks.session.note != null) {
-        decryptedNote = await _encryptionService.decrypt(sessionWithKicks.session.note!);
-      }
+    // Map all sessions to domain entities (no decryption needed - SQLCipher handles it)
+    return sessionsWithKicks.map((sessionWithKicks) {
+      // Map kicks to domain entities
+      final kicks = sessionWithKicks.kicks
+          .map((kickDto) => KickSessionMapper.kickToDomain(kickDto))
+          .toList();
 
       // Map pause events to domain entities
       final pauseEvents = PauseEventMapper.toDomainList(sessionWithKicks.pauseEvents);
 
-      // Build session with decrypted kicks and pause events
-      decryptedSessions.add(KickSession(
+      // Build session with kicks and pause events
+      return KickSession(
         id: sessionWithKicks.session.id,
         startTime: DateTime.fromMillisecondsSinceEpoch(
             sessionWithKicks.session.startTimeMillis),
@@ -452,7 +409,7 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
                 sessionWithKicks.session.endTimeMillis!)
             : null,
         isActive: sessionWithKicks.session.isActive,
-        kicks: decryptedKicks,
+        kicks: kicks,
         pausedAt: sessionWithKicks.session.pausedAtMillis != null
             ? DateTime.fromMillisecondsSinceEpoch(
                 sessionWithKicks.session.pausedAtMillis!)
@@ -461,12 +418,37 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
           milliseconds: sessionWithKicks.session.totalPausedMillis,
         ),
         pauseCount: sessionWithKicks.session.pauseCount,
-        note: decryptedNote,
+        note: sessionWithKicks.session.note,
         pauseEvents: pauseEvents,
-      ));
-    }
+      );
+    }).toList();
+  }
 
-    return decryptedSessions;
+  @override
+  Future<int> deleteSessionsOlderThan(DateTime cutoffDate) async {
+    _logger.debug('Deleting sessions older than cutoff date');
+
+    try {
+      final deletedCount = await _dao.deleteSessionsOlderThan(
+        cutoffDate.millisecondsSinceEpoch,
+      );
+
+      _logger.info('Deleted old kick sessions', data: {
+        'count': deletedCount,
+        'cutoff_date': cutoffDate.toIso8601String(),
+      });
+      _logger.logDatabaseOperation('DELETE', table: 'kick_sessions', success: true);
+
+      return deletedCount;
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to delete old kick sessions',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _logger.logDatabaseOperation('DELETE', table: 'kick_sessions', success: false, error: e);
+      rethrow;
+    }
   }
 
   @override
@@ -477,4 +459,3 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
     return null;
   }
 }
-

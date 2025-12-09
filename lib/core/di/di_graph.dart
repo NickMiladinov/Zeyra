@@ -1,17 +1,20 @@
 /// Explicit DI graph visualizer/initializer.
-/// 
+///
 /// This file provides visibility into the dependency injection graph
 /// and handles initialization of all async services during app startup.
-/// 
+///
 /// **Initialization Order (CRITICAL - DO NOT CHANGE):**
 /// 1. Environment variables (required by other services)
 /// 2. Sentry (to catch errors from subsequent initializations)
 /// 3. Logging (depends on Sentry)
-/// 4. Encryption (for medical data security)
+/// 4. Database encryption service (for SQLCipher key management)
 /// 5. Supabase (backend & auth)
 /// 6. Auth listener (depends on Supabase)
 /// 7. SharedPreferences → TooltipPreferencesService
-/// 
+///
+/// **Note:** The encrypted database is initialized lazily when a user logs in,
+/// not during app startup. See `main_providers.dart` for database provider.
+///
 library;
 
 import 'package:flutter/material.dart';
@@ -23,17 +26,17 @@ import '../constants/app_constants.dart';
 import '../monitoring/logging_service.dart';
 import '../monitoring/sentry_service.dart';
 import '../services/app_auth_listener.dart';
-import '../services/encryption_service.dart';
+import '../services/database_encryption_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../../main.dart' show logger;
 
 class DIGraph {
   // Singleton instances of initialized services
   static SentryService? _sentryService;
-  static EncryptionService? _encryptionService;
+  static DatabaseEncryptionService? _databaseEncryptionService;
   static TooltipPreferencesService? _tooltipPreferencesService;
   static AppAuthListener? _appAuthListener;
-  
+
   /// Get the initialized Sentry service.
   static SentryService get sentryService {
     if (_sentryService == null) {
@@ -41,15 +44,17 @@ class DIGraph {
     }
     return _sentryService!;
   }
-  
-  /// Get the initialized encryption service.
-  static EncryptionService get encryptionService {
-    if (_encryptionService == null) {
+
+  /// Get the initialized database encryption service.
+  ///
+  /// Manages SQLCipher encryption keys per user.
+  static DatabaseEncryptionService get databaseEncryptionService {
+    if (_databaseEncryptionService == null) {
       throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
     }
-    return _encryptionService!;
+    return _databaseEncryptionService!;
   }
-  
+
   /// Get the initialized tooltip preferences service.
   static TooltipPreferencesService get tooltipPreferencesService {
     if (_tooltipPreferencesService == null) {
@@ -71,9 +76,9 @@ class DIGraph {
   }
 
   /// Initialize the dependency injection graph.
-  /// 
+  ///
   /// **Must be called in main() before runApp().**
-  /// 
+  ///
   /// Initializes all async services in the correct dependency order.
   /// Returns the global navigator key for use in the app.
   static Future<GlobalKey<NavigatorState>> initialize() async {
@@ -98,20 +103,11 @@ class DIGraph {
     logger = LoggingService(sentryService: _sentryService!);
     logger.info('App starting - DIGraph initialization');
 
-    // 5. Initialize encryption service (for medical data security)
-    _encryptionService = EncryptionService();
-    try {
-      await _encryptionService!.initialize();
-      logger.info('Encryption service initialized');
-    } catch (e, stackTrace) {
-      logger.error(
-        'Failed to initialize encryption service',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      // Critical failure - encryption is required for medical data
-      rethrow;
-    }
+    // 5. Initialize database encryption service (for SQLCipher key management)
+    // Note: This service doesn't load keys at startup - keys are loaded
+    // lazily when a user authenticates and their database is opened.
+    _databaseEncryptionService = DatabaseEncryptionService();
+    logger.info('Database encryption service initialized');
 
     // 6. Initialize Supabase (backend & auth)
     bool supabaseInitialized = false;
@@ -170,5 +166,11 @@ class DIGraph {
     logger.info('DIGraph initialization complete');
     return navigatorKey;
   }
-}
 
+  /// Clear all cached encryption keys from memory.
+  ///
+  /// Call this on logout to ensure keys are not accessible.
+  static void clearEncryptionCache() {
+    _databaseEncryptionService?.clearCache();
+  }
+}

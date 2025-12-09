@@ -1,5 +1,5 @@
 import 'package:mocktail/mocktail.dart';
-import 'package:zeyra/core/services/encryption_service.dart';
+import 'package:zeyra/core/services/database_encryption_service.dart';
 import 'package:zeyra/data/local/daos/kick_counter_dao.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
@@ -220,6 +220,10 @@ class MockKickCounterRepository extends Mock
 /// Mock implementation of KickCounterDao for testing.
 class MockKickCounterDao extends Mock implements KickCounterDao {}
 
-/// Mock implementation of EncryptionService for testing.
-class MockEncryptionService extends Mock implements EncryptionService {}
+/// Mock implementation of DatabaseEncryptionService for testing.
+/// 
+/// NOTE: Field-level encryption was replaced with SQLCipher full database
+/// encryption. This mock is kept for backward compatibility with existing
+/// tests but may be removed in future refactoring.
+class MockDatabaseEncryptionService extends Mock implements DatabaseEncryptionService {}
 
