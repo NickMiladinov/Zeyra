@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/core/di/main_providers.dart';
+import 'package:zeyra/core/utils/data_minimization.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
 import 'package:zeyra/domain/usecases/kick_counter/calculate_analytics_usecase.dart';
@@ -102,10 +103,10 @@ class KickAnalyticsNotifier extends StateNotifier<KickAnalyticsState> {
   }
 
   /// Calculate analytics for graph view with shared safe range.
-  /// 
+  ///
   /// All displayed sessions are evaluated against one safe range calculated
   /// from up to 14 valid sessions that occurred before the newest displayed session.
-  /// 
+  ///
   /// Returns analytics without updating the main state (graph has its own local state).
   (KickHistoryAnalytics, List<KickSessionAnalytics>) calculateAnalyticsForGraph(
     List<KickSession> graphSessions,
@@ -115,6 +116,25 @@ class KickAnalyticsNotifier extends StateNotifier<KickAnalyticsState> {
       graphSessions,
       allSessions,
     );
+  }
+
+  /// Prepare analytics data for export/sharing (GDPR-compliant).
+  ///
+  /// Filters analytics to only include non-sensitive fields.
+  /// Use this when implementing export or sharing features to ensure
+  /// compliance with data minimization principles.
+  ///
+  /// Example fields included: count, duration, timestamp
+  /// Example fields excluded: note, perceivedStrength, symptoms
+  Map<String, dynamic> prepareAnalyticsForExport() {
+    final data = {
+      'valid_session_count': state.historyAnalytics.validSessionCount,
+      'timestamp': DateTime.now().toIso8601String(),
+      'session_count': state.sessionAnalytics.length,
+    };
+
+    // Use data minimization helper to filter only analytics-allowed fields
+    return FieldSelectionHelper.filterForAnalytics(data);
   }
 }
 

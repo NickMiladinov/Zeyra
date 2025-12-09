@@ -103,16 +103,24 @@ abstract class KickCounterRepository {
   // --------------------------------------------------------------------------
   
   /// Get historical kick counting sessions.
-  /// 
+  ///
   /// [limit] - Optional maximum number of sessions to return
   /// [before] - Optional timestamp to get sessions before
-  /// 
+  ///
   /// Returns sessions ordered by startTime descending (most recent first).
   /// Includes all kicks for each session.
   Future<List<KickSession>> getSessionHistory({
     int? limit,
     DateTime? before,
   });
+
+  /// Delete sessions older than the specified date.
+  ///
+  /// [cutoffDate] - Sessions with startTime before this date will be deleted
+  ///
+  /// Returns the number of sessions deleted.
+  /// Cascades to delete all associated kicks.
+  Future<int> deleteSessionsOlderThan(DateTime cutoffDate);
   
   /// Get the pregnancy week associated with a session.
   /// 

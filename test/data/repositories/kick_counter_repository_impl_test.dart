@@ -4,29 +4,24 @@ library;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:zeyra/core/services/encryption_service.dart';
 import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 
-class MockEncryptionService extends Mock implements EncryptionService {}
 class MockLoggingService extends Mock implements LoggingService {}
 
 void main() {
   late AppDatabase database;
-  late MockEncryptionService mockEncryptionService;
   late MockLoggingService mockLogger;
   late KickCounterRepositoryImpl repository;
 
   setUp(() {
-    // Create in-memory database for testing
+    // Create in-memory database for testing (unencrypted for tests)
     database = AppDatabase.forTesting(NativeDatabase.memory());
-    mockEncryptionService = MockEncryptionService();
     mockLogger = MockLoggingService();
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
-      encryptionService: mockEncryptionService,
       logger: mockLogger,
     );
 
@@ -127,11 +122,6 @@ void main() {
       test('should load kicks with session', () async {
         // Arrange
         final session = await repository.createSession();
-        
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted_moderate');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
 
         // Add some kicks
         await repository.addKick(session.id, MovementStrength.moderate);
@@ -151,24 +141,9 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('addKick', () {
-      test('should encrypt perceivedStrength before saving', () async {
-        // Arrange
-        final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt('moderate'))
-            .thenAnswer((_) async => 'encrypted_moderate');
-
-        // Act
-        await repository.addKick(session.id, MovementStrength.moderate);
-
-        // Assert
-        verify(() => mockEncryptionService.encrypt('moderate')).called(1);
-      });
-
       test('should set correct timestamp', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
         
         // Truncate to milliseconds since that's our storage precision
         final beforeKick = DateTime.fromMillisecondsSinceEpoch(
@@ -197,8 +172,6 @@ void main() {
       test('should increment sequenceNumber', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
 
         // Act
         final kick1 = await repository.addKick(session.id, MovementStrength.weak);
@@ -220,10 +193,6 @@ void main() {
       test('should delete kick with highest sequenceNumber', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
 
         await repository.addKick(session.id, MovementStrength.moderate);
         await repository.addKick(session.id, MovementStrength.moderate);
@@ -359,10 +328,6 @@ void main() {
       test('should set endTime to current DateTime', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
         
         await repository.addKick(session.id, MovementStrength.moderate);
         final beforeEnd = DateTime.now();
@@ -387,10 +352,6 @@ void main() {
       test('should set isActive to false', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
         
         await repository.addKick(session.id, MovementStrength.moderate);
 
@@ -414,10 +375,6 @@ void main() {
       test('should cascade delete kicks', () async {
         // Arrange
         final session = await repository.createSession();
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
         
         await repository.addKick(session.id, MovementStrength.moderate);
         await repository.addKick(session.id, MovementStrength.moderate);
@@ -441,11 +398,6 @@ void main() {
     group('getSessionHistory', () {
       test('should return sessions ordered by startTime desc', () async {
         // Arrange
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-
         final session1 = await repository.createSession();
         await repository.addKick(session1.id, MovementStrength.moderate);
         await repository.endSession(session1.id);
@@ -467,11 +419,6 @@ void main() {
 
       test('should respect limit parameter', () async {
         // Arrange
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-
         for (int i = 0; i < 5; i++) {
           final session = await repository.createSession();
           await repository.addKick(session.id, MovementStrength.moderate);
@@ -494,12 +441,6 @@ void main() {
     group('getSession', () {
       test('should retrieve session by ID with kicks', () async {
         // Arrange
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        // Mock decrypt to return valid movement strength for any encrypted value
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-
         final createdSession = await repository.createSession();
         await repository.addKick(createdSession.id, MovementStrength.moderate);
         await repository.addKick(createdSession.id, MovementStrength.strong);
@@ -521,18 +462,9 @@ void main() {
         expect(session, isNull);
       });
 
-      test('should decrypt note if present', () async {
+      test('should load note if present', () async {
         // Arrange
         const note = 'Test note';
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        // Mock for any decrypt call - handles both note and any kicks
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((invocation) async {
-              final encrypted = invocation.positionalArguments[0] as String;
-              if (encrypted == 'encrypted-note') return note;
-              return 'moderate'; // Default for kick strengths
-            });
 
         final createdSession = await repository.createSession();
         await repository.updateSessionNote(createdSession.id, note);
@@ -563,34 +495,22 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('updateSessionNote', () {
-      test('should encrypt and store note', () async {
+      test('should store note', () async {
         // Arrange
         const note = 'Felt very active today';
         final session = await repository.createSession();
-        
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        when(() => mockEncryptionService.decrypt('encrypted-note'))
-            .thenAnswer((_) async => note);
 
         // Act
         final updatedSession = await repository.updateSessionNote(session.id, note);
 
         // Assert
         expect(updatedSession.note, equals(note));
-        verify(() => mockEncryptionService.encrypt(note)).called(1);
-        verify(() => mockEncryptionService.decrypt('encrypted-note')).called(1);
       });
 
       test('should clear note when null is provided', () async {
         // Arrange
         const note = 'Initial note';
         final session = await repository.createSession();
-        
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        when(() => mockEncryptionService.decrypt('encrypted-note'))
-            .thenAnswer((_) async => note);
         
         await repository.updateSessionNote(session.id, note);
 
@@ -606,11 +526,6 @@ void main() {
         const note = 'Initial note';
         final session = await repository.createSession();
         
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        when(() => mockEncryptionService.decrypt('encrypted-note'))
-            .thenAnswer((_) async => note);
-        
         await repository.updateSessionNote(session.id, note);
 
         // Act
@@ -618,14 +533,11 @@ void main() {
 
         // Assert
         expect(updatedSession.note, isNull);
-        verifyNever(() => mockEncryptionService.encrypt(''));
       });
 
       test('should throw when session does not exist', () async {
         // Arrange
         const note = 'Test note';
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
 
         // Act & Assert
         expect(
@@ -637,16 +549,6 @@ void main() {
       test('should preserve session metadata when updating note', () async {
         // Arrange
         const note = 'Test note';
-        // Mock encryption/decryption for kick strength
-        when(() => mockEncryptionService.encrypt('moderate'))
-            .thenAnswer((_) async => 'encrypted-strength');
-        when(() => mockEncryptionService.decrypt('encrypted-strength'))
-            .thenAnswer((_) async => 'moderate');
-        // Mock encryption/decryption for note
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        when(() => mockEncryptionService.decrypt('encrypted-note'))
-            .thenAnswer((_) async => note);
 
         final session = await repository.createSession();
         await repository.addKick(session.id, MovementStrength.moderate);
@@ -666,15 +568,6 @@ void main() {
         const note1 = 'First note';
         const note2 = 'Second note';
         final session = await repository.createSession();
-        
-        when(() => mockEncryptionService.encrypt(note1))
-            .thenAnswer((_) async => 'encrypted-1');
-        when(() => mockEncryptionService.encrypt(note2))
-            .thenAnswer((_) async => 'encrypted-2');
-        when(() => mockEncryptionService.decrypt('encrypted-1'))
-            .thenAnswer((_) async => note1);
-        when(() => mockEncryptionService.decrypt('encrypted-2'))
-            .thenAnswer((_) async => note2);
 
         // Act
         await repository.updateSessionNote(session.id, note1);
@@ -694,19 +587,6 @@ void main() {
         // Arrange
         const note1 = 'Session 1 note';
         const note2 = 'Session 2 note';
-        
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-        when(() => mockEncryptionService.encrypt(note1))
-            .thenAnswer((_) async => 'encrypted-note-1');
-        when(() => mockEncryptionService.encrypt(note2))
-            .thenAnswer((_) async => 'encrypted-note-2');
-        when(() => mockEncryptionService.decrypt('encrypted-note-1'))
-            .thenAnswer((_) async => note1);
-        when(() => mockEncryptionService.decrypt('encrypted-note-2'))
-            .thenAnswer((_) async => note2);
 
         final session1 = await repository.createSession();
         await repository.addKick(session1.id, MovementStrength.moderate);
@@ -732,15 +612,6 @@ void main() {
       test('should handle mix of sessions with and without notes', () async {
         // Arrange
         const note = 'Has a note';
-        
-        when(() => mockEncryptionService.encrypt(any()))
-            .thenAnswer((_) async => 'encrypted');
-        when(() => mockEncryptionService.decrypt(any()))
-            .thenAnswer((_) async => 'moderate');
-        when(() => mockEncryptionService.encrypt(note))
-            .thenAnswer((_) async => 'encrypted-note');
-        when(() => mockEncryptionService.decrypt('encrypted-note'))
-            .thenAnswer((_) async => note);
 
         final session1 = await repository.createSession();
         await repository.addKick(session1.id, MovementStrength.moderate);
@@ -760,6 +631,69 @@ void main() {
         expect(history.length, equals(2));
         expect(history[0].note, equals(note));
         expect(history[1].note, isNull);
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // Data Retention Tests
+    // ------------------------------------------------------------------------
+
+    group('deleteSessionsOlderThan', () {
+      test('should delete old sessions and return count', () async {
+        // Arrange - Create sessions at different times
+        final now = DateTime.now();
+
+        // Create old session (400 days ago)
+        final oldSession = await repository.createSession();
+        await repository.addKick(oldSession.id, MovementStrength.moderate);
+        await repository.endSession(oldSession.id);
+
+        // Manually update the session's timestamp to be old
+        await database.customStatement(
+          'UPDATE kick_sessions SET start_time_millis = ?, end_time_millis = ?, created_at_millis = ? WHERE id = ?',
+          [
+            now.subtract(const Duration(days: 400)).millisecondsSinceEpoch,
+            now.subtract(const Duration(days: 400)).millisecondsSinceEpoch,
+            now.subtract(const Duration(days: 400)).millisecondsSinceEpoch,
+            oldSession.id,
+          ],
+        );
+
+        // Create recent session (30 days ago)
+        await Future.delayed(const Duration(milliseconds: 10));
+        final recentSession = await repository.createSession();
+        await repository.addKick(recentSession.id, MovementStrength.moderate);
+        await repository.endSession(recentSession.id);
+
+        // Act - Delete sessions older than 365 days
+        final cutoffDate = now.subtract(const Duration(days: 365));
+        final deletedCount = await repository.deleteSessionsOlderThan(cutoffDate);
+
+        // Assert
+        expect(deletedCount, equals(1));
+
+        // Verify only recent session remains
+        final history = await repository.getSessionHistory();
+        expect(history.length, equals(1));
+        expect(history.first.id, equals(recentSession.id));
+      });
+
+      test('should return 0 when no old sessions exist', () async {
+        // Arrange - Create only recent session
+        final session = await repository.createSession();
+        await repository.addKick(session.id, MovementStrength.moderate);
+        await repository.endSession(session.id);
+
+        // Act - Delete sessions older than 365 days
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 365));
+        final deletedCount = await repository.deleteSessionsOlderThan(cutoffDate);
+
+        // Assert
+        expect(deletedCount, equals(0));
+
+        // Verify session still exists
+        final history = await repository.getSessionHistory();
+        expect(history.length, equals(1));
       });
     });
   });

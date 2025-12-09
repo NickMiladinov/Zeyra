@@ -5,9 +5,13 @@ import '../local/daos/kick_counter_dao.dart';
 import 'pause_event_mapper.dart';
 
 /// Mapper for converting between domain entities and DTOs.
-/// 
+///
 /// Handles bidirectional mapping of KickSession and Kick entities,
 /// including Duration ↔ milliseconds conversion for pause tracking.
+///
+/// **Note:** With SQLCipher full database encryption, no field-level
+/// encryption/decryption is needed. Data is stored as plaintext in the
+/// encrypted database.
 class KickSessionMapper {
   KickSessionMapper._(); // Prevent instantiation
 
@@ -16,22 +20,11 @@ class KickSessionMapper {
   // --------------------------------------------------------------------------
 
   /// Convert DTO with kicks to domain KickSession entity.
-  /// 
+  ///
   /// [dto] - Database representation with kicks
-  /// [decryptStrength] - Function to decrypt perceived strength values
-  /// [decryptNote] - Function to decrypt note (if present)
-  /// 
-  /// Returns fully hydrated domain entity with decrypted kicks.
-  static KickSession toDomain(
-    KickSessionWithKicks dto,
-    String Function(String) decryptStrength, {
-    String Function(String)? decryptNote,
-  }) {
-    String? note;
-    if (dto.session.note != null && decryptNote != null) {
-      note = decryptNote(dto.session.note!);
-    }
-
+  ///
+  /// Returns fully hydrated domain entity.
+  static KickSession toDomain(KickSessionWithKicks dto) {
     return KickSession(
       id: dto.session.id,
       startTime: DateTime.fromMillisecondsSinceEpoch(dto.session.startTimeMillis),
@@ -39,9 +32,7 @@ class KickSessionMapper {
           ? DateTime.fromMillisecondsSinceEpoch(dto.session.endTimeMillis!)
           : null,
       isActive: dto.session.isActive,
-      kicks: dto.kicks
-          .map((k) => kickToDomain(k, decryptStrength(k.perceivedStrength)))
-          .toList(),
+      kicks: dto.kicks.map((k) => kickToDomain(k)).toList(),
       pausedAt: dto.session.pausedAtMillis != null
           ? DateTime.fromMillisecondsSinceEpoch(dto.session.pausedAtMillis!)
           : null,
@@ -49,28 +40,18 @@ class KickSessionMapper {
         milliseconds: dto.session.totalPausedMillis,
       ),
       pauseCount: dto.session.pauseCount,
-      note: note,
+      note: dto.session.note,
       pauseEvents: PauseEventMapper.toDomainList(dto.pauseEvents),
     );
   }
 
   /// Convert domain KickSession to DTO.
-  /// 
+  ///
   /// [domain] - Domain entity
-  /// [encryptStrength] - Function to encrypt perceived strength values
-  /// [encryptNote] - Function to encrypt note (if present)
-  /// 
+  ///
   /// Returns database representation. Kicks must be saved separately.
-  static KickSessionDto toDto(
-    KickSession domain,
-    String Function(MovementStrength) encryptStrength, {
-    String Function(String)? encryptNote,
-  }) {
+  static KickSessionDto toDto(KickSession domain) {
     final now = DateTime.now();
-    String? encryptedNote;
-    if (domain.note != null && encryptNote != null) {
-      encryptedNote = encryptNote(domain.note!);
-    }
 
     return KickSessionDto(
       id: domain.id,
@@ -80,7 +61,7 @@ class KickSessionMapper {
       pausedAtMillis: domain.pausedAt?.millisecondsSinceEpoch,
       totalPausedMillis: domain.totalPausedDuration.inMilliseconds,
       pauseCount: domain.pauseCount,
-      note: encryptedNote,
+      note: domain.note,
       createdAtMillis: now.millisecondsSinceEpoch,
       updatedAtMillis: now.millisecondsSinceEpoch,
     );
@@ -91,34 +72,32 @@ class KickSessionMapper {
   // --------------------------------------------------------------------------
 
   /// Convert DTO kick to domain Kick entity.
-  /// 
+  ///
   /// [dto] - Database representation
-  /// [decryptedStrength] - Already decrypted strength value
-  /// 
+  ///
   /// Returns domain entity with parsed strength enum.
-  static Kick kickToDomain(KickDto dto, String decryptedStrength) {
+  static Kick kickToDomain(KickDto dto) {
     return Kick(
       id: dto.id,
       sessionId: dto.sessionId,
       timestamp: DateTime.fromMillisecondsSinceEpoch(dto.timestampMillis),
       sequenceNumber: dto.sequenceNumber,
-      perceivedStrength: _parseMovementStrength(decryptedStrength),
+      perceivedStrength: _parseMovementStrength(dto.perceivedStrength),
     );
   }
 
   /// Convert domain Kick to DTO.
-  /// 
+  ///
   /// [domain] - Domain entity
-  /// [encryptedStrength] - Already encrypted strength value
-  /// 
+  ///
   /// Returns database representation.
-  static KickDto kickToDto(Kick domain, String encryptedStrength) {
+  static KickDto kickToDto(Kick domain) {
     return KickDto(
       id: domain.id,
       sessionId: domain.sessionId,
       timestampMillis: domain.timestamp.millisecondsSinceEpoch,
       sequenceNumber: domain.sequenceNumber,
-      perceivedStrength: encryptedStrength,
+      perceivedStrength: movementStrengthToString(domain.perceivedStrength),
     );
   }
 
@@ -127,7 +106,7 @@ class KickSessionMapper {
   // --------------------------------------------------------------------------
 
   /// Parse string to MovementStrength enum.
-  /// 
+  ///
   /// Handles case-insensitive parsing and defaults to moderate if invalid.
   static MovementStrength _parseMovementStrength(String value) {
     switch (value.toLowerCase()) {
@@ -143,9 +122,8 @@ class KickSessionMapper {
     }
   }
 
-  /// Convert MovementStrength enum to string for encryption.
+  /// Convert MovementStrength enum to string for storage.
   static String movementStrengthToString(MovementStrength strength) {
     return strength.name;
   }
 }
-

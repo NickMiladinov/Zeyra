@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:zeyra/core/utils/data_minimization.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
@@ -50,7 +51,7 @@ void main() {
     mockAnalyticsNotifier = MockKickAnalyticsNotifier();
     
     // Mock initial load
-    when(() => mockUseCase.getSessionHistory(limit: 50))
+    when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
         .thenAnswer((_) async => []);
     
     // Mock analytics notifier state
@@ -77,7 +78,7 @@ void main() {
           FakeKickSession.ended(note: 'Session 1'),
           FakeKickSession.ended(note: 'Session 2'),
         ];
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => sessions);
 
         // Act
@@ -91,7 +92,7 @@ void main() {
 
       test('should set loading state while loading', () async {
         // Arrange
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => []);
 
         // Check initial state
@@ -110,7 +111,7 @@ void main() {
 
       test('should handle error on load', () async {
         // Arrange
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenThrow(Exception('Database Error'));
 
         // Act
@@ -125,7 +126,7 @@ void main() {
       test('should calculate typical range correctly', () async {
         // Arrange
         final session = createSessionWithKicks(10, const Duration(minutes: 30));
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => [session]);
 
         // Act
@@ -138,7 +139,7 @@ void main() {
 
       test('should return null typical range when no valid sessions', () async {
         // Arrange
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => []);
 
         // Act
@@ -164,7 +165,7 @@ void main() {
         // Note: Constructor already called loadHistory once with initial empty list
         expect(notifier.state.history.length, equals(0));
 
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => refreshedSessions);
 
         // Act
@@ -173,7 +174,7 @@ void main() {
         // Assert
         expect(notifier.state.history.length, equals(2));
         // Constructor calls loadHistory once, refresh calls it again
-        verify(() => mockUseCase.getSessionHistory(limit: 50)).called(greaterThanOrEqualTo(1));
+        verify(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions)).called(greaterThanOrEqualTo(1));
       });
     });
 
@@ -193,13 +194,13 @@ void main() {
           FakeKickSession.simple(id: 'session-2', isActive: false, endTime: DateTime(2024, 1, 1, 10, 30)),
         ];
 
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => initialSessions);
         await notifier.loadHistory();
 
         when(() => mockUseCase.deleteHistoricalSession(sessionId))
             .thenAnswer((_) async => Future.value());
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => afterDeleteSessions);
 
         // Act
@@ -232,7 +233,7 @@ void main() {
         
         when(() => mockUseCase.deleteHistoricalSession(sessionId))
             .thenThrow(Exception('Delete failed'));
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => sessions);
 
         // Act
@@ -262,7 +263,7 @@ void main() {
 
         when(() => mockUseCase.updateSessionNote(sessionId, note))
             .thenAnswer((_) async => updatedSession);
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => afterUpdateSessions);
 
         // Act
@@ -281,7 +282,7 @@ void main() {
 
         when(() => mockUseCase.updateSessionNote(sessionId, null))
             .thenAnswer((_) async => updatedSession);
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => afterUpdateSessions);
 
         // Act
@@ -315,7 +316,7 @@ void main() {
         
         when(() => mockUseCase.updateSessionNote(sessionId, note))
             .thenThrow(Exception('Update failed'));
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => sessions);
 
         // Act
@@ -346,7 +347,7 @@ void main() {
           FakeKickSession.simple(id: session2Id, isActive: false, endTime: DateTime(2024, 1, 1, 10, 30)),
         ];
         
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => initialSessions);
         await notifier.loadHistory();
 
@@ -354,7 +355,7 @@ void main() {
         final updatedSession1 = FakeKickSession.simple(id: session1Id, note: note, isActive: false, endTime: DateTime(2024, 1, 1, 10, 30));
         when(() => mockUseCase.updateSessionNote(session1Id, note))
             .thenAnswer((_) async => updatedSession1);
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => [updatedSession1, initialSessions[1]]);
         
         await notifier.updateSessionNote(session1Id, note);
@@ -362,7 +363,7 @@ void main() {
         // Delete second session
         when(() => mockUseCase.deleteHistoricalSession(session2Id))
             .thenAnswer((_) async => Future.value());
-        when(() => mockUseCase.getSessionHistory(limit: 50))
+        when(() => mockUseCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions))
             .thenAnswer((_) async => [updatedSession1]);
 
         // Act

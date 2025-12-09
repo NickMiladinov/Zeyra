@@ -39,25 +39,32 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 |--------|------|-------------|
 | id | String (UUID) | Local record ID |
 | authId | String | Supabase Auth user ID |
-| email | String | User’s email |
-| firstName | String | User’s first name |
-| lastName | String | User’s last name |
+| email | String | User's email |
+| firstName | String | User's first name |
+| lastName | String | User's last name |
 | dateOfBirth | DateTime | Date of birth |
 | gender | Enum | Used for personalization |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 | isSynced | Boolean | Cloud sync status |
+| databasePath | String | Path to user's database file (`zeyra_<authId>.db`) |
+| encryptionKeyId | String | Secure storage key ID (`zeyra_key_<authId>`) |
+| lastAccessedAt | DateTime | Last session timestamp |
+| schemaVersion | int | Database schema version for migrations |
 
 **Use Cases:**
-- Get current user profile  
-- Update user information  
-- Sync with Supabase auth user  
-- Delete local user data on logout  
+- Get current user profile
+- Update user information
+- Sync with Supabase auth user
+- Manage per-user database isolation
+- Track database schema version for migrations
 
 **Relationships:**
 - One `UserProfile` → Many `Pregnancy`
 - One `UserProfile` → One `UserSettings`
 - One `UserProfile` → One `Subscription`
+- One `UserProfile` → One `SessionState`
+- One `UserProfile` → One Database file → One Encryption key
 
 ---
 
@@ -70,10 +77,14 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 | notificationsEnabled | Boolean | |
 | language | String | |
 | createdAt | DateTime | |
+| inactivityTimeoutMinutes | int | Minutes before auto-lock (1/5/15/30), default 5 |
+| biometricsEnabled | Boolean | Whether biometrics are enabled for unlock (default: true if available) |
+| backgroundLockEnabled | Boolean | Lock when app backgrounded (default: true) |
 
 **Use Cases:**
-- Toggle theme and preferences  
-- Manage notification and privacy settings  
+- Toggle theme and preferences
+- Manage notification and privacy settings
+- Configure session security (auto-lock timeout, biometrics)
 
 **Relationships:**
 - Belongs to `UserProfile`
@@ -102,9 +113,36 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
+### 4. SessionState
+| Field | Type | Description |
+|--------|------|-------------|
+| id | String | Primary key |
+| userId | String | FK to UserProfile |
+| state | Enum | locked / requiresLogin / requiresLocalAuth / active |
+| lastStateChange | DateTime | When state last changed |
+| failedAuthAttempts | int | Counter for biometric failures (resets on success) |
+| lockedAt | DateTime? | When session was locked (null if active) |
+
+**State Definitions:**
+- `locked` — Initial/undefined state, no active session
+- `requiresLogin` — Need full Supabase authentication (no valid token)
+- `requiresLocalAuth` — Need biometric/PIN authentication (valid token exists)
+- `active` — Session active, database unlocked, user can access data
+
+**Use Cases:**
+- Track current session state for security enforcement
+- Manage lock/unlock lifecycle
+- Count failed biometric attempts for fallback to password
+- Audit session activity timestamps
+
+**Relationships:**
+- Belongs to `UserProfile`
+
+---
+
 ## 🤰 Pregnancy Entities
 
-### 4. Pregnancy
+### 5. Pregnancy
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | Primary key |
@@ -112,7 +150,6 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 | startDate | DateTime | LMP/conception date |
 | dueDate | DateTime | Expected due date |
 | selectedHospitalId | String? | Selected hospital ID |
-| notes | String? | User-entered notes |
 | createdAt | DateTime | |
 | updatedAt | DateTime | |
 
@@ -129,7 +166,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 💉 Health & Tracking Entities
 
-### 5. SymptomLog
+### 6. SymptomLog
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -149,7 +186,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 6. Biomarker
+### 7. Biomarker
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -179,7 +216,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 7. TestResult
+### 8. TestResult
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -204,7 +241,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 8. FileAttachment
+### 9. FileAttachment
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -228,7 +265,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 🏥 Hospital Entities
 
-### 9. Hospital
+### 10. Hospital
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -253,7 +290,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 📆 Planning & Tools Entities
 
-### 10. Appointment
+### 11. Appointment
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -274,7 +311,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 11. KickCounterEntry
+### 12. KickCounterEntry
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -294,7 +331,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 12. ContractionTimerEntry
+### 13. ContractionTimerEntry
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -314,7 +351,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 13. BirthPlan
+### 14. BirthPlan
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -332,7 +369,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 14. ShoppingListItem
+### 15. ShoppingListItem
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -350,7 +387,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 15. BumpPhoto
+### 16. BumpPhoto
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -372,7 +409,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 🤖 AI & Assistant Entities
 
-### 16. AskMyMidwifeNote
+### 17. AskMyMidwifeNote
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -388,7 +425,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 17. AIChatMessage
+### 18. AIChatMessage
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -408,7 +445,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 🔔 Notifications
 
-### 18. Notification
+### 19. Notification
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -430,10 +467,17 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 ---
 
 ## 🔗 Relationships Map (simplified)
+```
 UserProfile ───< Pregnancy ───< (SymptomLog, Biomarker, Appointment, FileAttachment, BirthPlan, etc.)
+UserProfile ─── SessionState
+UserProfile ─── UserSettings
+UserProfile ─── Subscription
+UserProfile ───< Notification
+UserProfile ─── Database file (`zeyra_<authId>.db`)
+UserProfile ─── Encryption key (`zeyra_key_<authId>`)
 Pregnancy ───< Hospital
 UserProfile ───< Hospital
-UserProfile ───< Subscription, Settings, Notification
+```
 
 
 ---

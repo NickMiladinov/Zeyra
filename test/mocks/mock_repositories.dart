@@ -27,4 +27,4 @@ export 'fake_data/kick_counter_fakes.dart'
     show
         MockKickCounterRepository,
         MockKickCounterDao,
-        MockEncryptionService;
+        MockDatabaseEncryptionService;

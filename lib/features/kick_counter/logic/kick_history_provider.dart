@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/core/di/main_providers.dart';
+import 'package:zeyra/core/utils/data_minimization.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
@@ -57,7 +58,9 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
   Future<void> loadHistory() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final history = await _manageSessionUseCase.getSessionHistory(limit: 50);
+      final history = await _manageSessionUseCase.getSessionHistory(
+        limit: DataMinimizationDefaults.maxHistorySessions,
+      );
       
       // Calculate analytics
       _analyticsNotifier.calculateAnalytics(history);
@@ -116,7 +119,8 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
 // ----------------------------------------------------------------------------
 
 final kickHistoryProvider = StateNotifierProvider<KickHistoryNotifier, KickHistoryState>((ref) {
-  final manageSessionUseCase = ref.watch(manageSessionUseCaseProvider);
+  // Use .value! since the database must be initialized before UI accesses this
+  final manageSessionUseCase = ref.watch(manageSessionUseCaseProvider).value!;
   final analyticsNotifier = ref.watch(kickAnalyticsProvider.notifier);
   return KickHistoryNotifier(manageSessionUseCase, analyticsNotifier);
 });

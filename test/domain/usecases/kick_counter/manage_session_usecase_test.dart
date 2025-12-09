@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:zeyra/core/utils/data_minimization.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick_counter_constants.dart';
 import 'package:zeyra/domain/exceptions/kick_counter_exception.dart';
@@ -850,16 +851,16 @@ void main() {
           FakeKickSession.ended(note: 'Second session'),
           FakeKickSession.ended(),
         ];
-        when(() => mockRepository.getSessionHistory(limit: 50, before: null))
+        when(() => mockRepository.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions, before: null))
             .thenAnswer((_) async => history);
 
         // Act
-        final result = await useCase.getSessionHistory(limit: 50);
+        final result = await useCase.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions);
 
         // Assert
         expect(result, equals(history));
         expect(result.length, equals(3));
-        verify(() => mockRepository.getSessionHistory(limit: 50, before: null)).called(1);
+        verify(() => mockRepository.getSessionHistory(limit: DataMinimizationDefaults.maxHistorySessions, before: null)).called(1);
       });
 
       test('should return empty list when no history exists', () async {
@@ -913,6 +914,62 @@ void main() {
 
         // Assert
         verify(() => mockRepository.getSessionHistory(limit: limit, before: before)).called(1);
+      });
+    });
+
+    // ------------------------------------------------------------------------
+    // deleteOldSessions Tests
+    // ------------------------------------------------------------------------
+
+    group('deleteOldSessions', () {
+      test('should delete sessions older than default 365 days', () async {
+        // Arrange
+        final cutoffDate = DateTime.now().subtract(const Duration(days: 365));
+        when(() => mockRepository.deleteSessionsOlderThan(any()))
+            .thenAnswer((_) async => 5);
+
+        // Act
+        final deletedCount = await useCase.deleteOldSessions();
+
+        // Assert
+        expect(deletedCount, equals(5));
+
+        // Verify the cutoff date is approximately 365 days ago (within 1 second tolerance)
+        final captured = verify(() => mockRepository.deleteSessionsOlderThan(captureAny())).captured.single as DateTime;
+        final difference = captured.difference(cutoffDate).abs();
+        expect(difference.inSeconds, lessThan(2));
+      });
+
+      test('should delete sessions older than custom retention period', () async {
+        // Arrange
+        const customDays = 180;
+        final cutoffDate = DateTime.now().subtract(const Duration(days: customDays));
+        when(() => mockRepository.deleteSessionsOlderThan(any()))
+            .thenAnswer((_) async => 3);
+
+        // Act
+        final deletedCount = await useCase.deleteOldSessions(customDays);
+
+        // Assert
+        expect(deletedCount, equals(3));
+
+        // Verify the cutoff date is approximately customDays ago (within 1 second tolerance)
+        final captured = verify(() => mockRepository.deleteSessionsOlderThan(captureAny())).captured.single as DateTime;
+        final difference = captured.difference(cutoffDate).abs();
+        expect(difference.inSeconds, lessThan(2));
+      });
+
+      test('should return 0 when no old sessions exist', () async {
+        // Arrange
+        when(() => mockRepository.deleteSessionsOlderThan(any()))
+            .thenAnswer((_) async => 0);
+
+        // Act
+        final deletedCount = await useCase.deleteOldSessions();
+
+        // Assert
+        expect(deletedCount, equals(0));
+        verify(() => mockRepository.deleteSessionsOlderThan(any())).called(1);
       });
     });
   });
