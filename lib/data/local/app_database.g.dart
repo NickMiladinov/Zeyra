@@ -3,6 +3,1376 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
+class $UserProfilesTable extends UserProfiles
+    with TableInfo<$UserProfilesTable, UserProfileDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _authIdMeta = const VerificationMeta('authId');
+  @override
+  late final GeneratedColumn<String> authId = GeneratedColumn<String>(
+    'auth_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstNameMeta = const VerificationMeta(
+    'firstName',
+  );
+  @override
+  late final GeneratedColumn<String> firstName = GeneratedColumn<String>(
+    'first_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastNameMeta = const VerificationMeta(
+    'lastName',
+  );
+  @override
+  late final GeneratedColumn<String> lastName = GeneratedColumn<String>(
+    'last_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dateOfBirthMillisMeta = const VerificationMeta(
+    'dateOfBirthMillis',
+  );
+  @override
+  late final GeneratedColumn<int> dateOfBirthMillis = GeneratedColumn<int>(
+    'date_of_birth_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _genderMeta = const VerificationMeta('gender');
+  @override
+  late final GeneratedColumn<String> gender = GeneratedColumn<String>(
+    'gender',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isSyncedMeta = const VerificationMeta(
+    'isSynced',
+  );
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+    'is_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _databasePathMeta = const VerificationMeta(
+    'databasePath',
+  );
+  @override
+  late final GeneratedColumn<String> databasePath = GeneratedColumn<String>(
+    'database_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _encryptionKeyIdMeta = const VerificationMeta(
+    'encryptionKeyId',
+  );
+  @override
+  late final GeneratedColumn<String> encryptionKeyId = GeneratedColumn<String>(
+    'encryption_key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAccessedAtMillisMeta =
+      const VerificationMeta('lastAccessedAtMillis');
+  @override
+  late final GeneratedColumn<int> lastAccessedAtMillis = GeneratedColumn<int>(
+    'last_accessed_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _schemaVersionMeta = const VerificationMeta(
+    'schemaVersion',
+  );
+  @override
+  late final GeneratedColumn<int> schemaVersion = GeneratedColumn<int>(
+    'schema_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    authId,
+    email,
+    firstName,
+    lastName,
+    dateOfBirthMillis,
+    gender,
+    createdAtMillis,
+    updatedAtMillis,
+    isSynced,
+    databasePath,
+    encryptionKeyId,
+    lastAccessedAtMillis,
+    schemaVersion,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profiles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserProfileDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('auth_id')) {
+      context.handle(
+        _authIdMeta,
+        authId.isAcceptableOrUnknown(data['auth_id']!, _authIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_authIdMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('first_name')) {
+      context.handle(
+        _firstNameMeta,
+        firstName.isAcceptableOrUnknown(data['first_name']!, _firstNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_firstNameMeta);
+    }
+    if (data.containsKey('last_name')) {
+      context.handle(
+        _lastNameMeta,
+        lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastNameMeta);
+    }
+    if (data.containsKey('date_of_birth_millis')) {
+      context.handle(
+        _dateOfBirthMillisMeta,
+        dateOfBirthMillis.isAcceptableOrUnknown(
+          data['date_of_birth_millis']!,
+          _dateOfBirthMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dateOfBirthMillisMeta);
+    }
+    if (data.containsKey('gender')) {
+      context.handle(
+        _genderMeta,
+        gender.isAcceptableOrUnknown(data['gender']!, _genderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_genderMeta);
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(
+        _isSyncedMeta,
+        isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
+      );
+    }
+    if (data.containsKey('database_path')) {
+      context.handle(
+        _databasePathMeta,
+        databasePath.isAcceptableOrUnknown(
+          data['database_path']!,
+          _databasePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_databasePathMeta);
+    }
+    if (data.containsKey('encryption_key_id')) {
+      context.handle(
+        _encryptionKeyIdMeta,
+        encryptionKeyId.isAcceptableOrUnknown(
+          data['encryption_key_id']!,
+          _encryptionKeyIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_encryptionKeyIdMeta);
+    }
+    if (data.containsKey('last_accessed_at_millis')) {
+      context.handle(
+        _lastAccessedAtMillisMeta,
+        lastAccessedAtMillis.isAcceptableOrUnknown(
+          data['last_accessed_at_millis']!,
+          _lastAccessedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastAccessedAtMillisMeta);
+    }
+    if (data.containsKey('schema_version')) {
+      context.handle(
+        _schemaVersionMeta,
+        schemaVersion.isAcceptableOrUnknown(
+          data['schema_version']!,
+          _schemaVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_schemaVersionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfileDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfileDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      authId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}auth_id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      firstName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}first_name'],
+      )!,
+      lastName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_name'],
+      )!,
+      dateOfBirthMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date_of_birth_millis'],
+      )!,
+      gender: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}gender'],
+      )!,
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+      isSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_synced'],
+      )!,
+      databasePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}database_path'],
+      )!,
+      encryptionKeyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}encryption_key_id'],
+      )!,
+      lastAccessedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_accessed_at_millis'],
+      )!,
+      schemaVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}schema_version'],
+      )!,
+    );
+  }
+
+  @override
+  $UserProfilesTable createAlias(String alias) {
+    return $UserProfilesTable(attachedDatabase, alias);
+  }
+}
+
+class UserProfileDto extends DataClass implements Insertable<UserProfileDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// Supabase Auth user ID
+  final String authId;
+
+  /// User's email
+  final String email;
+
+  /// User's first name
+  final String firstName;
+
+  /// User's last name
+  final String lastName;
+
+  /// Date of birth (stored as millis since epoch)
+  final int dateOfBirthMillis;
+
+  /// Gender (stored as lowercase string)
+  final String gender;
+
+  /// When record was created (millis since epoch)
+  final int createdAtMillis;
+
+  /// When record was last updated (millis since epoch)
+  final int updatedAtMillis;
+
+  /// Whether synced to cloud
+  final bool isSynced;
+
+  /// Path to database file
+  final String databasePath;
+
+  /// Encryption key ID in secure storage
+  final String encryptionKeyId;
+
+  /// Last access timestamp (millis since epoch)
+  final int lastAccessedAtMillis;
+
+  /// Database schema version
+  final int schemaVersion;
+  const UserProfileDto({
+    required this.id,
+    required this.authId,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.dateOfBirthMillis,
+    required this.gender,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+    required this.isSynced,
+    required this.databasePath,
+    required this.encryptionKeyId,
+    required this.lastAccessedAtMillis,
+    required this.schemaVersion,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['auth_id'] = Variable<String>(authId);
+    map['email'] = Variable<String>(email);
+    map['first_name'] = Variable<String>(firstName);
+    map['last_name'] = Variable<String>(lastName);
+    map['date_of_birth_millis'] = Variable<int>(dateOfBirthMillis);
+    map['gender'] = Variable<String>(gender);
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    map['is_synced'] = Variable<bool>(isSynced);
+    map['database_path'] = Variable<String>(databasePath);
+    map['encryption_key_id'] = Variable<String>(encryptionKeyId);
+    map['last_accessed_at_millis'] = Variable<int>(lastAccessedAtMillis);
+    map['schema_version'] = Variable<int>(schemaVersion);
+    return map;
+  }
+
+  UserProfilesCompanion toCompanion(bool nullToAbsent) {
+    return UserProfilesCompanion(
+      id: Value(id),
+      authId: Value(authId),
+      email: Value(email),
+      firstName: Value(firstName),
+      lastName: Value(lastName),
+      dateOfBirthMillis: Value(dateOfBirthMillis),
+      gender: Value(gender),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+      isSynced: Value(isSynced),
+      databasePath: Value(databasePath),
+      encryptionKeyId: Value(encryptionKeyId),
+      lastAccessedAtMillis: Value(lastAccessedAtMillis),
+      schemaVersion: Value(schemaVersion),
+    );
+  }
+
+  factory UserProfileDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfileDto(
+      id: serializer.fromJson<String>(json['id']),
+      authId: serializer.fromJson<String>(json['authId']),
+      email: serializer.fromJson<String>(json['email']),
+      firstName: serializer.fromJson<String>(json['firstName']),
+      lastName: serializer.fromJson<String>(json['lastName']),
+      dateOfBirthMillis: serializer.fromJson<int>(json['dateOfBirthMillis']),
+      gender: serializer.fromJson<String>(json['gender']),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+      databasePath: serializer.fromJson<String>(json['databasePath']),
+      encryptionKeyId: serializer.fromJson<String>(json['encryptionKeyId']),
+      lastAccessedAtMillis: serializer.fromJson<int>(
+        json['lastAccessedAtMillis'],
+      ),
+      schemaVersion: serializer.fromJson<int>(json['schemaVersion']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'authId': serializer.toJson<String>(authId),
+      'email': serializer.toJson<String>(email),
+      'firstName': serializer.toJson<String>(firstName),
+      'lastName': serializer.toJson<String>(lastName),
+      'dateOfBirthMillis': serializer.toJson<int>(dateOfBirthMillis),
+      'gender': serializer.toJson<String>(gender),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+      'isSynced': serializer.toJson<bool>(isSynced),
+      'databasePath': serializer.toJson<String>(databasePath),
+      'encryptionKeyId': serializer.toJson<String>(encryptionKeyId),
+      'lastAccessedAtMillis': serializer.toJson<int>(lastAccessedAtMillis),
+      'schemaVersion': serializer.toJson<int>(schemaVersion),
+    };
+  }
+
+  UserProfileDto copyWith({
+    String? id,
+    String? authId,
+    String? email,
+    String? firstName,
+    String? lastName,
+    int? dateOfBirthMillis,
+    String? gender,
+    int? createdAtMillis,
+    int? updatedAtMillis,
+    bool? isSynced,
+    String? databasePath,
+    String? encryptionKeyId,
+    int? lastAccessedAtMillis,
+    int? schemaVersion,
+  }) => UserProfileDto(
+    id: id ?? this.id,
+    authId: authId ?? this.authId,
+    email: email ?? this.email,
+    firstName: firstName ?? this.firstName,
+    lastName: lastName ?? this.lastName,
+    dateOfBirthMillis: dateOfBirthMillis ?? this.dateOfBirthMillis,
+    gender: gender ?? this.gender,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+    isSynced: isSynced ?? this.isSynced,
+    databasePath: databasePath ?? this.databasePath,
+    encryptionKeyId: encryptionKeyId ?? this.encryptionKeyId,
+    lastAccessedAtMillis: lastAccessedAtMillis ?? this.lastAccessedAtMillis,
+    schemaVersion: schemaVersion ?? this.schemaVersion,
+  );
+  UserProfileDto copyWithCompanion(UserProfilesCompanion data) {
+    return UserProfileDto(
+      id: data.id.present ? data.id.value : this.id,
+      authId: data.authId.present ? data.authId.value : this.authId,
+      email: data.email.present ? data.email.value : this.email,
+      firstName: data.firstName.present ? data.firstName.value : this.firstName,
+      lastName: data.lastName.present ? data.lastName.value : this.lastName,
+      dateOfBirthMillis: data.dateOfBirthMillis.present
+          ? data.dateOfBirthMillis.value
+          : this.dateOfBirthMillis,
+      gender: data.gender.present ? data.gender.value : this.gender,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      databasePath: data.databasePath.present
+          ? data.databasePath.value
+          : this.databasePath,
+      encryptionKeyId: data.encryptionKeyId.present
+          ? data.encryptionKeyId.value
+          : this.encryptionKeyId,
+      lastAccessedAtMillis: data.lastAccessedAtMillis.present
+          ? data.lastAccessedAtMillis.value
+          : this.lastAccessedAtMillis,
+      schemaVersion: data.schemaVersion.present
+          ? data.schemaVersion.value
+          : this.schemaVersion,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfileDto(')
+          ..write('id: $id, ')
+          ..write('authId: $authId, ')
+          ..write('email: $email, ')
+          ..write('firstName: $firstName, ')
+          ..write('lastName: $lastName, ')
+          ..write('dateOfBirthMillis: $dateOfBirthMillis, ')
+          ..write('gender: $gender, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('databasePath: $databasePath, ')
+          ..write('encryptionKeyId: $encryptionKeyId, ')
+          ..write('lastAccessedAtMillis: $lastAccessedAtMillis, ')
+          ..write('schemaVersion: $schemaVersion')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    authId,
+    email,
+    firstName,
+    lastName,
+    dateOfBirthMillis,
+    gender,
+    createdAtMillis,
+    updatedAtMillis,
+    isSynced,
+    databasePath,
+    encryptionKeyId,
+    lastAccessedAtMillis,
+    schemaVersion,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfileDto &&
+          other.id == this.id &&
+          other.authId == this.authId &&
+          other.email == this.email &&
+          other.firstName == this.firstName &&
+          other.lastName == this.lastName &&
+          other.dateOfBirthMillis == this.dateOfBirthMillis &&
+          other.gender == this.gender &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis &&
+          other.isSynced == this.isSynced &&
+          other.databasePath == this.databasePath &&
+          other.encryptionKeyId == this.encryptionKeyId &&
+          other.lastAccessedAtMillis == this.lastAccessedAtMillis &&
+          other.schemaVersion == this.schemaVersion);
+}
+
+class UserProfilesCompanion extends UpdateCompanion<UserProfileDto> {
+  final Value<String> id;
+  final Value<String> authId;
+  final Value<String> email;
+  final Value<String> firstName;
+  final Value<String> lastName;
+  final Value<int> dateOfBirthMillis;
+  final Value<String> gender;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<bool> isSynced;
+  final Value<String> databasePath;
+  final Value<String> encryptionKeyId;
+  final Value<int> lastAccessedAtMillis;
+  final Value<int> schemaVersion;
+  final Value<int> rowid;
+  const UserProfilesCompanion({
+    this.id = const Value.absent(),
+    this.authId = const Value.absent(),
+    this.email = const Value.absent(),
+    this.firstName = const Value.absent(),
+    this.lastName = const Value.absent(),
+    this.dateOfBirthMillis = const Value.absent(),
+    this.gender = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.databasePath = const Value.absent(),
+    this.encryptionKeyId = const Value.absent(),
+    this.lastAccessedAtMillis = const Value.absent(),
+    this.schemaVersion = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserProfilesCompanion.insert({
+    required String id,
+    required String authId,
+    required String email,
+    required String firstName,
+    required String lastName,
+    required int dateOfBirthMillis,
+    required String gender,
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.isSynced = const Value.absent(),
+    required String databasePath,
+    required String encryptionKeyId,
+    required int lastAccessedAtMillis,
+    required int schemaVersion,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       authId = Value(authId),
+       email = Value(email),
+       firstName = Value(firstName),
+       lastName = Value(lastName),
+       dateOfBirthMillis = Value(dateOfBirthMillis),
+       gender = Value(gender),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis),
+       databasePath = Value(databasePath),
+       encryptionKeyId = Value(encryptionKeyId),
+       lastAccessedAtMillis = Value(lastAccessedAtMillis),
+       schemaVersion = Value(schemaVersion);
+  static Insertable<UserProfileDto> custom({
+    Expression<String>? id,
+    Expression<String>? authId,
+    Expression<String>? email,
+    Expression<String>? firstName,
+    Expression<String>? lastName,
+    Expression<int>? dateOfBirthMillis,
+    Expression<String>? gender,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<bool>? isSynced,
+    Expression<String>? databasePath,
+    Expression<String>? encryptionKeyId,
+    Expression<int>? lastAccessedAtMillis,
+    Expression<int>? schemaVersion,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (authId != null) 'auth_id': authId,
+      if (email != null) 'email': email,
+      if (firstName != null) 'first_name': firstName,
+      if (lastName != null) 'last_name': lastName,
+      if (dateOfBirthMillis != null) 'date_of_birth_millis': dateOfBirthMillis,
+      if (gender != null) 'gender': gender,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (databasePath != null) 'database_path': databasePath,
+      if (encryptionKeyId != null) 'encryption_key_id': encryptionKeyId,
+      if (lastAccessedAtMillis != null)
+        'last_accessed_at_millis': lastAccessedAtMillis,
+      if (schemaVersion != null) 'schema_version': schemaVersion,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserProfilesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? authId,
+    Value<String>? email,
+    Value<String>? firstName,
+    Value<String>? lastName,
+    Value<int>? dateOfBirthMillis,
+    Value<String>? gender,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<bool>? isSynced,
+    Value<String>? databasePath,
+    Value<String>? encryptionKeyId,
+    Value<int>? lastAccessedAtMillis,
+    Value<int>? schemaVersion,
+    Value<int>? rowid,
+  }) {
+    return UserProfilesCompanion(
+      id: id ?? this.id,
+      authId: authId ?? this.authId,
+      email: email ?? this.email,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      dateOfBirthMillis: dateOfBirthMillis ?? this.dateOfBirthMillis,
+      gender: gender ?? this.gender,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      isSynced: isSynced ?? this.isSynced,
+      databasePath: databasePath ?? this.databasePath,
+      encryptionKeyId: encryptionKeyId ?? this.encryptionKeyId,
+      lastAccessedAtMillis: lastAccessedAtMillis ?? this.lastAccessedAtMillis,
+      schemaVersion: schemaVersion ?? this.schemaVersion,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (authId.present) {
+      map['auth_id'] = Variable<String>(authId.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (firstName.present) {
+      map['first_name'] = Variable<String>(firstName.value);
+    }
+    if (lastName.present) {
+      map['last_name'] = Variable<String>(lastName.value);
+    }
+    if (dateOfBirthMillis.present) {
+      map['date_of_birth_millis'] = Variable<int>(dateOfBirthMillis.value);
+    }
+    if (gender.present) {
+      map['gender'] = Variable<String>(gender.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (databasePath.present) {
+      map['database_path'] = Variable<String>(databasePath.value);
+    }
+    if (encryptionKeyId.present) {
+      map['encryption_key_id'] = Variable<String>(encryptionKeyId.value);
+    }
+    if (lastAccessedAtMillis.present) {
+      map['last_accessed_at_millis'] = Variable<int>(
+        lastAccessedAtMillis.value,
+      );
+    }
+    if (schemaVersion.present) {
+      map['schema_version'] = Variable<int>(schemaVersion.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfilesCompanion(')
+          ..write('id: $id, ')
+          ..write('authId: $authId, ')
+          ..write('email: $email, ')
+          ..write('firstName: $firstName, ')
+          ..write('lastName: $lastName, ')
+          ..write('dateOfBirthMillis: $dateOfBirthMillis, ')
+          ..write('gender: $gender, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('databasePath: $databasePath, ')
+          ..write('encryptionKeyId: $encryptionKeyId, ')
+          ..write('lastAccessedAtMillis: $lastAccessedAtMillis, ')
+          ..write('schemaVersion: $schemaVersion, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PregnanciesTable extends Pregnancies
+    with TableInfo<$PregnanciesTable, PregnancyDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PregnanciesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES user_profiles (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _startDateMillisMeta = const VerificationMeta(
+    'startDateMillis',
+  );
+  @override
+  late final GeneratedColumn<int> startDateMillis = GeneratedColumn<int>(
+    'start_date_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dueDateMillisMeta = const VerificationMeta(
+    'dueDateMillis',
+  );
+  @override
+  late final GeneratedColumn<int> dueDateMillis = GeneratedColumn<int>(
+    'due_date_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _selectedHospitalIdMeta =
+      const VerificationMeta('selectedHospitalId');
+  @override
+  late final GeneratedColumn<String> selectedHospitalId =
+      GeneratedColumn<String>(
+        'selected_hospital_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    startDateMillis,
+    dueDateMillis,
+    selectedHospitalId,
+    createdAtMillis,
+    updatedAtMillis,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pregnancies';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PregnancyDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('start_date_millis')) {
+      context.handle(
+        _startDateMillisMeta,
+        startDateMillis.isAcceptableOrUnknown(
+          data['start_date_millis']!,
+          _startDateMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMillisMeta);
+    }
+    if (data.containsKey('due_date_millis')) {
+      context.handle(
+        _dueDateMillisMeta,
+        dueDateMillis.isAcceptableOrUnknown(
+          data['due_date_millis']!,
+          _dueDateMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dueDateMillisMeta);
+    }
+    if (data.containsKey('selected_hospital_id')) {
+      context.handle(
+        _selectedHospitalIdMeta,
+        selectedHospitalId.isAcceptableOrUnknown(
+          data['selected_hospital_id']!,
+          _selectedHospitalIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PregnancyDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PregnancyDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      startDateMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_date_millis'],
+      )!,
+      dueDateMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}due_date_millis'],
+      )!,
+      selectedHospitalId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}selected_hospital_id'],
+      ),
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+    );
+  }
+
+  @override
+  $PregnanciesTable createAlias(String alias) {
+    return $PregnanciesTable(attachedDatabase, alias);
+  }
+}
+
+class PregnancyDto extends DataClass implements Insertable<PregnancyDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// Foreign key to UserProfiles
+  final String userId;
+
+  /// Last Menstrual Period date (millis since epoch)
+  final int startDateMillis;
+
+  /// Expected due date (millis since epoch)
+  final int dueDateMillis;
+
+  /// Selected hospital ID (nullable)
+  final String? selectedHospitalId;
+
+  /// When record was created (millis since epoch)
+  final int createdAtMillis;
+
+  /// When record was last updated (millis since epoch)
+  final int updatedAtMillis;
+  const PregnancyDto({
+    required this.id,
+    required this.userId,
+    required this.startDateMillis,
+    required this.dueDateMillis,
+    this.selectedHospitalId,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['start_date_millis'] = Variable<int>(startDateMillis);
+    map['due_date_millis'] = Variable<int>(dueDateMillis);
+    if (!nullToAbsent || selectedHospitalId != null) {
+      map['selected_hospital_id'] = Variable<String>(selectedHospitalId);
+    }
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    return map;
+  }
+
+  PregnanciesCompanion toCompanion(bool nullToAbsent) {
+    return PregnanciesCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      startDateMillis: Value(startDateMillis),
+      dueDateMillis: Value(dueDateMillis),
+      selectedHospitalId: selectedHospitalId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(selectedHospitalId),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+    );
+  }
+
+  factory PregnancyDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PregnancyDto(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      startDateMillis: serializer.fromJson<int>(json['startDateMillis']),
+      dueDateMillis: serializer.fromJson<int>(json['dueDateMillis']),
+      selectedHospitalId: serializer.fromJson<String?>(
+        json['selectedHospitalId'],
+      ),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'startDateMillis': serializer.toJson<int>(startDateMillis),
+      'dueDateMillis': serializer.toJson<int>(dueDateMillis),
+      'selectedHospitalId': serializer.toJson<String?>(selectedHospitalId),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+    };
+  }
+
+  PregnancyDto copyWith({
+    String? id,
+    String? userId,
+    int? startDateMillis,
+    int? dueDateMillis,
+    Value<String?> selectedHospitalId = const Value.absent(),
+    int? createdAtMillis,
+    int? updatedAtMillis,
+  }) => PregnancyDto(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    startDateMillis: startDateMillis ?? this.startDateMillis,
+    dueDateMillis: dueDateMillis ?? this.dueDateMillis,
+    selectedHospitalId: selectedHospitalId.present
+        ? selectedHospitalId.value
+        : this.selectedHospitalId,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+  );
+  PregnancyDto copyWithCompanion(PregnanciesCompanion data) {
+    return PregnancyDto(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      startDateMillis: data.startDateMillis.present
+          ? data.startDateMillis.value
+          : this.startDateMillis,
+      dueDateMillis: data.dueDateMillis.present
+          ? data.dueDateMillis.value
+          : this.dueDateMillis,
+      selectedHospitalId: data.selectedHospitalId.present
+          ? data.selectedHospitalId.value
+          : this.selectedHospitalId,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PregnancyDto(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('startDateMillis: $startDateMillis, ')
+          ..write('dueDateMillis: $dueDateMillis, ')
+          ..write('selectedHospitalId: $selectedHospitalId, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    startDateMillis,
+    dueDateMillis,
+    selectedHospitalId,
+    createdAtMillis,
+    updatedAtMillis,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PregnancyDto &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.startDateMillis == this.startDateMillis &&
+          other.dueDateMillis == this.dueDateMillis &&
+          other.selectedHospitalId == this.selectedHospitalId &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis);
+}
+
+class PregnanciesCompanion extends UpdateCompanion<PregnancyDto> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<int> startDateMillis;
+  final Value<int> dueDateMillis;
+  final Value<String?> selectedHospitalId;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<int> rowid;
+  const PregnanciesCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.startDateMillis = const Value.absent(),
+    this.dueDateMillis = const Value.absent(),
+    this.selectedHospitalId = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PregnanciesCompanion.insert({
+    required String id,
+    required String userId,
+    required int startDateMillis,
+    required int dueDateMillis,
+    this.selectedHospitalId = const Value.absent(),
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       startDateMillis = Value(startDateMillis),
+       dueDateMillis = Value(dueDateMillis),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis);
+  static Insertable<PregnancyDto> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<int>? startDateMillis,
+    Expression<int>? dueDateMillis,
+    Expression<String>? selectedHospitalId,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (startDateMillis != null) 'start_date_millis': startDateMillis,
+      if (dueDateMillis != null) 'due_date_millis': dueDateMillis,
+      if (selectedHospitalId != null)
+        'selected_hospital_id': selectedHospitalId,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PregnanciesCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<int>? startDateMillis,
+    Value<int>? dueDateMillis,
+    Value<String?>? selectedHospitalId,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<int>? rowid,
+  }) {
+    return PregnanciesCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      startDateMillis: startDateMillis ?? this.startDateMillis,
+      dueDateMillis: dueDateMillis ?? this.dueDateMillis,
+      selectedHospitalId: selectedHospitalId ?? this.selectedHospitalId,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (startDateMillis.present) {
+      map['start_date_millis'] = Variable<int>(startDateMillis.value);
+    }
+    if (dueDateMillis.present) {
+      map['due_date_millis'] = Variable<int>(dueDateMillis.value);
+    }
+    if (selectedHospitalId.present) {
+      map['selected_hospital_id'] = Variable<String>(selectedHospitalId.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PregnanciesCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('startDateMillis: $startDateMillis, ')
+          ..write('dueDateMillis: $dueDateMillis, ')
+          ..write('selectedHospitalId: $selectedHospitalId, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $KickSessionsTable extends KickSessions
     with TableInfo<$KickSessionsTable, KickSessionDto> {
   @override
@@ -1585,9 +2955,15 @@ class PauseEventsCompanion extends UpdateCompanion<PauseEventDto> {
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
+  late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $PregnanciesTable pregnancies = $PregnanciesTable(this);
   late final $KickSessionsTable kickSessions = $KickSessionsTable(this);
   late final $KicksTable kicks = $KicksTable(this);
   late final $PauseEventsTable pauseEvents = $PauseEventsTable(this);
+  late final UserProfileDao userProfileDao = UserProfileDao(
+    this as AppDatabase,
+  );
+  late final PregnancyDao pregnancyDao = PregnancyDao(this as AppDatabase);
   late final KickCounterDao kickCounterDao = KickCounterDao(
     this as AppDatabase,
   );
@@ -1596,12 +2972,21 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
+    userProfiles,
+    pregnancies,
     kickSessions,
     kicks,
     pauseEvents,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'user_profiles',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('pregnancies', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'kick_sessions',
@@ -1619,6 +3004,859 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ]);
 }
 
+typedef $$UserProfilesTableCreateCompanionBuilder =
+    UserProfilesCompanion Function({
+      required String id,
+      required String authId,
+      required String email,
+      required String firstName,
+      required String lastName,
+      required int dateOfBirthMillis,
+      required String gender,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<bool> isSynced,
+      required String databasePath,
+      required String encryptionKeyId,
+      required int lastAccessedAtMillis,
+      required int schemaVersion,
+      Value<int> rowid,
+    });
+typedef $$UserProfilesTableUpdateCompanionBuilder =
+    UserProfilesCompanion Function({
+      Value<String> id,
+      Value<String> authId,
+      Value<String> email,
+      Value<String> firstName,
+      Value<String> lastName,
+      Value<int> dateOfBirthMillis,
+      Value<String> gender,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<bool> isSynced,
+      Value<String> databasePath,
+      Value<String> encryptionKeyId,
+      Value<int> lastAccessedAtMillis,
+      Value<int> schemaVersion,
+      Value<int> rowid,
+    });
+
+final class $$UserProfilesTableReferences
+    extends BaseReferences<_$AppDatabase, $UserProfilesTable, UserProfileDto> {
+  $$UserProfilesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$PregnanciesTable, List<PregnancyDto>>
+  _pregnanciesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.pregnancies,
+    aliasName: $_aliasNameGenerator(db.userProfiles.id, db.pregnancies.userId),
+  );
+
+  $$PregnanciesTableProcessedTableManager get pregnanciesRefs {
+    final manager = $$PregnanciesTableTableManager(
+      $_db,
+      $_db.pregnancies,
+    ).filter((f) => f.userId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_pregnanciesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$UserProfilesTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authId => $composableBuilder(
+    column: $table.authId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dateOfBirthMillis => $composableBuilder(
+    column: $table.dateOfBirthMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get gender => $composableBuilder(
+    column: $table.gender,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get databasePath => $composableBuilder(
+    column: $table.databasePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get encryptionKeyId => $composableBuilder(
+    column: $table.encryptionKeyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastAccessedAtMillis => $composableBuilder(
+    column: $table.lastAccessedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> pregnanciesRefs(
+    Expression<bool> Function($$PregnanciesTableFilterComposer f) f,
+  ) {
+    final $$PregnanciesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pregnancies,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PregnanciesTableFilterComposer(
+            $db: $db,
+            $table: $db.pregnancies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$UserProfilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authId => $composableBuilder(
+    column: $table.authId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstName => $composableBuilder(
+    column: $table.firstName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastName => $composableBuilder(
+    column: $table.lastName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dateOfBirthMillis => $composableBuilder(
+    column: $table.dateOfBirthMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get gender => $composableBuilder(
+    column: $table.gender,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get databasePath => $composableBuilder(
+    column: $table.databasePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get encryptionKeyId => $composableBuilder(
+    column: $table.encryptionKeyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastAccessedAtMillis => $composableBuilder(
+    column: $table.lastAccessedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserProfilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProfilesTable> {
+  $$UserProfilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get authId =>
+      $composableBuilder(column: $table.authId, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get firstName =>
+      $composableBuilder(column: $table.firstName, builder: (column) => column);
+
+  GeneratedColumn<String> get lastName =>
+      $composableBuilder(column: $table.lastName, builder: (column) => column);
+
+  GeneratedColumn<int> get dateOfBirthMillis => $composableBuilder(
+    column: $table.dateOfBirthMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get gender =>
+      $composableBuilder(column: $table.gender, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<String> get databasePath => $composableBuilder(
+    column: $table.databasePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get encryptionKeyId => $composableBuilder(
+    column: $table.encryptionKeyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lastAccessedAtMillis => $composableBuilder(
+    column: $table.lastAccessedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get schemaVersion => $composableBuilder(
+    column: $table.schemaVersion,
+    builder: (column) => column,
+  );
+
+  Expression<T> pregnanciesRefs<T extends Object>(
+    Expression<T> Function($$PregnanciesTableAnnotationComposer a) f,
+  ) {
+    final $$PregnanciesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.pregnancies,
+      getReferencedColumn: (t) => t.userId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PregnanciesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.pregnancies,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$UserProfilesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserProfilesTable,
+          UserProfileDto,
+          $$UserProfilesTableFilterComposer,
+          $$UserProfilesTableOrderingComposer,
+          $$UserProfilesTableAnnotationComposer,
+          $$UserProfilesTableCreateCompanionBuilder,
+          $$UserProfilesTableUpdateCompanionBuilder,
+          (UserProfileDto, $$UserProfilesTableReferences),
+          UserProfileDto,
+          PrefetchHooks Function({bool pregnanciesRefs})
+        > {
+  $$UserProfilesTableTableManager(_$AppDatabase db, $UserProfilesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserProfilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserProfilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserProfilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> authId = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<String> firstName = const Value.absent(),
+                Value<String> lastName = const Value.absent(),
+                Value<int> dateOfBirthMillis = const Value.absent(),
+                Value<String> gender = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+                Value<String> databasePath = const Value.absent(),
+                Value<String> encryptionKeyId = const Value.absent(),
+                Value<int> lastAccessedAtMillis = const Value.absent(),
+                Value<int> schemaVersion = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion(
+                id: id,
+                authId: authId,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                dateOfBirthMillis: dateOfBirthMillis,
+                gender: gender,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                isSynced: isSynced,
+                databasePath: databasePath,
+                encryptionKeyId: encryptionKeyId,
+                lastAccessedAtMillis: lastAccessedAtMillis,
+                schemaVersion: schemaVersion,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String authId,
+                required String email,
+                required String firstName,
+                required String lastName,
+                required int dateOfBirthMillis,
+                required String gender,
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<bool> isSynced = const Value.absent(),
+                required String databasePath,
+                required String encryptionKeyId,
+                required int lastAccessedAtMillis,
+                required int schemaVersion,
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfilesCompanion.insert(
+                id: id,
+                authId: authId,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                dateOfBirthMillis: dateOfBirthMillis,
+                gender: gender,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                isSynced: isSynced,
+                databasePath: databasePath,
+                encryptionKeyId: encryptionKeyId,
+                lastAccessedAtMillis: lastAccessedAtMillis,
+                schemaVersion: schemaVersion,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UserProfilesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({pregnanciesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (pregnanciesRefs) db.pregnancies],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (pregnanciesRefs)
+                    await $_getPrefetchedData<
+                      UserProfileDto,
+                      $UserProfilesTable,
+                      PregnancyDto
+                    >(
+                      currentTable: table,
+                      referencedTable: $$UserProfilesTableReferences
+                          ._pregnanciesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$UserProfilesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).pregnanciesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.userId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UserProfilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserProfilesTable,
+      UserProfileDto,
+      $$UserProfilesTableFilterComposer,
+      $$UserProfilesTableOrderingComposer,
+      $$UserProfilesTableAnnotationComposer,
+      $$UserProfilesTableCreateCompanionBuilder,
+      $$UserProfilesTableUpdateCompanionBuilder,
+      (UserProfileDto, $$UserProfilesTableReferences),
+      UserProfileDto,
+      PrefetchHooks Function({bool pregnanciesRefs})
+    >;
+typedef $$PregnanciesTableCreateCompanionBuilder =
+    PregnanciesCompanion Function({
+      required String id,
+      required String userId,
+      required int startDateMillis,
+      required int dueDateMillis,
+      Value<String?> selectedHospitalId,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<int> rowid,
+    });
+typedef $$PregnanciesTableUpdateCompanionBuilder =
+    PregnanciesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<int> startDateMillis,
+      Value<int> dueDateMillis,
+      Value<String?> selectedHospitalId,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<int> rowid,
+    });
+
+final class $$PregnanciesTableReferences
+    extends BaseReferences<_$AppDatabase, $PregnanciesTable, PregnancyDto> {
+  $$PregnanciesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $UserProfilesTable _userIdTable(_$AppDatabase db) =>
+      db.userProfiles.createAlias(
+        $_aliasNameGenerator(db.pregnancies.userId, db.userProfiles.id),
+      );
+
+  $$UserProfilesTableProcessedTableManager get userId {
+    final $_column = $_itemColumn<String>('user_id')!;
+
+    final manager = $$UserProfilesTableTableManager(
+      $_db,
+      $_db.userProfiles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_userIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PregnanciesTableFilterComposer
+    extends Composer<_$AppDatabase, $PregnanciesTable> {
+  $$PregnanciesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startDateMillis => $composableBuilder(
+    column: $table.startDateMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dueDateMillis => $composableBuilder(
+    column: $table.dueDateMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get selectedHospitalId => $composableBuilder(
+    column: $table.selectedHospitalId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$UserProfilesTableFilterComposer get userId {
+    final $$UserProfilesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserProfilesTableFilterComposer(
+            $db: $db,
+            $table: $db.userProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PregnanciesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PregnanciesTable> {
+  $$PregnanciesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startDateMillis => $composableBuilder(
+    column: $table.startDateMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dueDateMillis => $composableBuilder(
+    column: $table.dueDateMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get selectedHospitalId => $composableBuilder(
+    column: $table.selectedHospitalId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$UserProfilesTableOrderingComposer get userId {
+    final $$UserProfilesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserProfilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.userProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PregnanciesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PregnanciesTable> {
+  $$PregnanciesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get startDateMillis => $composableBuilder(
+    column: $table.startDateMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get dueDateMillis => $composableBuilder(
+    column: $table.dueDateMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get selectedHospitalId => $composableBuilder(
+    column: $table.selectedHospitalId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+
+  $$UserProfilesTableAnnotationComposer get userId {
+    final $$UserProfilesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.userId,
+      referencedTable: $db.userProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UserProfilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.userProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PregnanciesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PregnanciesTable,
+          PregnancyDto,
+          $$PregnanciesTableFilterComposer,
+          $$PregnanciesTableOrderingComposer,
+          $$PregnanciesTableAnnotationComposer,
+          $$PregnanciesTableCreateCompanionBuilder,
+          $$PregnanciesTableUpdateCompanionBuilder,
+          (PregnancyDto, $$PregnanciesTableReferences),
+          PregnancyDto,
+          PrefetchHooks Function({bool userId})
+        > {
+  $$PregnanciesTableTableManager(_$AppDatabase db, $PregnanciesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PregnanciesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PregnanciesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PregnanciesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<int> startDateMillis = const Value.absent(),
+                Value<int> dueDateMillis = const Value.absent(),
+                Value<String?> selectedHospitalId = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PregnanciesCompanion(
+                id: id,
+                userId: userId,
+                startDateMillis: startDateMillis,
+                dueDateMillis: dueDateMillis,
+                selectedHospitalId: selectedHospitalId,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required int startDateMillis,
+                required int dueDateMillis,
+                Value<String?> selectedHospitalId = const Value.absent(),
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<int> rowid = const Value.absent(),
+              }) => PregnanciesCompanion.insert(
+                id: id,
+                userId: userId,
+                startDateMillis: startDateMillis,
+                dueDateMillis: dueDateMillis,
+                selectedHospitalId: selectedHospitalId,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PregnanciesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({userId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (userId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.userId,
+                                referencedTable: $$PregnanciesTableReferences
+                                    ._userIdTable(db),
+                                referencedColumn: $$PregnanciesTableReferences
+                                    ._userIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PregnanciesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PregnanciesTable,
+      PregnancyDto,
+      $$PregnanciesTableFilterComposer,
+      $$PregnanciesTableOrderingComposer,
+      $$PregnanciesTableAnnotationComposer,
+      $$PregnanciesTableCreateCompanionBuilder,
+      $$PregnanciesTableUpdateCompanionBuilder,
+      (PregnancyDto, $$PregnanciesTableReferences),
+      PregnancyDto,
+      PrefetchHooks Function({bool userId})
+    >;
 typedef $$KickSessionsTableCreateCompanionBuilder =
     KickSessionsCompanion Function({
       required String id,
@@ -2821,6 +5059,10 @@ typedef $$PauseEventsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
+  $$UserProfilesTableTableManager get userProfiles =>
+      $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$PregnanciesTableTableManager get pregnancies =>
+      $$PregnanciesTableTableManager(_db, _db.pregnancies);
   $$KickSessionsTableTableManager get kickSessions =>
       $$KickSessionsTableTableManager(_db, _db.kickSessions);
   $$KicksTableTableManager get kicks =>

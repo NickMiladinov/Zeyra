@@ -7,6 +7,7 @@ import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
 import 'package:zeyra/app/theme/app_icons.dart';
+import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_history_provider.dart';
 import 'package:zeyra/features/kick_counter/ui/screens/kick_active_session_screen.dart';
@@ -103,6 +104,18 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
     if (_tooltipsChecked) return;
     _tooltipsChecked = true;
 
+    // Check if dependencies are ready first
+    final useCaseAsync = ref.read(manageSessionUseCaseProvider);
+    if (!useCaseAsync.hasValue) {
+      // Dependencies not ready yet, retry after delay
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!mounted) return;
+        _tooltipsChecked = false;
+        _checkAndShowTooltips();
+      });
+      return;
+    }
+
     final tooltipState = ref.read(tooltipProvider);
     final historyState = ref.read(kickHistoryProvider);
     final history = historyState.history;
@@ -196,6 +209,22 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
 
   @override
   Widget build(BuildContext context) {
+    // Check if dependencies are ready
+    final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
+
+    if (!useCaseAsync.hasValue) {
+      // Show loading while dependencies initialize
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Your Baby\'s Patterns', style: AppTypography.headlineSmall),
+          centerTitle: true,
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final historyState = ref.watch(kickHistoryProvider);
     final history = historyState.history;
     final activeSession = ref.watch(kickCounterProvider).activeSession;

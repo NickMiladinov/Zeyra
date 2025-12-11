@@ -118,9 +118,21 @@ class KickHistoryNotifier extends StateNotifier<KickHistoryState> {
 // Providers
 // ----------------------------------------------------------------------------
 
+/// Provider that exposes the KickHistoryNotifier.
+/// IMPORTANT: Only access this after dependencies are ready.
+/// The provider checks for data availability and throws if accessed too early.
 final kickHistoryProvider = StateNotifierProvider<KickHistoryNotifier, KickHistoryState>((ref) {
-  // Use .value! since the database must be initialized before UI accesses this
-  final manageSessionUseCase = ref.watch(manageSessionUseCaseProvider).value!;
+  final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
+
+  // Wait for the dependency to be ready
+  if (!useCaseAsync.hasValue) {
+    throw StateError(
+      'kickHistoryProvider accessed before dependencies are ready. '
+      'User must be authenticated first.',
+    );
+  }
+
+  final manageSessionUseCase = useCaseAsync.requireValue;
   final analyticsNotifier = ref.watch(kickAnalyticsProvider.notifier);
   return KickHistoryNotifier(manageSessionUseCase, analyticsNotifier);
 });

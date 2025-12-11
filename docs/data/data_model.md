@@ -311,27 +311,92 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 12. KickCounterEntry
+### 12. KickSession (Kick Counter)
 | Field | Type | Description |
 |--------|------|-------------|
-| id | String | |
-| pregnancyId | String | |
-| count | int | |
-| startTime | DateTime | |
-| endTime | DateTime | |
-| durationMinutes | int | |
-| createdAt | DateTime | |
+| id | String | UUID |
+| startTime | DateTime | When session started |
+| endTime | DateTime? | When session ended (null if active) |
+| isActive | Boolean | Whether session is currently active |
+| pausedAt | DateTime? | When session was paused (null if not paused) |
+| totalPausedDuration | Duration | Accumulated pause time |
+| pauseCount | int | Number of times session was paused |
+| note | String? | Optional session note |
+| createdAt | DateTime | Record creation timestamp |
+| updatedAt | DateTime | Last update timestamp |
+
+**Computed Properties:**
+- `isPaused`: Whether session is currently paused
+- `kickCount`: Number of kicks recorded
+- `activeDuration`: Active monitoring time (excludes pauses)
+- `averageTimeBetweenKicks`: Average interval between kicks
+- `durationToTenthKick`: Time to reach 10 kicks (excluding pauses before 10th kick)
 
 **Use Cases:**
-- Log baby kick sessions  
-- Display kick pattern analytics  
+- Start/stop kick counting sessions
+- Pause/resume monitoring
+- Track fetal movement patterns
+- Calculate time to 10 kicks for medical assessment
 
 **Relationships:**
-- Belongs to `Pregnancy`
+- One `KickSession` → Many `Kick`
+- One `KickSession` → Many `PauseEvent`
+- **Future:** Will belong to `Pregnancy` (pregnancyId FK to be added)
 
 ---
 
-### 13. ContractionTimerEntry
+### 13. Kick
+| Field | Type | Description |
+|--------|------|-------------|
+| id | String | UUID |
+| sessionId | String | FK to KickSession |
+| timestamp | DateTime | When kick was recorded |
+| sequenceNumber | int | Sequential number within session (1-indexed) |
+| perceivedStrength | MovementStrength | Enum: weak, moderate, strong |
+
+**Use Cases:**
+- Record individual fetal movements
+- Track movement strength patterns
+- Support "undo last kick" functionality
+
+**Relationships:**
+- Belongs to `KickSession`
+
+---
+
+### 14. PauseEvent
+| Field | Type | Description |
+|--------|------|-------------|
+| id | String | UUID |
+| sessionId | String | FK to KickSession |
+| pausedAt | DateTime | When pause started |
+| resumedAt | DateTime? | When pause ended (null if still paused) |
+| kickCountAtPause | int | Number of kicks recorded before this pause |
+| createdAt | DateTime | Record creation timestamp |
+| updatedAt | DateTime | Last update timestamp |
+
+**Computed Properties:**
+- `duration`: Length of this pause
+- `isBeforeTenthKick`: Whether pause occurred before 10th kick
+
+**Use Cases:**
+- Track session interruptions
+- Calculate accurate active monitoring time
+- Exclude pre-10th-kick pauses from time-to-10 calculation
+
+**Relationships:**
+- Belongs to `KickSession`
+
+---
+
+### 15. MovementStrength (Enum)
+- `weak`: Barely noticeable, subtle movements
+- `moderate`: Clearly felt but not strong
+- `strong`: Strong, vigorous movements
+
+---
+
+### 16. ContractionTimerEntry
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -351,7 +416,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 14. BirthPlan
+### 17. BirthPlan
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -369,7 +434,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 15. ShoppingListItem
+### 18. ShoppingListItem
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -387,7 +452,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 16. BumpPhoto
+### 19. BumpPhoto
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -409,7 +474,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 🤖 AI & Assistant Entities
 
-### 17. AskMyMidwifeNote
+### 20. AskMyMidwifeNote
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -425,7 +490,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 18. AIChatMessage
+### 21. AIChatMessage
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -445,7 +510,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ## 🔔 Notifications
 
-### 19. Notification
+### 22. Notification
 | Field | Type | Description |
 |--------|------|-------------|
 | id | String | |
@@ -477,6 +542,9 @@ UserProfile ─── Database file (`zeyra_<authId>.db`)
 UserProfile ─── Encryption key (`zeyra_key_<authId>`)
 Pregnancy ───< Hospital
 UserProfile ───< Hospital
+KickSession ───< Kick
+KickSession ───< PauseEvent
+(Future: Pregnancy ───< KickSession)
 ```
 
 
