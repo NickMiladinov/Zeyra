@@ -39,13 +39,15 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       }
 
       final dto = UserProfileMapper.toDto(profile);
-      await _dao.insertUserProfile(dto);
+      final insertedDto = await _dao.insertUserProfile(dto);
 
       _logger.info('User profile created successfully');
       _logger.logDatabaseOperation('INSERT',
           table: 'user_profiles', success: true);
 
-      return profile;
+      // Return the inserted DTO mapped back to domain entity
+      // to ensure database-generated fields are included
+      return UserProfileMapper.toDomain(insertedDto);
     } catch (e, stackTrace) {
       _logger.error(
         'Failed to create user profile',

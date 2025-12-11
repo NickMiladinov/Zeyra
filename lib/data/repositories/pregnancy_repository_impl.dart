@@ -47,13 +47,15 @@ class PregnancyRepositoryImpl implements PregnancyRepository {
       _validatePregnancyDates(pregnancy.startDate, pregnancy.dueDate);
 
       final dto = PregnancyMapper.toDto(pregnancy);
-      await _dao.insertPregnancy(dto);
+      final insertedDto = await _dao.insertPregnancy(dto);
 
       _logger.info('Pregnancy created successfully');
       _logger.logDatabaseOperation('INSERT',
           table: 'pregnancies', success: true);
 
-      return pregnancy;
+      // Return the inserted DTO mapped back to domain entity
+      // to ensure database-generated fields are included
+      return PregnancyMapper.toDomain(insertedDto);
     } catch (e, stackTrace) {
       _logger.error(
         'Failed to create pregnancy',
