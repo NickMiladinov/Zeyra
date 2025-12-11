@@ -238,8 +238,19 @@ class KickCounterNotifier extends StateNotifier<KickCounterState> {
 // Providers
 // ----------------------------------------------------------------------------
 
+/// Provider that exposes the KickCounterNotifier.
+/// IMPORTANT: Only access this after dependencies are ready.
+/// The provider checks for data availability and throws if accessed too early.
 final kickCounterProvider = StateNotifierProvider<KickCounterNotifier, KickCounterState>((ref) {
-  // Use .value! since the database must be initialized before UI accesses this
-  final useCase = ref.watch(manageSessionUseCaseProvider).value!;
-  return KickCounterNotifier(useCase);
+  final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
+
+  // Wait for the dependency to be ready
+  if (!useCaseAsync.hasValue) {
+    throw StateError(
+      'kickCounterProvider accessed before dependencies are ready. '
+      'User must be authenticated first.',
+    );
+  }
+
+  return KickCounterNotifier(useCaseAsync.requireValue);
 });

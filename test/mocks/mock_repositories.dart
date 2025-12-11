@@ -28,3 +28,9 @@ export 'fake_data/kick_counter_fakes.dart'
         MockKickCounterRepository,
         MockKickCounterDao,
         MockDatabaseEncryptionService;
+
+// Pregnancy & UserProfile Feature Mocks
+export 'fake_data/pregnancy_fakes.dart'
+    show
+        MockPregnancyRepository,
+        MockUserProfileRepository;

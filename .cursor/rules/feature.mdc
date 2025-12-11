@@ -55,6 +55,7 @@ Defines how to create a **new feature module** consistent with system design.
 
 ### STEP 4: Integration
 - Register providers in `core/di/main_providers.dart`
+- Add any necessary PII scrubbing in `core\monitoring\pii_scrubber.dart`
 - Add routes in `app/router/`
 
 ### STEP 5: Testing

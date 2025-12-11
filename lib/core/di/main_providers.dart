@@ -3,9 +3,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
 import '../../data/repositories/kick_counter_repository_impl.dart';
+import '../../data/repositories/pregnancy_repository_impl.dart';
+import '../../data/repositories/user_profile_repository_impl.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
+import '../../domain/repositories/pregnancy_repository.dart';
+import '../../domain/repositories/user_profile_repository.dart';
 import '../../domain/usecases/kick_counter/calculate_analytics_usecase.dart';
 import '../../domain/usecases/kick_counter/manage_session_usecase.dart';
+import '../../domain/usecases/pregnancy/create_pregnancy_usecase.dart';
+import '../../domain/usecases/pregnancy/delete_pregnancy_usecase.dart';
+import '../../domain/usecases/pregnancy/get_active_pregnancy_usecase.dart';
+import '../../domain/usecases/pregnancy/get_all_pregnancies_usecase.dart';
+import '../../domain/usecases/pregnancy/update_pregnancy_due_date_usecase.dart';
+import '../../domain/usecases/pregnancy/update_pregnancy_start_date_usecase.dart';
+import '../../domain/usecases/pregnancy/update_pregnancy_usecase.dart';
+import '../../domain/usecases/user_profile/create_user_profile_usecase.dart';
+import '../../domain/usecases/user_profile/get_user_profile_usecase.dart';
+import '../../domain/usecases/user_profile/update_user_profile_usecase.dart';
 import '../services/database_encryption_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../monitoring/logging_service.dart';
@@ -148,4 +162,98 @@ final manageSessionUseCaseProvider = FutureProvider<ManageSessionUseCase>((ref) 
 /// Handles statistical calculations for kick counter analytics.
 final calculateAnalyticsUseCaseProvider = Provider<CalculateAnalyticsUseCase>((ref) {
   return CalculateAnalyticsUseCase();
+});
+
+// ----------------------------------------------------------------------------
+// User Profile Feature
+// ----------------------------------------------------------------------------
+
+/// Provider for the user profile repository.
+///
+/// Implements user profile data operations with SQLCipher-encrypted Drift persistence.
+final userProfileRepositoryProvider = FutureProvider<UserProfileRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+
+  return UserProfileRepositoryImpl(
+    dao: db.userProfileDao,
+    logger: logging,
+  );
+});
+
+/// Provider for the create user profile use case.
+final createUserProfileUseCaseProvider = FutureProvider<CreateUserProfileUseCase>((ref) async {
+  final repository = await ref.watch(userProfileRepositoryProvider.future);
+  return CreateUserProfileUseCase(repository: repository);
+});
+
+/// Provider for the get user profile use case.
+final getUserProfileUseCaseProvider = FutureProvider<GetUserProfileUseCase>((ref) async {
+  final repository = await ref.watch(userProfileRepositoryProvider.future);
+  return GetUserProfileUseCase(repository: repository);
+});
+
+/// Provider for the update user profile use case.
+final updateUserProfileUseCaseProvider = FutureProvider<UpdateUserProfileUseCase>((ref) async {
+  final repository = await ref.watch(userProfileRepositoryProvider.future);
+  return UpdateUserProfileUseCase(repository: repository);
+});
+
+// ----------------------------------------------------------------------------
+// Pregnancy Feature
+// ----------------------------------------------------------------------------
+
+/// Provider for the pregnancy repository.
+///
+/// Implements pregnancy data operations with SQLCipher-encrypted Drift persistence.
+final pregnancyRepositoryProvider = FutureProvider<PregnancyRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+
+  return PregnancyRepositoryImpl(
+    dao: db.pregnancyDao,
+    logger: logging,
+  );
+});
+
+/// Provider for the create pregnancy use case.
+final createPregnancyUseCaseProvider = FutureProvider<CreatePregnancyUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return CreatePregnancyUseCase(repository: repository);
+});
+
+/// Provider for the get active pregnancy use case.
+final getActivePregnancyUseCaseProvider = FutureProvider<GetActivePregnancyUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return GetActivePregnancyUseCase(repository: repository);
+});
+
+/// Provider for the get all pregnancies use case.
+final getAllPregnanciesUseCaseProvider = FutureProvider<GetAllPregnanciesUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return GetAllPregnanciesUseCase(repository: repository);
+});
+
+/// Provider for the update pregnancy use case.
+final updatePregnancyUseCaseProvider = FutureProvider<UpdatePregnancyUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return UpdatePregnancyUseCase(repository: repository);
+});
+
+/// Provider for the delete pregnancy use case.
+final deletePregnancyUseCaseProvider = FutureProvider<DeletePregnancyUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return DeletePregnancyUseCase(repository: repository);
+});
+
+/// Provider for the update pregnancy start date use case.
+final updatePregnancyStartDateUseCaseProvider = FutureProvider<UpdatePregnancyStartDateUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return UpdatePregnancyStartDateUseCase(repository: repository);
+});
+
+/// Provider for the update pregnancy due date use case.
+final updatePregnancyDueDateUseCaseProvider = FutureProvider<UpdatePregnancyDueDateUseCase>((ref) async {
+  final repository = await ref.watch(pregnancyRepositoryProvider.future);
+  return UpdatePregnancyDueDateUseCase(repository: repository);
 });

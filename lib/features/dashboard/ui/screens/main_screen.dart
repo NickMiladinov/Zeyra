@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
+import 'package:zeyra/features/baby/ui/screens/pregnancy_data_screen.dart';
 import 'package:zeyra/features/dashboard/ui/screens/home_screen.dart';
 import 'package:zeyra/features/developer/ui/screens/developer_menu_screen.dart';
 import 'package:zeyra/features/tools/ui/screens/tools_screen.dart';
@@ -25,7 +26,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   List<Widget> get _screens => [
     const HomeScreen(), // Today (index 0)
     const _PlaceholderScreen(key: ValueKey('my-health'), title: 'My Health'), // My Health (index 1)
-    const _PlaceholderScreen(key: ValueKey('baby'), title: 'Baby'), // Baby (index 2)
+    const PregnancyDataScreen(key: ValueKey('baby')), // Baby (index 2)
     const ToolsScreen(key: ValueKey('tools')), // Tools (index 3)
     const _PlaceholderScreen(key: ValueKey('more'), title: 'More'), // More (index 4)
   ];

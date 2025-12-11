@@ -8,9 +8,13 @@ import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
 
 import 'daos/kick_counter_dao.dart';
+import 'daos/pregnancy_dao.dart';
+import 'daos/user_profile_dao.dart';
 import 'models/kick_session_table.dart';
 import 'models/kick_table.dart';
 import 'models/pause_event_table.dart';
+import 'models/pregnancy_table.dart';
+import 'models/user_profile_table.dart';
 
 part 'app_database.g.dart';
 
@@ -29,12 +33,20 @@ part 'app_database.g.dart';
 /// - `cipher_memory_security`: ON (clears sensitive data from memory)
 @DriftDatabase(
   tables: [
+    // User & Pregnancy
+    UserProfiles,
+    Pregnancies,
+
     // Kick counter feature
     KickSessions,
     Kicks,
     PauseEvents,
   ],
   daos: [
+    // User & Pregnancy DAOs
+    UserProfileDao,
+    PregnancyDao,
+
     // Kick counter DAO
     KickCounterDao,
   ],
