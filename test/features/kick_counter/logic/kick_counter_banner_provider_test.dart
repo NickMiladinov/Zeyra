@@ -4,6 +4,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_banner_provider.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
@@ -17,6 +18,22 @@ import '../../../mocks/fake_data/kick_counter_fakes.dart';
 class MockManageSessionUseCase extends Mock implements ManageSessionUseCase {}
 
 // ----------------------------------------------------------------------------
+// Helper Functions
+// ----------------------------------------------------------------------------
+
+/// Creates a ProviderContainer with all necessary overrides for testing
+ProviderContainer createTestContainer(MockManageSessionUseCase mockUseCase) {
+  return ProviderContainer(
+    overrides: [
+      manageSessionUseCaseProvider.overrideWith((ref) async => mockUseCase),
+      kickCounterProvider.overrideWith((ref) {
+        return KickCounterNotifier(mockUseCase);
+      }),
+    ],
+  );
+}
+
+// ----------------------------------------------------------------------------
 // Tests
 // ----------------------------------------------------------------------------
 
@@ -27,19 +44,16 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('show()', () {
-      test('should show banner when active session exists', () {
+      test('should show banner when active session exists', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         // Manually set active session by accessing notifier
         final notifier = container.read(kickCounterProvider.notifier);
@@ -55,42 +69,38 @@ void main() {
         expect(container.read(kickCounterBannerProvider), true);
       });
 
-      test('should not show banner when no active session exists', () {
+      test('should not show banner when no active session exists', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final bannerNotifier = container.read(kickCounterBannerProvider.notifier);
 
         // Act
         bannerNotifier.show();
 
-        // Assert
-        expect(container.read(kickCounterBannerProvider), false);
+        // Assert - show() sets the "want to show" state, but actual visibility 
+        // is determined by shouldShowKickCounterBannerProvider which checks session
+        expect(container.read(kickCounterBannerProvider), true); // State is set
+        expect(container.read(shouldShowKickCounterBannerProvider), false); // But actual visibility is false (no session)
       });
 
-      test('should set _isActiveScreenVisible to false', () {
+      test('should set _isActiveScreenVisible to false', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -113,19 +123,16 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('hide()', () {
-      test('should hide banner', () {
+      test('should hide banner', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -143,19 +150,16 @@ void main() {
         expect(container.read(kickCounterBannerProvider), false);
       });
 
-      test('should set _isActiveScreenVisible to true', () {
+      test('should set _isActiveScreenVisible to true', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -176,19 +180,16 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('shouldShow', () {
-      test('should return true when banner visible and session exists', () {
+      test('should return true when banner visible and session exists', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -203,19 +204,16 @@ void main() {
         expect(result, true);
       });
 
-      test('should return false when banner hidden even if session exists', () {
+      test('should return false when banner hidden even if session exists', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -230,24 +228,21 @@ void main() {
         expect(result, false);
       });
 
-      test('should return false when banner visible but no session', () {
+      test('should return false when banner visible but no session', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final bannerNotifier = container.read(kickCounterBannerProvider.notifier);
         // Manually set state to true (though show() won't actually set it)
         // This tests the double-check in shouldShow
-        
+
         // Act
         final result = bannerNotifier.shouldShow;
 
@@ -266,19 +261,23 @@ void main() {
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
         when(() => mockUseCase.endSession(any())).thenAnswer((_) async {});
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
+
+        // Initialize banner provider and trigger listener setup via shouldShowProvider
+        container.read(kickCounterBannerProvider);
+        container.read(shouldShowKickCounterBannerProvider);
+
+        // Wait a bit for the listener chain to be established
+        await Future.delayed(const Duration(milliseconds: 50));
 
         final bannerNotifier = container.read(kickCounterBannerProvider.notifier);
         final kickNotifier = container.read(kickCounterProvider.notifier);
-        
+
         kickNotifier.restoreSession(FakeKickSession.active());
 
         // Show banner first
@@ -287,6 +286,9 @@ void main() {
 
         // Act - end session
         await kickNotifier.endSession();
+
+        // Wait for listener to process the change
+        await Future.delayed(const Duration(milliseconds: 50));
 
         // Assert
         expect(container.read(kickCounterBannerProvider), false);
@@ -298,25 +300,26 @@ void main() {
         final session = FakeKickSession.active();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => session);
         when(() => mockUseCase.pauseSession(any())).thenAnswer((_) async => session.copyWith(pausedAt: DateTime.now()));
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
 
-        // Read the banner provider to initialize it
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
+
+        // Read providers to initialize and set up listeners
         container.read(kickCounterBannerProvider);
+        container.read(shouldShowKickCounterBannerProvider);
+
+        // Wait for listener chain to be established
+        await Future.delayed(const Duration(milliseconds: 50));
 
         final kickNotifier = container.read(kickCounterProvider.notifier);
 
         // Act - restore session (simulate app startup with existing session)
         await kickNotifier.checkActiveSession();
 
-        // Wait for async operations
+        // Wait for async operations and listener to process
         await Future.delayed(const Duration(milliseconds: 100));
 
         // Assert
@@ -329,15 +332,12 @@ void main() {
         final session = FakeKickSession.active();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => session);
         when(() => mockUseCase.pauseSession(any())).thenAnswer((_) async => session.copyWith(pausedAt: DateTime.now()));
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final bannerNotifier = container.read(kickCounterBannerProvider.notifier);
 
@@ -362,19 +362,16 @@ void main() {
     // ------------------------------------------------------------------------
 
     group('shouldShowKickCounterBannerProvider', () {
-      test('should return true when banner visible and session exists', () {
+      test('should return true when banner visible and session exists', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());
@@ -389,19 +386,16 @@ void main() {
         expect(result, true);
       });
 
-      test('should return false when banner visible but no session', () {
+      test('should return false when banner visible but no session', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final bannerNotifier = container.read(kickCounterBannerProvider.notifier);
         bannerNotifier.show(); // Won't actually show without session
@@ -413,19 +407,16 @@ void main() {
         expect(result, false);
       });
 
-      test('should return false when session exists but banner hidden', () {
+      test('should return false when session exists but banner hidden', () async {
         // Arrange
         final mockUseCase = MockManageSessionUseCase();
         when(() => mockUseCase.getActiveSession()).thenAnswer((_) async => null);
-        
-        final container = ProviderContainer(
-          overrides: [
-            kickCounterProvider.overrideWith((ref) {
-              return KickCounterNotifier(mockUseCase);
-            }),
-          ],
-        );
+
+        final container = createTestContainer(mockUseCase);
         addTearDown(container.dispose);
+
+        // Wait for async provider to be ready
+        await container.read(manageSessionUseCaseProvider.future);
 
         final notifier = container.read(kickCounterProvider.notifier);
         notifier.restoreSession(FakeKickSession.active());

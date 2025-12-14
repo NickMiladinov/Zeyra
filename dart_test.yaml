@@ -6,7 +6,12 @@ presets:
   kick_counter:
     paths:
       - test/runners/kick_counter/all_test.dart
-  
+
+  # Run all bump photo tests
+  bump_photo:
+    paths:
+      - test/runners/bump_photo/bump_photo_all_test.dart
+
   # Run only unit tests (fast, no integration/performance)
   unit:
     paths:
@@ -35,6 +40,9 @@ tags:
   kick_counter:
     # Standard timeout for kick counter tests
 
+  bump_photo:
+    # Bump photo feature tests
+
   user_profile:
     # UserProfile feature tests
 
@@ -60,4 +68,5 @@ exclude_paths:
   - test/harness/
   - test/mocks/
   - test/plans/
+  - test/runners/  # Exclude test runners to prevent duplicate test runs
 

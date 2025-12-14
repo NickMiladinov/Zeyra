@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
 
@@ -14,54 +15,39 @@ import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
 class KickCounterBannerNotifier extends StateNotifier<bool> {
   final Ref _ref;
   
-  /// Tracks whether the active session screen is currently being viewed.
-  /// This prevents auto-showing the banner when user starts a new session
-  /// from the active session screen.
+  /// Track whether the user is currently on the active session screen
   bool _isActiveScreenVisible = false;
   
-  KickCounterBannerNotifier(this._ref) : super(false) {
-    // Wait for dependencies to be ready before listening to kick counter state
-    _ref.listen(manageSessionUseCaseProvider, (previous, next) {
-      next.whenData((_) {
-        // Dependencies are ready, start listening to kick counter state
-        try {
-          _ref.listen<KickCounterState>(kickCounterProvider, (previous, next) {
-            // If session ends, hide banner
-            if (next.activeSession == null) {
-              state = false;
-            }
-            // If session is restored on app startup (previous was null, now exists)
-            // AND user is NOT viewing the active session screen,
-            // automatically show the banner so user can access it
-            else if (previous?.activeSession == null &&
-                     next.activeSession != null &&
-                     !_isActiveScreenVisible) {
-              state = true;
-            }
-          });
-        } catch (e) {
-          // Ignore errors during initialization - dependencies might not be ready yet
-        }
-      });
+  /// Track whether the session listener has been set up
+  bool _listenerInitialized = false;
+  
+  KickCounterBannerNotifier(this._ref) : super(false);
+  
+  /// Set up listener for session state changes (called lazily when auth is ready).
+  void _ensureListenerInitialized() {
+    if (_listenerInitialized) return;
+    _listenerInitialized = true;
+    
+    _ref.listen(kickCounterProvider, (previous, next) {
+      // Auto-hide when session ends
+      if (previous?.activeSession != null && next.activeSession == null) {
+        state = false;
+      }
+      // Auto-show when session restored and not on active screen
+      else if (previous?.activeSession == null && next.activeSession != null && !_isActiveScreenVisible) {
+        state = true;
+      }
     });
   }
 
   /// Show the banner (called when user leaves active session screen)
+  /// 
+  /// Sets the banner visibility state to true. The actual visibility is 
+  /// determined by [shouldShowKickCounterBannerProvider] which checks if
+  /// there's an active session.
   void show() {
     _isActiveScreenVisible = false;
-    // Check if dependencies are ready before accessing kick counter provider
-    final useCaseAsync = _ref.read(manageSessionUseCaseProvider);
-    useCaseAsync.whenData((_) {
-      try {
-        final kickState = _ref.read(kickCounterProvider);
-        // Only show if there's an active session
-        if (kickState.activeSession != null) {
-          state = true;
-        }
-      } catch (e) {
-        // Dependencies not ready yet, silently ignore
-      }
-    });
+    state = true;
   }
 
   /// Hide the banner (called when user enters active session screen)
@@ -70,24 +56,9 @@ class KickCounterBannerNotifier extends StateNotifier<bool> {
     state = false;
   }
 
-  /// Check if banner should be visible based on session state
-  bool get shouldShow {
-    // Check if dependencies are ready before accessing kick counter provider
-    final useCaseAsync = _ref.read(manageSessionUseCaseProvider);
-    return useCaseAsync.when(
-      data: (_) {
-        try {
-          final kickState = _ref.read(kickCounterProvider);
-          return state && kickState.activeSession != null;
-        } catch (e) {
-          // Dependencies not ready yet
-          return false;
-        }
-      },
-      loading: () => false,
-      error: (_, __) => false,
-    );
-  }
+  /// Check if banner should be visible based on current state.
+  /// Note: Use [shouldShowKickCounterBannerProvider] for reactive UI updates.
+  bool get shouldShow => state;
 }
 
 /// Provider for kick counter banner visibility state.
@@ -100,29 +71,44 @@ final kickCounterBannerProvider = StateNotifierProvider<KickCounterBannerNotifie
 /// Convenience provider that combines banner visibility with session existence.
 ///
 /// Returns `true` only when both:
+/// - Dependencies are ready (user authenticated), AND
 /// - Banner is set to visible, AND
 /// - An active session exists
 ///
-/// Returns `false` while dependencies are initializing.
+/// Returns `false` while dependencies are initializing or user is not authenticated.
+/// Safely handles cases where providers are not yet available.
 final shouldShowKickCounterBannerProvider = Provider<bool>((ref) {
+  // 1. Watch banner state FIRST to establish dependency for reactivity.
+  // The notifier no longer accesses kickCounterProvider in constructor, so this is safe.
   final bannerVisible = ref.watch(kickCounterBannerProvider);
-
-  // Check if async dependencies are ready
-  final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
-
-  return useCaseAsync.when(
-    data: (_) {
-      // Dependencies ready, check kick counter state
-      try {
+  
+  // 2. Check authentication before accessing auth-dependent providers
+  try {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      return false;
+    }
+  } catch (e) {
+    // Supabase not initialized - test environment, continue
+  }
+  
+  // 3. User is authenticated - ensure session listener is initialized
+  ref.read(kickCounterBannerProvider.notifier)._ensureListenerInitialized();
+  
+  // 4. Check if there's an active session
+  try {
+    final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
+    return useCaseAsync.when(
+      data: (_) {
         final kickState = ref.watch(kickCounterProvider);
-        return bannerVisible && kickState.activeSession != null;
-      } catch (e) {
-        // Dependencies not fully initialized yet
-        return false;
-      }
-    },
-    loading: () => false, // Don't show banner while initializing
-    error: (_, __) => false, // Don't show banner if initialization failed
-  );
+        final hasSession = kickState.activeSession != null;
+        return bannerVisible && hasSession;
+      },
+      loading: () => false,
+      error: (_, __) => false,
+    );
+  } catch (e) {
+    return false;
+  }
 });
 

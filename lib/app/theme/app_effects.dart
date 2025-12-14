@@ -33,6 +33,11 @@ class AppEffects {
   static BorderRadius get roundedCircle => BorderRadius.circular(radiusCircle);
   
   /// Top-only rounded corners (for cards with actions at bottom)
+  static BorderRadius get roundedTopXXL => const BorderRadius.only(
+    topLeft: Radius.circular(radiusXXL),
+    topRight: Radius.circular(radiusXXL),
+  );
+  
   static BorderRadius get roundedTopXL => const BorderRadius.only(
     topLeft: Radius.circular(radiusXL),
     topRight: Radius.circular(radiusXL),
@@ -44,6 +49,11 @@ class AppEffects {
   );
   
   /// Bottom-only rounded corners
+  static BorderRadius get roundedBottomXXL => const BorderRadius.only(
+    bottomLeft: Radius.circular(radiusXXL),
+    bottomRight: Radius.circular(radiusXXL),
+  );
+  
   static BorderRadius get roundedBottomXL => const BorderRadius.only(
     bottomLeft: Radius.circular(radiusXL),
     bottomRight: Radius.circular(radiusXL),

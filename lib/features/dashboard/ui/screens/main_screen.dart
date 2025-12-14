@@ -31,11 +31,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     const _PlaceholderScreen(key: ValueKey('more'), title: 'More'), // More (index 4)
   ];
 
-  void _onTabTapped(int index) {
-    // Update the navigation provider instead of local state
-    ref.read(navigationIndexProvider.notifier).state = index;
-  }
-
   @override
   Widget build(BuildContext context) {
     // Watch the navigation provider to react to tab changes from anywhere in the app
@@ -48,22 +43,22 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         sizing: StackFit.expand,
         children: _screens,
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: currentIndex,
-        onTap: _onTabTapped,
-      ),
+      // No bottom nav here - each tab's root screen will have its own
     );
   }
 }
 
 /// Placeholder screen for tabs that haven't been built yet
-class _PlaceholderScreen extends StatelessWidget {
+class _PlaceholderScreen extends ConsumerWidget {
   final String title;
 
   const _PlaceholderScreen({super.key, required this.title});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Determine which tab index this placeholder is for
+    final currentIndex = ref.watch(navigationIndexProvider);
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -105,6 +100,12 @@ class _PlaceholderScreen extends StatelessWidget {
             ],
           ],
         ),
+      ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentIndex: currentIndex,
+        onTap: (index) {
+          ref.read(navigationIndexProvider.notifier).state = index;
+        },
       ),
     );
   }
