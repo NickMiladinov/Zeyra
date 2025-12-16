@@ -33,6 +33,11 @@ class AppEffects {
   static BorderRadius get roundedCircle => BorderRadius.circular(radiusCircle);
   
   /// Top-only rounded corners (for cards with actions at bottom)
+  static BorderRadius get roundedTopXXL => const BorderRadius.only(
+    topLeft: Radius.circular(radiusXXL),
+    topRight: Radius.circular(radiusXXL),
+  );
+  
   static BorderRadius get roundedTopXL => const BorderRadius.only(
     topLeft: Radius.circular(radiusXL),
     topRight: Radius.circular(radiusXL),
@@ -44,6 +49,11 @@ class AppEffects {
   );
   
   /// Bottom-only rounded corners
+  static BorderRadius get roundedBottomXXL => const BorderRadius.only(
+    bottomLeft: Radius.circular(radiusXXL),
+    bottomRight: Radius.circular(radiusXXL),
+  );
+  
   static BorderRadius get roundedBottomXL => const BorderRadius.only(
     bottomLeft: Radius.circular(radiusXL),
     bottomRight: Radius.circular(radiusXL),
@@ -197,6 +207,7 @@ class AppEffects {
   static const Duration durationInstant = Duration(milliseconds: 0);
   static const Duration durationFast = Duration(milliseconds: 150);
   static const Duration durationNormal = Duration(milliseconds: 300);
+  static const Duration durationMedium = Duration(milliseconds: 400);
   static const Duration durationSlow = Duration(milliseconds: 500);
   static const Duration durationVerySlow = Duration(milliseconds: 750);
   static const Duration durationVeryVerySlow = Duration(milliseconds: 1000);

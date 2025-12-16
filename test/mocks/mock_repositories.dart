@@ -34,3 +34,6 @@ export 'fake_data/pregnancy_fakes.dart'
     show
         MockPregnancyRepository,
         MockUserProfileRepository;
+
+// Bump Photo Feature Mocks
+export 'fake_data/bump_photo_fakes.dart';

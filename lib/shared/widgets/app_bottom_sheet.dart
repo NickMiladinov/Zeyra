@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_icons.dart';
+import 'package:zeyra/shared/providers/modal_overlay_provider.dart';
+
+/// Duration for bottom sheet entrance animation (slower for elegance)
+const Duration _entranceAnimationDuration = AppEffects.durationMedium;
+
+/// Duration for bottom sheet exit animation (faster for responsiveness)
+const Duration _exitAnimationDuration = AppEffects.durationNormal;
 
 /// Shared bottom sheet overlay widget providing consistent styling across the app.
 /// 
@@ -13,6 +21,7 @@ import 'package:zeyra/app/theme/app_icons.dart';
 /// - Optional close button for accessibility
 /// - Consistent padding and spacing
 /// - Smooth animations
+/// - Automatically hides floating banners when visible
 class AppBottomSheet extends StatelessWidget {
   /// The content to display in the bottom sheet
   final Widget child;
@@ -43,7 +52,10 @@ class AppBottomSheet extends StatelessWidget {
     this.backgroundColor,
   });
 
-  /// Show the bottom sheet with standard modal configuration
+  /// Show the bottom sheet with standard modal configuration.
+  /// 
+  /// Automatically notifies the app that a bottom sheet is visible,
+  /// which hides floating elements like the kick counter banner.
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget child,
@@ -53,22 +65,44 @@ class AppBottomSheet extends StatelessWidget {
     bool isDismissible = true,
     Color? backgroundColor,
     bool enableDrag = true,
-  }) {
-    return showModalBottomSheet<T>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isDismissible: isDismissible,
-      enableDrag: enableDrag,
-      isScrollControlled: true,
-      builder: (context) => AppBottomSheet(
-        title: title,
-        showCloseButton: showCloseButton,
-        height: height,
+  }) async {
+    // Get the ProviderContainer to update the modal overlay visibility
+    final container = ProviderScope.containerOf(context);
+    
+    // Mark modal overlay as visible
+    container.read(modalOverlayNotifierProvider).show();
+    
+    // Create animation controller for custom animation timing
+    // We need a TickerProvider, so we use the Navigator's context
+    final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+    
+    try {
+      return await showModalBottomSheet<T>(
+        context: context,
+        backgroundColor: Colors.transparent,
         isDismissible: isDismissible,
-        backgroundColor: backgroundColor,
-        child: child,
-      ),
-    );
+        enableDrag: enableDrag,
+        isScrollControlled: true,
+        useRootNavigator: true,
+        // Custom animation durations via route settings
+        transitionAnimationController: AnimationController(
+          vsync: navigator,
+          duration: _entranceAnimationDuration,
+          reverseDuration: _exitAnimationDuration,
+        ),
+        builder: (context) => AppBottomSheet(
+          title: title,
+          showCloseButton: showCloseButton,
+          height: height,
+          isDismissible: isDismissible,
+          backgroundColor: backgroundColor,
+          child: child,
+        ),
+      );
+    } finally {
+      // Mark modal overlay as hidden when closed
+      container.read(modalOverlayNotifierProvider).hide();
+    }
   }
 
   @override
@@ -131,7 +165,7 @@ class _DragHandle extends StatelessWidget {
       width: 40.0,
       height: 4.0,
       decoration: BoxDecoration(
-        color: AppColors.border,
+        color: AppColors.backgroundGrey400,
         borderRadius: BorderRadius.circular(AppEffects.radiusSM),
       ),
     );
@@ -180,4 +214,3 @@ class _Header extends StatelessWidget {
     );
   }
 }
-

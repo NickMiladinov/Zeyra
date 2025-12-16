@@ -2,12 +2,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
+import '../../data/repositories/bump_photo_repository_impl.dart';
 import '../../data/repositories/kick_counter_repository_impl.dart';
 import '../../data/repositories/pregnancy_repository_impl.dart';
 import '../../data/repositories/user_profile_repository_impl.dart';
+import '../../domain/repositories/bump_photo_repository.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
 import '../../domain/repositories/pregnancy_repository.dart';
 import '../../domain/repositories/user_profile_repository.dart';
+import '../../domain/usecases/bump_photo/delete_bump_photo.dart';
+import '../../domain/usecases/bump_photo/get_bump_photos.dart';
+import '../../domain/usecases/bump_photo/save_bump_photo.dart';
+import '../../domain/usecases/bump_photo/save_bump_photo_note.dart';
+import '../../domain/usecases/bump_photo/update_bump_photo_note.dart';
 import '../../domain/usecases/kick_counter/calculate_analytics_usecase.dart';
 import '../../domain/usecases/kick_counter/manage_session_usecase.dart';
 import '../../domain/usecases/pregnancy/create_pregnancy_usecase.dart';
@@ -21,6 +28,7 @@ import '../../domain/usecases/user_profile/create_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/get_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/update_user_profile_usecase.dart';
 import '../services/database_encryption_service.dart';
+import '../services/photo_file_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../monitoring/logging_service.dart';
 import '../monitoring/sentry_service.dart';
@@ -256,4 +264,77 @@ final updatePregnancyStartDateUseCaseProvider = FutureProvider<UpdatePregnancySt
 final updatePregnancyDueDateUseCaseProvider = FutureProvider<UpdatePregnancyDueDateUseCase>((ref) async {
   final repository = await ref.watch(pregnancyRepositoryProvider.future);
   return UpdatePregnancyDueDateUseCase(repository: repository);
+});
+
+/// Provider for the active pregnancy entity.
+///
+/// Returns the current active pregnancy or null if none exists.
+final activePregnancyProvider = FutureProvider((ref) async {
+  final useCase = await ref.watch(getActivePregnancyUseCaseProvider.future);
+  return await useCase.execute();
+});
+
+// ----------------------------------------------------------------------------
+// Bump Photo Feature
+// ----------------------------------------------------------------------------
+
+/// Provider for the photo file service.
+///
+/// Handles file operations for bump photos including compression and user-isolated storage.
+final photoFileServiceProvider = Provider<PhotoFileService>((ref) {
+  final logging = ref.watch(loggingServiceProvider);
+  return PhotoFileService(logger: logging);
+});
+
+/// Provider for the bump photo repository.
+///
+/// Implements bump photo data operations with SQLCipher-encrypted Drift persistence
+/// and file system storage for photos.
+final bumpPhotoRepositoryProvider = FutureProvider<BumpPhotoRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final fileService = ref.watch(photoFileServiceProvider);
+  final logging = ref.watch(loggingServiceProvider);
+
+  // Get current user ID for file operations
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    throw StateError('Cannot access bump photo repository without authenticated user.');
+  }
+
+  return BumpPhotoRepositoryImpl(
+    dao: db.bumpPhotoDao,
+    fileService: fileService,
+    logger: logging,
+    userId: user.id,
+  );
+});
+
+/// Provider for the get bump photos use case.
+final getBumpPhotosUseCaseProvider = FutureProvider<GetBumpPhotos>((ref) async {
+  final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
+  return GetBumpPhotos(repository);
+});
+
+/// Provider for the save bump photo use case.
+final saveBumpPhotoUseCaseProvider = FutureProvider<SaveBumpPhoto>((ref) async {
+  final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
+  return SaveBumpPhoto(repository);
+});
+
+/// Provider for the save bump photo note use case (without photo).
+final saveBumpPhotoNoteUseCaseProvider = FutureProvider<SaveBumpPhotoNote>((ref) async {
+  final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
+  return SaveBumpPhotoNote(repository);
+});
+
+/// Provider for the update bump photo note use case.
+final updateBumpPhotoNoteUseCaseProvider = FutureProvider<UpdateBumpPhotoNote>((ref) async {
+  final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
+  return UpdateBumpPhotoNote(repository);
+});
+
+/// Provider for the delete bump photo use case.
+final deleteBumpPhotoUseCaseProvider = FutureProvider<DeleteBumpPhoto>((ref) async {
+  final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
+  return DeleteBumpPhoto(repository);
 });

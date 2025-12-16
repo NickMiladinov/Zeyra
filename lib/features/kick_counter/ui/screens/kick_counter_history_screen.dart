@@ -349,11 +349,12 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 3, // Tools tab
         onTap: (index) {
-          // Always navigate back to MainScreen when tapping any tab
-          // This provides consistent behavior: tapping the current tab
-          // (Tools) goes back to the main Tools screen
-          final navService = NavigationService(context, ref);
-          navService.navigateToTab(index);
+          // If tapping the current tab (Tools), pop back to root of this tab
+          if (index == 3 && Navigator.of(context).canPop()) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          // Update tab index (switches tabs or stays on same tab)
+          ref.read(navigationIndexProvider.notifier).state = index;
         },
       ),
     );

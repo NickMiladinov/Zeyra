@@ -25,6 +25,11 @@ dependencies:
   uuid: ^4.0.0 # Check for the latest version
   path: ^1.9.0 # Check for the latest version - For path manipulation
 
+  # Image handling
+  image_picker: ^1.1.2 # Camera and gallery access
+  image: ^4.3.0 # Image compression and processing
+  crop_image: ^1.0.13 # Manual image cropping with smooth UI
+
   intl: ^0.20.2 # For date formatting
   meta: ^1.12.0 # For annotations like @visibleForTesting
   package_info_plus: ^8.0.0 # For reading app version automatically

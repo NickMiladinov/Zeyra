@@ -13,6 +13,10 @@ import 'package:zeyra/main.dart' show logger;
 /// **Initialization:** This service is initialized in `DIGraph.initialize()` during app startup.
 class AppAuthListener {
   final GlobalKey<NavigatorState> navigatorKey;
+  
+  /// Tracks whether the user was previously authenticated.
+  /// Used to differentiate between initial sign-in and token refresh events.
+  bool _wasAuthenticated = false;
 
   AppAuthListener({required this.navigatorKey});
 
@@ -21,14 +25,23 @@ class AppAuthListener {
   /// Handles auth state changes and token refresh errors gracefully.
   /// Token refresh failures (e.g., 500 errors from server) are logged but
   /// don't crash the app, as Supabase will retry automatically.
+  /// 
+  /// **Important:** Only navigates on actual state transitions (signed-out → signed-in
+  /// or signed-in → signed-out), NOT on token refreshes which also fire signedIn events.
   void init() {
+    // Check initial auth state
+    _wasAuthenticated = Supabase.instance.client.auth.currentSession != null;
+    
     // Listen to auth state changes with error handling
     Supabase.instance.client.auth.onAuthStateChange.listen(
       (data) {
         final AuthChangeEvent event = data.event;
+        final bool isNowAuthenticated = data.session != null;
 
-        // Navigate on sign-in, useful for deep links or token refreshes from a signed-out state.
-        if (event == AuthChangeEvent.signedIn) {
+        // Navigate on sign-in ONLY if transitioning from signed-out to signed-in
+        // This prevents recreating MainScreen on token refreshes
+        if (event == AuthChangeEvent.signedIn && !_wasAuthenticated) {
+          logger.info('Auth state changed: signed in (was signed out)');
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const MainScreen()),
             (route) => false,
@@ -36,6 +49,7 @@ class AppAuthListener {
         }
         // Navigate on sign-out. This is the crucial part for the logout button.
         else if (event == AuthChangeEvent.signedOut) {
+          logger.info('Auth state changed: signed out');
           navigatorKey.currentState?.pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const AuthScreen()),
             (route) => false,
@@ -45,6 +59,13 @@ class AppAuthListener {
         else if (event == AuthChangeEvent.tokenRefreshed) {
           logger.debug('Auth token refreshed successfully');
         }
+        // Log other signedIn events (likely token refresh related)
+        else if (event == AuthChangeEvent.signedIn && _wasAuthenticated) {
+          logger.debug('Auth signedIn event (already authenticated, likely token refresh)');
+        }
+        
+        // Update tracked state
+        _wasAuthenticated = isNowAuthenticated;
       },
       // Handle token refresh errors gracefully
       onError: (error, stackTrace) {
@@ -86,4 +107,4 @@ class AppAuthListener {
       },
     );
   }
-} 
+}

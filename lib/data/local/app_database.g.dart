@@ -2952,6 +2952,557 @@ class PauseEventsCompanion extends UpdateCompanion<PauseEventDto> {
   }
 }
 
+class $BumpPhotosTable extends BumpPhotos
+    with TableInfo<$BumpPhotosTable, BumpPhotoDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BumpPhotosTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pregnancyIdMeta = const VerificationMeta(
+    'pregnancyId',
+  );
+  @override
+  late final GeneratedColumn<String> pregnancyId = GeneratedColumn<String>(
+    'pregnancy_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _weekNumberMeta = const VerificationMeta(
+    'weekNumber',
+  );
+  @override
+  late final GeneratedColumn<int> weekNumber = GeneratedColumn<int>(
+    'week_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _photoDateMillisMeta = const VerificationMeta(
+    'photoDateMillis',
+  );
+  @override
+  late final GeneratedColumn<int> photoDateMillis = GeneratedColumn<int>(
+    'photo_date_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    pregnancyId,
+    weekNumber,
+    filePath,
+    note,
+    photoDateMillis,
+    createdAtMillis,
+    updatedAtMillis,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bump_photos';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BumpPhotoDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('pregnancy_id')) {
+      context.handle(
+        _pregnancyIdMeta,
+        pregnancyId.isAcceptableOrUnknown(
+          data['pregnancy_id']!,
+          _pregnancyIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_pregnancyIdMeta);
+    }
+    if (data.containsKey('week_number')) {
+      context.handle(
+        _weekNumberMeta,
+        weekNumber.isAcceptableOrUnknown(data['week_number']!, _weekNumberMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekNumberMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('photo_date_millis')) {
+      context.handle(
+        _photoDateMillisMeta,
+        photoDateMillis.isAcceptableOrUnknown(
+          data['photo_date_millis']!,
+          _photoDateMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_photoDateMillisMeta);
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {pregnancyId, weekNumber},
+  ];
+  @override
+  BumpPhotoDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BumpPhotoDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      pregnancyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pregnancy_id'],
+      )!,
+      weekNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}week_number'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      photoDateMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}photo_date_millis'],
+      )!,
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+    );
+  }
+
+  @override
+  $BumpPhotosTable createAlias(String alias) {
+    return $BumpPhotosTable(attachedDatabase, alias);
+  }
+}
+
+class BumpPhotoDto extends DataClass implements Insertable<BumpPhotoDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// Foreign key to Pregnancies table
+  final String pregnancyId;
+
+  /// Pregnancy week number (1-44)
+  final int weekNumber;
+
+  /// Local file path to the photo (nullable to support notes without photos)
+  final String? filePath;
+
+  /// Optional user note about this week
+  final String? note;
+
+  /// When the photo was taken/added (stored as millis since epoch)
+  final int photoDateMillis;
+
+  /// Timestamp when record was created (stored as millis since epoch)
+  final int createdAtMillis;
+
+  /// Timestamp when record was last updated (stored as millis since epoch)
+  final int updatedAtMillis;
+  const BumpPhotoDto({
+    required this.id,
+    required this.pregnancyId,
+    required this.weekNumber,
+    this.filePath,
+    this.note,
+    required this.photoDateMillis,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['pregnancy_id'] = Variable<String>(pregnancyId);
+    map['week_number'] = Variable<int>(weekNumber);
+    if (!nullToAbsent || filePath != null) {
+      map['file_path'] = Variable<String>(filePath);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['photo_date_millis'] = Variable<int>(photoDateMillis);
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    return map;
+  }
+
+  BumpPhotosCompanion toCompanion(bool nullToAbsent) {
+    return BumpPhotosCompanion(
+      id: Value(id),
+      pregnancyId: Value(pregnancyId),
+      weekNumber: Value(weekNumber),
+      filePath: filePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(filePath),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      photoDateMillis: Value(photoDateMillis),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+    );
+  }
+
+  factory BumpPhotoDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BumpPhotoDto(
+      id: serializer.fromJson<String>(json['id']),
+      pregnancyId: serializer.fromJson<String>(json['pregnancyId']),
+      weekNumber: serializer.fromJson<int>(json['weekNumber']),
+      filePath: serializer.fromJson<String?>(json['filePath']),
+      note: serializer.fromJson<String?>(json['note']),
+      photoDateMillis: serializer.fromJson<int>(json['photoDateMillis']),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'pregnancyId': serializer.toJson<String>(pregnancyId),
+      'weekNumber': serializer.toJson<int>(weekNumber),
+      'filePath': serializer.toJson<String?>(filePath),
+      'note': serializer.toJson<String?>(note),
+      'photoDateMillis': serializer.toJson<int>(photoDateMillis),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+    };
+  }
+
+  BumpPhotoDto copyWith({
+    String? id,
+    String? pregnancyId,
+    int? weekNumber,
+    Value<String?> filePath = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    int? photoDateMillis,
+    int? createdAtMillis,
+    int? updatedAtMillis,
+  }) => BumpPhotoDto(
+    id: id ?? this.id,
+    pregnancyId: pregnancyId ?? this.pregnancyId,
+    weekNumber: weekNumber ?? this.weekNumber,
+    filePath: filePath.present ? filePath.value : this.filePath,
+    note: note.present ? note.value : this.note,
+    photoDateMillis: photoDateMillis ?? this.photoDateMillis,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+  );
+  BumpPhotoDto copyWithCompanion(BumpPhotosCompanion data) {
+    return BumpPhotoDto(
+      id: data.id.present ? data.id.value : this.id,
+      pregnancyId: data.pregnancyId.present
+          ? data.pregnancyId.value
+          : this.pregnancyId,
+      weekNumber: data.weekNumber.present
+          ? data.weekNumber.value
+          : this.weekNumber,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      note: data.note.present ? data.note.value : this.note,
+      photoDateMillis: data.photoDateMillis.present
+          ? data.photoDateMillis.value
+          : this.photoDateMillis,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BumpPhotoDto(')
+          ..write('id: $id, ')
+          ..write('pregnancyId: $pregnancyId, ')
+          ..write('weekNumber: $weekNumber, ')
+          ..write('filePath: $filePath, ')
+          ..write('note: $note, ')
+          ..write('photoDateMillis: $photoDateMillis, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    pregnancyId,
+    weekNumber,
+    filePath,
+    note,
+    photoDateMillis,
+    createdAtMillis,
+    updatedAtMillis,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BumpPhotoDto &&
+          other.id == this.id &&
+          other.pregnancyId == this.pregnancyId &&
+          other.weekNumber == this.weekNumber &&
+          other.filePath == this.filePath &&
+          other.note == this.note &&
+          other.photoDateMillis == this.photoDateMillis &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis);
+}
+
+class BumpPhotosCompanion extends UpdateCompanion<BumpPhotoDto> {
+  final Value<String> id;
+  final Value<String> pregnancyId;
+  final Value<int> weekNumber;
+  final Value<String?> filePath;
+  final Value<String?> note;
+  final Value<int> photoDateMillis;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<int> rowid;
+  const BumpPhotosCompanion({
+    this.id = const Value.absent(),
+    this.pregnancyId = const Value.absent(),
+    this.weekNumber = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.note = const Value.absent(),
+    this.photoDateMillis = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BumpPhotosCompanion.insert({
+    required String id,
+    required String pregnancyId,
+    required int weekNumber,
+    this.filePath = const Value.absent(),
+    this.note = const Value.absent(),
+    required int photoDateMillis,
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       pregnancyId = Value(pregnancyId),
+       weekNumber = Value(weekNumber),
+       photoDateMillis = Value(photoDateMillis),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis);
+  static Insertable<BumpPhotoDto> custom({
+    Expression<String>? id,
+    Expression<String>? pregnancyId,
+    Expression<int>? weekNumber,
+    Expression<String>? filePath,
+    Expression<String>? note,
+    Expression<int>? photoDateMillis,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (pregnancyId != null) 'pregnancy_id': pregnancyId,
+      if (weekNumber != null) 'week_number': weekNumber,
+      if (filePath != null) 'file_path': filePath,
+      if (note != null) 'note': note,
+      if (photoDateMillis != null) 'photo_date_millis': photoDateMillis,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BumpPhotosCompanion copyWith({
+    Value<String>? id,
+    Value<String>? pregnancyId,
+    Value<int>? weekNumber,
+    Value<String?>? filePath,
+    Value<String?>? note,
+    Value<int>? photoDateMillis,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<int>? rowid,
+  }) {
+    return BumpPhotosCompanion(
+      id: id ?? this.id,
+      pregnancyId: pregnancyId ?? this.pregnancyId,
+      weekNumber: weekNumber ?? this.weekNumber,
+      filePath: filePath ?? this.filePath,
+      note: note ?? this.note,
+      photoDateMillis: photoDateMillis ?? this.photoDateMillis,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (pregnancyId.present) {
+      map['pregnancy_id'] = Variable<String>(pregnancyId.value);
+    }
+    if (weekNumber.present) {
+      map['week_number'] = Variable<int>(weekNumber.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (photoDateMillis.present) {
+      map['photo_date_millis'] = Variable<int>(photoDateMillis.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BumpPhotosCompanion(')
+          ..write('id: $id, ')
+          ..write('pregnancyId: $pregnancyId, ')
+          ..write('weekNumber: $weekNumber, ')
+          ..write('filePath: $filePath, ')
+          ..write('note: $note, ')
+          ..write('photoDateMillis: $photoDateMillis, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2960,6 +3511,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $KickSessionsTable kickSessions = $KickSessionsTable(this);
   late final $KicksTable kicks = $KicksTable(this);
   late final $PauseEventsTable pauseEvents = $PauseEventsTable(this);
+  late final $BumpPhotosTable bumpPhotos = $BumpPhotosTable(this);
   late final UserProfileDao userProfileDao = UserProfileDao(
     this as AppDatabase,
   );
@@ -2967,6 +3519,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final KickCounterDao kickCounterDao = KickCounterDao(
     this as AppDatabase,
   );
+  late final BumpPhotoDao bumpPhotoDao = BumpPhotoDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2977,6 +3530,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     kickSessions,
     kicks,
     pauseEvents,
+    bumpPhotos,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5055,6 +5609,273 @@ typedef $$PauseEventsTableProcessedTableManager =
       PauseEventDto,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$BumpPhotosTableCreateCompanionBuilder =
+    BumpPhotosCompanion Function({
+      required String id,
+      required String pregnancyId,
+      required int weekNumber,
+      Value<String?> filePath,
+      Value<String?> note,
+      required int photoDateMillis,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<int> rowid,
+    });
+typedef $$BumpPhotosTableUpdateCompanionBuilder =
+    BumpPhotosCompanion Function({
+      Value<String> id,
+      Value<String> pregnancyId,
+      Value<int> weekNumber,
+      Value<String?> filePath,
+      Value<String?> note,
+      Value<int> photoDateMillis,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<int> rowid,
+    });
+
+class $$BumpPhotosTableFilterComposer
+    extends Composer<_$AppDatabase, $BumpPhotosTable> {
+  $$BumpPhotosTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pregnancyId => $composableBuilder(
+    column: $table.pregnancyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get weekNumber => $composableBuilder(
+    column: $table.weekNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get photoDateMillis => $composableBuilder(
+    column: $table.photoDateMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BumpPhotosTableOrderingComposer
+    extends Composer<_$AppDatabase, $BumpPhotosTable> {
+  $$BumpPhotosTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pregnancyId => $composableBuilder(
+    column: $table.pregnancyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get weekNumber => $composableBuilder(
+    column: $table.weekNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get photoDateMillis => $composableBuilder(
+    column: $table.photoDateMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BumpPhotosTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BumpPhotosTable> {
+  $$BumpPhotosTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get pregnancyId => $composableBuilder(
+    column: $table.pregnancyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get weekNumber => $composableBuilder(
+    column: $table.weekNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get photoDateMillis => $composableBuilder(
+    column: $table.photoDateMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+}
+
+class $$BumpPhotosTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $BumpPhotosTable,
+          BumpPhotoDto,
+          $$BumpPhotosTableFilterComposer,
+          $$BumpPhotosTableOrderingComposer,
+          $$BumpPhotosTableAnnotationComposer,
+          $$BumpPhotosTableCreateCompanionBuilder,
+          $$BumpPhotosTableUpdateCompanionBuilder,
+          (
+            BumpPhotoDto,
+            BaseReferences<_$AppDatabase, $BumpPhotosTable, BumpPhotoDto>,
+          ),
+          BumpPhotoDto,
+          PrefetchHooks Function()
+        > {
+  $$BumpPhotosTableTableManager(_$AppDatabase db, $BumpPhotosTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BumpPhotosTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BumpPhotosTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BumpPhotosTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> pregnancyId = const Value.absent(),
+                Value<int> weekNumber = const Value.absent(),
+                Value<String?> filePath = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> photoDateMillis = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BumpPhotosCompanion(
+                id: id,
+                pregnancyId: pregnancyId,
+                weekNumber: weekNumber,
+                filePath: filePath,
+                note: note,
+                photoDateMillis: photoDateMillis,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String pregnancyId,
+                required int weekNumber,
+                Value<String?> filePath = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required int photoDateMillis,
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<int> rowid = const Value.absent(),
+              }) => BumpPhotosCompanion.insert(
+                id: id,
+                pregnancyId: pregnancyId,
+                weekNumber: weekNumber,
+                filePath: filePath,
+                note: note,
+                photoDateMillis: photoDateMillis,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BumpPhotosTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $BumpPhotosTable,
+      BumpPhotoDto,
+      $$BumpPhotosTableFilterComposer,
+      $$BumpPhotosTableOrderingComposer,
+      $$BumpPhotosTableAnnotationComposer,
+      $$BumpPhotosTableCreateCompanionBuilder,
+      $$BumpPhotosTableUpdateCompanionBuilder,
+      (
+        BumpPhotoDto,
+        BaseReferences<_$AppDatabase, $BumpPhotosTable, BumpPhotoDto>,
+      ),
+      BumpPhotoDto,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5069,4 +5890,6 @@ class $AppDatabaseManager {
       $$KicksTableTableManager(_db, _db.kicks);
   $$PauseEventsTableTableManager get pauseEvents =>
       $$PauseEventsTableTableManager(_db, _db.pauseEvents);
+  $$BumpPhotosTableTableManager get bumpPhotos =>
+      $$BumpPhotosTableTableManager(_db, _db.bumpPhotos);
 }

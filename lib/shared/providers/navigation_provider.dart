@@ -37,8 +37,7 @@ class NavigationService {
     // Update the tab index in the provider
     ref.read(navigationIndexProvider.notifier).state = tabIndex;
 
-    // Always pop back to the main screen if we're on a detail screen
-    // This ensures tapping any tab (including current) returns to main tab view
+    // Pop all routes in the current context's navigator (handles nested navigators)
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).popUntil((route) => route.isFirst);
     }

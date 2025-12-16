@@ -12,11 +12,17 @@ import 'package:zeyra/features/kick_counter/ui/widgets/kick_counter_banner.dart'
 /// when the user has an active kick counter session and navigates away
 /// from the active session screen.
 /// 
-/// Usage:
+/// The banner automatically hides when bottom sheets are shown via
+/// [isBottomSheetVisibleProvider], ensuring proper z-ordering.
+/// 
+/// Usage in MaterialApp.builder:
 /// ```dart
-/// KickCounterBannerOverlay(
-///   child: MainScreen(),
-/// )
+/// builder: (context, child) {
+///   return KickCounterBannerOverlay(
+///     navigatorKey: navigatorKey,
+///     child: child ?? const SizedBox.shrink(),
+///   );
+/// }
 /// ```
 class KickCounterBannerOverlay extends ConsumerStatefulWidget {
   const KickCounterBannerOverlay({

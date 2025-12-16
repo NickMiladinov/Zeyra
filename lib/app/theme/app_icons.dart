@@ -365,6 +365,16 @@ class AppIcons {
   static const IconData camera = Symbols.photo_camera_rounded;
   static const IconData attachment = Symbols.attach_file_rounded;
   
+  // Image Editing icons
+  static const IconData cropFree = Symbols.crop_free_rounded;
+  static const IconData cropSquare = Symbols.crop_square_rounded;
+  static const IconData cropPortrait = Symbols.crop_portrait_rounded;
+  static const IconData cropLandscape = Symbols.crop_landscape_rounded;
+  static const IconData crop169 = Symbols.crop_16_9_rounded;
+  static const IconData smartphone = Symbols.smartphone_rounded;
+  static const IconData rotateLeft = Symbols.rotate_left_rounded;
+  static const IconData rotateRight = Symbols.rotate_right_rounded;
+  
   // Communication icons
   static const IconData chat = Symbols.chat_rounded;
   static const IconData send = Symbols.send_rounded;

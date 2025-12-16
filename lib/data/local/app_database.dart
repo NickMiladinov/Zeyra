@@ -7,9 +7,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
 
+import 'daos/bump_photo_dao.dart';
 import 'daos/kick_counter_dao.dart';
 import 'daos/pregnancy_dao.dart';
 import 'daos/user_profile_dao.dart';
+import 'models/bump_photo_table.dart';
 import 'models/kick_session_table.dart';
 import 'models/kick_table.dart';
 import 'models/pause_event_table.dart';
@@ -41,6 +43,9 @@ part 'app_database.g.dart';
     KickSessions,
     Kicks,
     PauseEvents,
+
+    // Bump photo feature
+    BumpPhotos,
   ],
   daos: [
     // User & Pregnancy DAOs
@@ -49,6 +54,9 @@ part 'app_database.g.dart';
 
     // Kick counter DAO
     KickCounterDao,
+
+    // Bump photo DAO
+    BumpPhotoDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -65,7 +73,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -74,10 +82,7 @@ class AppDatabase extends _$AppDatabase {
           await m.createAll();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Migration from version 1 to 2: Add pause_events table
-          if (from < 2) {
-            await m.createTable(pauseEvents);
-          }
+
         },
         beforeOpen: (details) async {
           // Enable foreign key constraints
