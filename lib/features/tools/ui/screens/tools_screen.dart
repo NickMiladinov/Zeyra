@@ -12,7 +12,11 @@ import 'package:zeyra/shared/widgets/app_banner.dart';
 import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
 import 'package:zeyra/shared/widgets/app_card.dart';
 
-/// Tools screen with nested navigation to preserve state
+/// Tools screen with nested navigation to preserve state.
+/// 
+/// Uses a nested Navigator to allow pushing screens (like KickCounterScreen)
+/// while keeping the bottom navigation bar visible. The nested Navigator's
+/// state is preserved when switching tabs thanks to IndexedStack in MainScreen.
 class ToolsScreen extends StatefulWidget {
   const ToolsScreen({super.key});
 
@@ -23,7 +27,9 @@ class ToolsScreen extends StatefulWidget {
 }
 
 class _ToolsScreenState extends State<ToolsScreen> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
+  // GlobalKey ensures the Navigator maintains its identity and state
+  // across rebuilds. This is critical for preserving the navigation stack.
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {

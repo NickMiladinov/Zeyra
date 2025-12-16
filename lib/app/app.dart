@@ -9,7 +9,7 @@ import 'package:zeyra/main.dart' show logger;
 class App extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
 
-  const App({super.key, required this.navigatorKey}); // Add navigatorKey to constructor
+  const App({super.key, required this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
@@ -35,4 +35,4 @@ class App extends StatelessWidget {
       ),
     );
   }
-} 
+}

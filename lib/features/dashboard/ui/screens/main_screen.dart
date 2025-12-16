@@ -21,15 +21,24 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
-
-  // List of widgets to display in the body based on the current index
-  List<Widget> get _screens => [
-    const HomeScreen(), // Today (index 0)
-    const _PlaceholderScreen(key: ValueKey('my-health'), title: 'My Health'), // My Health (index 1)
-    const PregnancyDataScreen(key: ValueKey('baby')), // Baby (index 2)
-    const ToolsScreen(key: ValueKey('tools')), // Tools (index 3)
-    const _PlaceholderScreen(key: ValueKey('more'), title: 'More'), // More (index 4)
-  ];
+  /// Tab screens are created once in initState and stored as instance variables.
+  /// This ensures the exact same widget instances are used across rebuilds,
+  /// which is essential for IndexedStack to preserve child state (especially
+  /// the nested Navigator in ToolsScreen).
+  late final List<Widget> _screens;
+  
+  @override
+  void initState() {
+    super.initState();
+    // Create screens once during initialization
+    _screens = [
+      const HomeScreen(key: ValueKey('home')), // Today (index 0)
+      const _PlaceholderScreen(key: ValueKey('my-health'), title: 'My Health'), // My Health (index 1)
+      const PregnancyDataScreen(key: ValueKey('baby')), // Baby (index 2)
+      const ToolsScreen(key: ValueKey('tools')), // Tools (index 3)
+      const _PlaceholderScreen(key: ValueKey('more'), title: 'More'), // More (index 4)
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +46,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final currentIndex = ref.watch(navigationIndexProvider);
 
     return Scaffold(
-      // Using IndexedStack to preserve the state of each screen when switching tabs
+      // Using IndexedStack to preserve the state of each screen when switching tabs.
+      // The _screens list is created once in initState, ensuring the same widget
+      // instances are used on every rebuild.
       body: IndexedStack(
         index: currentIndex,
         sizing: StackFit.expand,
@@ -56,7 +67,6 @@ class _PlaceholderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Determine which tab index this placeholder is for
     final currentIndex = ref.watch(navigationIndexProvider);
     
     return Scaffold(
@@ -109,4 +119,4 @@ class _PlaceholderScreen extends ConsumerWidget {
       ),
     );
   }
-} 
+}

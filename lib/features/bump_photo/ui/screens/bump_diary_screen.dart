@@ -63,8 +63,12 @@ class BumpDiaryScreen extends ConsumerWidget {
       bottomNavigationBar: AppBottomNavBar(
         currentIndex: 3, // Tools tab
         onTap: (index) {
-          final navService = NavigationService(context, ref);
-          navService.navigateToTab(index);
+          // If tapping the current tab (Tools), pop back to root of this tab
+          if (index == 3 && Navigator.of(context).canPop()) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+          // Update tab index (switches tabs or stays on same tab)
+          ref.read(navigationIndexProvider.notifier).state = index;
         },
       ),
     );
