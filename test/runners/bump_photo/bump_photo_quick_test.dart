@@ -20,6 +20,9 @@ import '../../domain/exceptions/bump_photo_exception_test.dart' as exception_tes
 // Mapper tests
 import '../../data/mappers/bump_photo_mapper_test.dart' as mapper_test;
 
+// Core utilities tests (fast)
+import '../../core/utils/image_format_utils_test.dart' as image_format_utils_test;
+
 /// Quick test runner for bump photo feature.
 ///
 /// Runs core domain and use case tests for rapid feedback during development.
@@ -50,6 +53,10 @@ void main() {
 
     group('Mappers', () {
       mapper_test.main();
+    });
+
+    group('Core Utilities', () {
+      image_format_utils_test.main();
     });
   });
 }

@@ -28,6 +28,10 @@ import '../../features/bump_photo/logic/bump_photo_notifier_test.dart' as notifi
 // Integration tests
 import '../../integration/bump_photo/bump_photo_flow_test.dart' as flow_test;
 
+// Core utilities and services tests
+import '../../core/utils/image_format_utils_test.dart' as image_format_utils_test;
+import '../../core/services/photo_file_service_test.dart' as photo_file_service_test;
+
 /// Comprehensive test runner for bump photo feature.
 ///
 /// Runs all tests for the bump photo feature including:
@@ -78,6 +82,16 @@ void main() {
     group('Feature Layer', () {
       group('Notifiers', () {
         notifier_test.main();
+      });
+    });
+
+    group('Core Services', () {
+      group('Image Format Utils', () {
+        image_format_utils_test.main();
+      });
+
+      group('Photo File Service', () {
+        photo_file_service_test.main();
       });
     });
 

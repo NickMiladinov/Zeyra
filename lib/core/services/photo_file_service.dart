@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../domain/entities/bump_photo/bump_photo_constants.dart';
 import '../../domain/exceptions/bump_photo_exception.dart';
 import '../monitoring/logging_service.dart';
+import '../utils/image_format_utils.dart';
 
 /// Service for managing bump photo files on the file system.
 ///
@@ -26,15 +27,16 @@ class PhotoFileService {
   PhotoFileService({required LoggingService logger}) : _logger = logger;
 
   /// Save a photo to the file system with compression and resizing.
+  /// All images are converted to JPEG with controlled quality.
   ///
-  /// [imageBytes] - Raw image data
+  /// [imageBytes] - Raw image data (any supported format)
   /// [userId] - User ID for directory isolation
   /// [pregnancyId] - Pregnancy ID
   /// [weekNumber] - Week number (used in filename)
   ///
   /// Returns the absolute file path where the photo was saved.
   ///
-  /// Throws [ImageProcessingException] if image processing fails.
+  /// Throws [ImageProcessingException] if image processing or format validation fails.
   /// Throws [PhotoFileException] if file operations fail.
   Future<String> savePhoto({
     required List<int> imageBytes,
@@ -43,15 +45,29 @@ class PhotoFileService {
     required int weekNumber,
   }) async {
     try {
+      final bytes = Uint8List.fromList(imageBytes);
+      
       _logger.debug('Processing image for save', data: {
         'user_id': userId,
         'pregnancy_id': pregnancyId,
         'week_number': weekNumber,
-        'original_size': imageBytes.length,
+        'original_size': bytes.length,
       });
 
-      // Decode image
-      final image = img.decodeImage(Uint8List.fromList(imageBytes));
+      // Validate image format
+      final detectedFormat = ImageFormatUtils.detectFormatFromBytes(bytes);
+      if (detectedFormat == null || !ImageFormatUtils.isFormatSupported(detectedFormat)) {
+        throw ImageProcessingException(
+          ImageFormatUtils.getUnsupportedFormatMessage(detectedFormat),
+        );
+      }
+
+      _logger.debug('Image format validated', data: {
+        'format': detectedFormat,
+      });
+
+      // Decode image (this supports all validated formats)
+      final image = img.decodeImage(bytes);
       if (image == null) {
         throw const ImageProcessingException('Failed to decode image');
       }

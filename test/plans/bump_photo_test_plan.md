@@ -21,8 +21,10 @@ This document outlines all tests for the Bump Photo feature. The feature allows 
 | **Unit - DAO** | `bump_photo_dao_test.dart` | 1 | 17 |
 | **Unit - Repository** | `bump_photo_repository_impl_test.dart` | 10 | 32 |
 | **Unit - Logic** | `bump_photo_notifier_test.dart` | 8 | 24 |
+| **Unit - Core Utils** | `image_format_utils_test.dart` | 7 | 24 |
+| **Unit - Core Services** | `photo_file_service_test.dart` | 2 | 11 |
 | **Integration** | `bump_photo_flow_test.dart` | 1 | 15 |
-| **Total** | **13 files** | **38 groups** | **152 tests** |
+| **Total** | **15 files** | **47 groups** | **187 tests** |
 
 ---
 
@@ -506,29 +508,122 @@ flutter test test/domain/usecases/bump_photo/save_bump_photo_test.dart
 
 ---
 
-## 6. Integration Tests
+## 6. Core Utilities & Services Tests
 
-### 6.1 Bump Photo Flow (`test/integration/bump_photo/bump_photo_flow_test.dart`)
+### 6.1 ImageFormatUtils (`test/core/utils/image_format_utils_test.dart`)
+
+**Purpose:** Validate image format detection and validation utilities.
+
+#### 6.1.1 isFormatSupported Group (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.1.1 | returns true for supported formats | jpg, jpeg, png, webp, bmp, gif | Format support |
+| 6.1.1.2 | returns true for formats with dots | .jpg, .png accepted | Dot handling |
+| 6.1.1.3 | is case insensitive | JPG, PNG work | Case handling |
+
+#### 6.1.2 isMimeTypeSupported Group (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.2.1 | returns true for supported MIME types | image/jpeg, image/png, etc. | MIME validation |
+| 6.1.2.2 | is case insensitive | IMAGE/JPEG works | Case handling |
+| 6.1.2.3 | returns false for unsupported MIME types | image/tiff rejected | Rejection |
+
+#### 6.1.3 detectFormatFromFileName Group (3 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.3.1 | detects format from file name | photo.jpg → jpg | Extension detection |
+| 6.1.3.2 | detects format from full path | /path/to/photo.jpg → jpg | Path parsing |
+| 6.1.3.3 | returns null for unsupported formats | photo.heic → null | Unsupported handling |
+
+#### 6.1.4 detectFormatFromBytes Group (6 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.4.1 | detects JPEG format | FF D8 FF magic number | JPEG detection |
+| 6.1.4.2 | detects PNG format | 89 50 4E 47 magic number | PNG detection |
+| 6.1.4.3 | detects GIF format | 47 49 46 38 magic number | GIF detection |
+| 6.1.4.4 | detects BMP format | 42 4D magic number | BMP detection |
+| 6.1.4.5 | detects WebP format | RIFF + WEBP signature | WebP detection |
+| 6.1.4.6 | returns null for unrecognized format | Unknown bytes → null | Unknown handling |
+
+#### 6.1.5 validateImageBytes Group (2 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.5.1 | returns true for valid formats | JPEG, PNG validated | Validation |
+| 6.1.5.2 | returns false for invalid format | Invalid bytes rejected | Rejection |
+
+#### 6.1.6 Error Messages Group (2 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.6.1 | returns generic message for null format | "Unable to detect" | Error message |
+| 6.1.6.2 | returns specific message for unsupported | Contains format name | Error message |
+
+#### 6.1.7 Display Helpers Group (1 test)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.1.7.1 | returns formatted list of formats | "JPG, JPEG, PNG..." | Display helper |
+
+**Coverage:** Format detection, magic number validation, MIME types, error messages
+
+---
+
+### 6.2 PhotoFileService (`test/core/services/photo_file_service_test.dart`)
+
+**Purpose:** Integration test for photo file operations with format conversion.
+
+#### 6.2.1 Format Validation & Compression Group (9 tests)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.2.1.1 | accepts JPEG format and compresses | JPEG input → JPEG 85% | JPEG handling |
+| 6.2.1.2 | accepts PNG format and converts to JPEG | PNG → JPEG conversion | PNG conversion |
+| 6.2.1.3 | accepts BMP format and converts to JPEG | BMP → JPEG conversion | BMP conversion |
+| 6.2.1.4 | accepts GIF format and converts to JPEG | GIF → JPEG conversion | GIF conversion |
+| 6.2.1.5 | rejects unsupported format | Invalid bytes throw error | Rejection |
+| 6.2.1.6 | resizes large images to maxImageWidth | 3000px → 1920px | Resizing |
+| 6.2.1.7 | does not resize small images | 800px unchanged | Size preservation |
+| 6.2.1.8 | throws ImageTooLargeException | Huge image rejected | Size limits |
+| 6.2.1.9 | validates format before decoding | Early validation | Validation order |
+
+#### 6.2.2 File Operations Group (1 test)
+
+| Test # | Test Name | Description | Validates |
+|--------|-----------|-------------|-----------|
+| 6.2.2.1 | creates directory structure correctly | User/pregnancy isolation | Directory creation |
+
+**Coverage:** Format conversion, validation, resizing, compression, error handling
+
+---
+
+## 7. Integration Tests
+
+### 7.1 Bump Photo Flow (`test/integration/bump_photo/bump_photo_flow_test.dart`)
 
 **Purpose:** End-to-end testing of complete user flows with in-memory database.
 
 | Test # | Test Name | Description | User Flow |
 |--------|-----------|-------------|-----------|
-| 6.1.1 | should save photo and retrieve it | Save -> Get | Basic flow |
-| 6.1.2 | should save note only without photo | Note-only entry | Note-only flow |
-| 6.1.3 | should save photo with note | Combined entry | Full entry |
-| 6.1.4 | should update note on existing photo | Photo -> Update note | Note update |
-| 6.1.5 | should delete photo and preserve note | Delete photo, keep note | Note preservation |
-| 6.1.6 | should delete photo without note completely | Delete removes record | Full delete |
-| 6.1.7 | should replace photo when saving to same week | Old file deleted | Photo replace |
-| 6.1.8 | should handle multiple weeks | Multi-week diary | Multi-entry |
-| 6.1.9 | should reject invalid week number (too low) | Week 0 rejected | Validation |
-| 6.1.10 | should reject invalid week number (too high) | Week 43 rejected | Validation |
-| 6.1.11 | should preserve note when changing photo | Replace photo, keep note | Note preservation |
-| 6.1.12 | should clear note when null provided | Note cleared | Note clearing |
-| 6.1.13 | should delete all photos for pregnancy | Bulk delete | Cleanup |
-| 6.1.14 | should handle empty pregnancy (no photos) | Empty state | Empty handling |
-| 6.1.15 | should handle concurrent saves to different weeks | Multi-week parallel | Concurrency |
+| 7.1.1 | should save photo and retrieve it | Save -> Get | Basic flow |
+| 7.1.2 | should save note only without photo | Note-only entry | Note-only flow |
+| 7.1.3 | should save photo with note | Combined entry | Full entry |
+| 7.1.4 | should update note on existing photo | Photo -> Update note | Note update |
+| 7.1.5 | should delete photo and preserve note | Delete photo, keep note | Note preservation |
+| 7.1.6 | should delete photo without note completely | Delete removes record | Full delete |
+| 7.1.7 | should replace photo when saving to same week | Old file deleted | Photo replace |
+| 7.1.8 | should handle multiple weeks | Multi-week diary | Multi-entry |
+| 7.1.9 | should reject invalid week number (too low) | Week 0 rejected | Validation |
+| 7.1.10 | should reject invalid week number (too high) | Week 43 rejected | Validation |
+| 7.1.11 | should preserve note when changing photo | Replace photo, keep note | Note preservation |
+| 7.1.12 | should clear note when null provided | Note cleared | Note clearing |
+| 7.1.13 | should delete all photos for pregnancy | Bulk delete | Cleanup |
+| 7.1.14 | should handle empty pregnancy (no photos) | Empty state | Empty handling |
+| 7.1.15 | should handle concurrent saves to different weeks | Multi-week parallel | Concurrency |
 
 **Coverage:** Complete user flows, note preservation, file cleanup, validation, edge cases
 
@@ -614,8 +709,8 @@ flutter test test/domain/usecases/bump_photo/save_bump_photo_test.dart
 
 ## Document Metadata
 
-**Last Updated:** 2025-12-12
-**Total Tests:** 161
-**Test Files:** 14
-**Coverage Level:** Comprehensive (Unit + Integration)
-**Feature Status:** Fully Implemented & Tested (including note-only entries, file cleanup)
+**Last Updated:** 2025-12-15
+**Total Tests:** 187 (includes image format validation & file service tests)
+**Test Files:** 15
+**Coverage Level:** Comprehensive (Unit + Integration + Core Services)
+**Feature Status:** Fully Implemented & Tested (including note-only entries, file cleanup, image format validation)

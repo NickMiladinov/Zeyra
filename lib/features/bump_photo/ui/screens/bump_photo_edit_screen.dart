@@ -1,17 +1,21 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../logic/bump_photo_provider.dart';
+import '../widgets/image_source_picker.dart';
 import 'photo_crop_screen.dart';
 import 'package:zeyra/app/theme/app_colors.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_icons.dart';
+import 'package:zeyra/core/utils/image_format_utils.dart';
 import 'package:zeyra/shared/widgets/app_dialog.dart';
 
 /// Screen for adding or editing a bump photo for a specific week.
@@ -77,6 +81,7 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
           note: note,
         ).catchError((e) {
           debugPrint('Failed to save note on screen exit: $e');
+          return null;
         });
       });
     }
@@ -125,23 +130,17 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
         );
       } else {
         // Create new note-only record
-        await ref.read(bumpPhotoProvider.notifier).saveNoteOnly(
+        final savedPhoto = await ref.read(bumpPhotoProvider.notifier).saveNoteOnly(
           weekNumber: widget.weekNumber,
           note: note,
         );
 
-        // Update _currentPhotoId after creating the record
-        final stateAsync = ref.read(bumpPhotoProvider);
-        stateAsync.whenData((state) {
-          final photo = state.photos
-              .where((p) => p.weekNumber == widget.weekNumber)
-              .firstOrNull;
-          if (photo != null && mounted) {
-            setState(() {
-              _currentPhotoId = photo.id;
-            });
-          }
-        });
+        // Update _currentPhotoId with the returned entity
+        if (savedPhoto != null && mounted) {
+          setState(() {
+            _currentPhotoId = savedPhoto.id;
+          });
+        }
       }
     } catch (e) {
       // Silent fail for auto-save
@@ -413,41 +412,25 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
     );
   }
 
-  /// Show dialog to choose image source
+  /// Show bottom sheet to choose image source
   Future<void> _showImageSourceDialog() async {
-    final source = await showDialog<ImageSource>(
+    final result = await ImageSourcePicker.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Add Photo',
-          style: AppTypography.headlineMedium,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(AppIcons.camera, color: AppColors.primary),
-              title: Text('Camera', style: AppTypography.bodyLarge),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: Icon(AppIcons.image, color: AppColors.primary),
-              title: Text('Gallery', style: AppTypography.bodyLarge),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTypography.labelLarge),
-          ),
-        ],
-      ),
+      title: 'Add Photo',
     );
 
-    if (source != null && mounted) {
-      await _pickAndCropImage(source);
+    if (result != null && mounted) {
+      switch (result.type) {
+        case ImageSourceType.camera:
+          await _pickAndCropImage(ImageSource.camera);
+          break;
+        case ImageSourceType.gallery:
+          await _pickAndCropImage(ImageSource.gallery);
+          break;
+        case ImageSourceType.files:
+          await _pickFromFiles();
+          break;
+      }
     }
   }
 
@@ -463,6 +446,38 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
         // User cancelled image picker
         return;
       }
+
+      if (!mounted) return;
+
+      // Validate image format before proceeding
+      final imageBytes = await pickedFile.readAsBytes();
+      final detectedFormat = ImageFormatUtils.detectFormatFromBytes(
+        Uint8List.fromList(imageBytes),
+      );
+
+      if (detectedFormat == null || !ImageFormatUtils.isFormatSupported(detectedFormat)) {
+        // Show error for unsupported format
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ImageFormatUtils.getUnsupportedFormatMessage(detectedFormat),
+              ),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        // Clean up the picked file
+        try {
+          await File(pickedFile.path).delete();
+        } catch (e) {
+          debugPrint('Failed to delete unsupported image: $e');
+        }
+        return;
+      }
+
+      debugPrint('Image format validated: $detectedFormat');
 
       if (!mounted) return;
 
@@ -484,7 +499,91 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
 
       if (croppedFile != null && mounted) {
         setState(() {
-          _selectedImage = File(pickedFile.path);
+          _selectedImage = croppedFile;
+          _croppedImage = croppedFile;
+        });
+
+        // Automatically save the photo
+        await _savePhoto();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to process image: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Pick image from files and show crop screen
+  Future<void> _pickFromFiles() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        // User cancelled file picker
+        return;
+      }
+
+      final filePath = result.files.single.path;
+      if (filePath == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to access selected file'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+        return;
+      }
+
+      if (!mounted) return;
+
+      // Validate image format before proceeding
+      final imageBytes = await File(filePath).readAsBytes();
+      final detectedFormat = ImageFormatUtils.detectFormatFromBytes(
+        Uint8List.fromList(imageBytes),
+      );
+
+      if (detectedFormat == null || !ImageFormatUtils.isFormatSupported(detectedFormat)) {
+        // Show error for unsupported format
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                ImageFormatUtils.getUnsupportedFormatMessage(detectedFormat),
+              ),
+              backgroundColor: AppColors.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      debugPrint('Image format validated: $detectedFormat');
+
+      if (!mounted) return;
+
+      // Navigate to crop screen
+      final File? croppedFile = await Navigator.of(context).push<File>(
+        MaterialPageRoute(
+          builder: (context) => PhotoCropScreen(
+            imageFile: File(filePath),
+          ),
+        ),
+      );
+
+      if (croppedFile != null && mounted) {
+        setState(() {
+          _selectedImage = File(filePath);
           _croppedImage = croppedFile;
         });
 
@@ -573,39 +672,23 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
 
   /// Change photo - shows image picker and cropper
   Future<void> _changePhoto() async {
-    final source = await showDialog<ImageSource>(
+    final result = await ImageSourcePicker.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Change Photo',
-          style: AppTypography.headlineMedium,
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(AppIcons.camera, color: AppColors.primary),
-              title: Text('Camera', style: AppTypography.bodyLarge),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: Icon(AppIcons.image, color: AppColors.primary),
-              title: Text('Gallery', style: AppTypography.bodyLarge),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: AppTypography.labelLarge),
-          ),
-        ],
-      ),
+      title: 'Change Photo',
     );
 
-    if (source != null && mounted) {
-      await _pickAndCropImage(source);
+    if (result != null && mounted) {
+      switch (result.type) {
+        case ImageSourceType.camera:
+          await _pickAndCropImage(ImageSource.camera);
+          break;
+        case ImageSourceType.gallery:
+          await _pickAndCropImage(ImageSource.gallery);
+          break;
+        case ImageSourceType.files:
+          await _pickFromFiles();
+          break;
+      }
     }
   }
 

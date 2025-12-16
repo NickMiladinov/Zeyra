@@ -207,6 +207,7 @@ class AppEffects {
   static const Duration durationInstant = Duration(milliseconds: 0);
   static const Duration durationFast = Duration(milliseconds: 150);
   static const Duration durationNormal = Duration(milliseconds: 300);
+  static const Duration durationMedium = Duration(milliseconds: 400);
   static const Duration durationSlow = Duration(milliseconds: 500);
   static const Duration durationVerySlow = Duration(milliseconds: 750);
   static const Duration durationVeryVerySlow = Duration(milliseconds: 1000);
