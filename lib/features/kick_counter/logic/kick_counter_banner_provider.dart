@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zeyra/core/di/main_providers.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
+import 'package:zeyra/shared/providers/modal_overlay_provider.dart';
 
 /// Manages the visibility state of the kick counter floating banner.
 /// 
@@ -82,7 +83,13 @@ final shouldShowKickCounterBannerProvider = Provider<bool>((ref) {
   // The notifier no longer accesses kickCounterProvider in constructor, so this is safe.
   final bannerVisible = ref.watch(kickCounterBannerProvider);
   
-  // 2. Check authentication before accessing auth-dependent providers
+  // 2. Hide banner when any modal overlay is visible (bottom sheets, full-screen modals, etc.)
+  final isModalVisible = ref.watch(isModalOverlayVisibleProvider);
+  if (isModalVisible) {
+    return false;
+  }
+  
+  // 3. Check authentication before accessing auth-dependent providers
   try {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
@@ -92,10 +99,10 @@ final shouldShowKickCounterBannerProvider = Provider<bool>((ref) {
     // Supabase not initialized - test environment, continue
   }
   
-  // 3. User is authenticated - ensure session listener is initialized
+  // 4. User is authenticated - ensure session listener is initialized
   ref.read(kickCounterBannerProvider.notifier)._ensureListenerInitialized();
   
-  // 4. Check if there's an active session
+  // 5. Check if there's an active session
   try {
     final useCaseAsync = ref.watch(manageSessionUseCaseProvider);
     return useCaseAsync.when(

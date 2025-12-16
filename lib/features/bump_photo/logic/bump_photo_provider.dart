@@ -192,8 +192,10 @@ class BumpPhotoNotifier extends StateNotifier<BumpPhotoState> {
   /// [weekNumber] - Week number (1-42)
   /// [note] - Note text (null to clear)
   ///
+  /// Returns the saved photo entity, or null if operation failed.
+  ///
   /// Updates state optimistically and reverts on error.
-  Future<void> saveNoteOnly({
+  Future<BumpPhoto?> saveNoteOnly({
     required int weekNumber,
     required String? note,
   }) async {
@@ -224,16 +226,20 @@ class BumpPhotoNotifier extends StateNotifier<BumpPhotoState> {
         weekSlots: weekSlots,
         isLoading: false,
       );
+
+      return savedPhoto;
     } on BumpPhotoException catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.message,
       );
+      return null;
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to save note: ${e.toString()}',
       );
+      return null;
     }
   }
 
@@ -361,11 +367,11 @@ class BumpPhotoAsyncNotifier extends AutoDisposeAsyncNotifier<BumpPhotoState> {
     );
   }
 
-  Future<void> saveNoteOnly({
+  Future<BumpPhoto?> saveNoteOnly({
     required int weekNumber,
     required String? note,
   }) async {
-    await _notifier?.saveNoteOnly(
+    return await _notifier?.saveNoteOnly(
       weekNumber: weekNumber,
       note: note,
     );

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:crop_image/crop_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 
 import 'package:zeyra/app/theme/app_colors.dart';
@@ -10,6 +11,7 @@ import 'package:zeyra/app/theme/app_icons.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
+import 'package:zeyra/shared/providers/modal_overlay_provider.dart';
 
 /// Aspect ratio preset
 class AspectRatioPreset {
@@ -25,7 +27,7 @@ class AspectRatioPreset {
 }
 
 /// Native-feeling crop screen with manual controls
-class PhotoCropScreen extends StatefulWidget {
+class PhotoCropScreen extends ConsumerStatefulWidget {
   final File imageFile;
 
   const PhotoCropScreen({
@@ -34,13 +36,15 @@ class PhotoCropScreen extends StatefulWidget {
   });
 
   @override
-  State<PhotoCropScreen> createState() => _PhotoCropScreenState();
+  ConsumerState<PhotoCropScreen> createState() => _PhotoCropScreenState();
 }
 
-class _PhotoCropScreenState extends State<PhotoCropScreen> {
+class _PhotoCropScreenState extends ConsumerState<PhotoCropScreen> {
   late CropController _cropController;
   bool _isProcessing = false;
   int _cropKey = 0; // Key to force CropImage rebuild
+  bool _hasShownOverlay = false; // Track if we actually called show()
+  ModalOverlayNotifier? _modalNotifier; // Store notifier reference for dispose
   AspectRatioPreset _selectedRatio = const AspectRatioPreset(
     label: 'Free',
     ratio: null,
@@ -61,8 +65,20 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
     super.initState();
     _cropController = CropController(
       aspectRatio: _selectedRatio.ratio,
-      defaultCrop: const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9),
+      defaultCrop: const Rect.fromLTRB(0.0, 0.0, 1.0, 1.0),
     );
+    
+    // Capture notifier reference before widget might be disposed
+    _modalNotifier = ref.read(modalOverlayNotifierProvider);
+    
+    // Hide kick counter banner while crop screen is visible
+    // Delay provider modification to avoid modifying during widget tree build
+    Future.microtask(() {
+      if (mounted) {
+        _modalNotifier?.show();
+        _hasShownOverlay = true;
+      }
+    });
   }
 
   void _changeAspectRatio(AspectRatioPreset preset) {
@@ -72,7 +88,7 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
       _cropKey++; // Increment key to force rebuild
       _cropController = CropController(
         aspectRatio: preset.ratio,
-        defaultCrop: const Rect.fromLTRB(0.1, 0.1, 0.9, 0.9),
+        defaultCrop: const Rect.fromLTRB(0.0, 0.0, 1.0, 1.0),
       );
     });
   }
@@ -80,6 +96,16 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
   @override
   void dispose() {
     _cropController.dispose();
+    // Show kick counter banner again when leaving crop screen
+    // Only hide if we actually called show()
+    // CRITICAL: Defer hide() call until after widget tree finishes disposing
+    // to avoid Riverpod lifecycle violation
+    if (_hasShownOverlay && _modalNotifier != null) {
+      final notifier = _modalNotifier!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.hide();
+      });
+    }
     super.dispose();
   }
 
@@ -199,15 +225,16 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
         height: height,
       );
 
-      // Encode as JPEG
+      // Encode as PNG (lossless) for temp storage
+      // This preserves perfect quality until final JPEG 85% compression in PhotoFileService
       final croppedBytes = Uint8List.fromList(
-        img.encodeJpg(croppedImage, quality: 90),
+        img.encodePng(croppedImage),
       );
 
       // Save to temp file
       final tempDir = await Directory.systemTemp.createTemp('bump_photo_');
       final tempFile = File(
-        '${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        '${tempDir.path}/cropped_${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await tempFile.writeAsBytes(croppedBytes);
 
