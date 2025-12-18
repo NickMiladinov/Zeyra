@@ -7,6 +7,11 @@ presets:
     paths:
       - test/runners/kick_counter/all_test.dart
 
+  # Run all contraction timer tests
+  contraction_timer:
+    paths:
+      - test/runners/contraction_timer/all_test.dart
+
   # Run all bump photo tests
   bump_photo:
     paths:
@@ -39,6 +44,9 @@ reporter: expanded  # More detailed output
 tags:
   kick_counter:
     # Standard timeout for kick counter tests
+
+  contraction_timer:
+    # Contraction timer feature tests
 
   bump_photo:
     # Bump photo feature tests

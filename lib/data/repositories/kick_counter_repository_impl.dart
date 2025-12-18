@@ -5,6 +5,7 @@ import '../../core/monitoring/logging_service.dart';
 import '../../domain/entities/kick_counter/kick.dart';
 import '../../domain/entities/kick_counter/kick_session.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
+import '../../domain/repositories/pregnancy_repository.dart';
 import '../local/app_database.dart';
 import '../local/daos/kick_counter_dao.dart';
 import '../mappers/kick_session_mapper.dart';
@@ -19,14 +20,17 @@ import '../mappers/pause_event_mapper.dart';
 /// See [AppDatabase.encrypted] for encryption configuration details.
 class KickCounterRepositoryImpl implements KickCounterRepository {
   final KickCounterDao _dao;
+  final PregnancyRepository _pregnancyRepository;
   final LoggingService _logger;
   final Uuid _uuid;
 
   KickCounterRepositoryImpl({
     required KickCounterDao dao,
+    required PregnancyRepository pregnancyRepository,
     required LoggingService logger,
     Uuid? uuid,
   })  : _dao = dao,
+        _pregnancyRepository = pregnancyRepository,
         _logger = logger,
         _uuid = uuid ?? const Uuid();
 
@@ -453,9 +457,30 @@ class KickCounterRepositoryImpl implements KickCounterRepository {
 
   @override
   Future<int?> getPregnancyWeekForSession(String sessionId) async {
-    // TODO: Implement pregnancy week calculation from pregnancy profile
-    // This requires integration with pregnancy profile repository
-    // For now, return null
-    return null;
+    try {
+      // Get the session to retrieve its start time
+      final session = await getSession(sessionId);
+      if (session == null) {
+        _logger.warning('Session not found for pregnancy week calculation');
+        return null;
+      }
+
+      // Get the active pregnancy
+      final pregnancy = await _pregnancyRepository.getActivePregnancy();
+      if (pregnancy == null) {
+        _logger.debug('No active pregnancy found for week calculation');
+        return null;
+      }
+
+      // Calculate pregnancy week at the time of the session using domain logic
+      return pregnancy.getGestationalWeekAt(session.startTime);
+    } catch (e, stackTrace) {
+      _logger.error(
+        'Failed to calculate pregnancy week for session',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
   }
 }

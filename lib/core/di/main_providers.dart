@@ -149,9 +149,11 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
 final kickCounterRepositoryProvider = FutureProvider<KickCounterRepository>((ref) async {
   final db = await ref.watch(appDatabaseProvider.future);
   final logging = ref.watch(loggingServiceProvider);
+  final pregnancyRepo = await ref.watch(pregnancyRepositoryProvider.future);
 
   return KickCounterRepositoryImpl(
     dao: db.kickCounterDao,
+    pregnancyRepository: pregnancyRepo,
     logger: logging,
   );
 });

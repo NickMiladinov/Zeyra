@@ -42,10 +42,19 @@ class Pregnancy {
   /// Returns the number of completed weeks since startDate.
   /// Returns 0 if startDate is in the future.
   int get gestationalWeek {
-    final now = DateTime.now();
-    if (now.isBefore(startDate)) return 0;
+    return getGestationalWeekAt(DateTime.now());
+  }
 
-    final daysSinceStart = now.difference(startDate).inDays;
+  /// Calculate gestational week at a specific point in time
+  ///
+  /// [dateTime] - The point in time to calculate the gestational week for
+  ///
+  /// Returns the number of completed weeks since startDate up to the given dateTime.
+  /// Returns 0 if dateTime is before startDate.
+  int getGestationalWeekAt(DateTime dateTime) {
+    if (dateTime.isBefore(startDate)) return 0;
+
+    final daysSinceStart = dateTime.difference(startDate).inDays;
     return daysSinceStart ~/ 7;
   }
 

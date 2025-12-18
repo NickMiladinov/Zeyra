@@ -9,13 +9,17 @@ import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
 import 'package:zeyra/domain/exceptions/kick_counter_exception.dart';
+import 'package:zeyra/domain/repositories/pregnancy_repository.dart';
 import 'package:zeyra/domain/usecases/kick_counter/manage_session_usecase.dart';
 
 class MockLoggingService extends Mock implements LoggingService {}
 
+class MockPregnancyRepository extends Mock implements PregnancyRepository {}
+
 void main() {
   late AppDatabase database;
   late MockLoggingService mockLogger;
+  late MockPregnancyRepository mockPregnancyRepository;
   late KickCounterRepositoryImpl repository;
   late ManageSessionUseCase useCase;
 
@@ -24,6 +28,7 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     
     mockLogger = MockLoggingService();
+    mockPregnancyRepository = MockPregnancyRepository();
     
     // Create in-memory database (unencrypted for tests)
     // NOTE: Production uses SQLCipher for full database encryption
@@ -31,6 +36,7 @@ void main() {
     
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
+      pregnancyRepository: mockPregnancyRepository,
       logger: mockLogger,
     );
     
