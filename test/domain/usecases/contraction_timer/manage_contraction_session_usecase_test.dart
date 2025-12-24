@@ -78,6 +78,15 @@ void main() {
         );
         when(() => mockRepository.getActiveSession())
             .thenAnswer((_) async => activeSession);
+        when(() => mockRepository.updateSessionCriteria(
+          sessionId,
+          achievedDuration: any(named: 'achievedDuration'),
+          durationAchievedAt: any(named: 'durationAchievedAt'),
+          achievedFrequency: any(named: 'achievedFrequency'),
+          frequencyAchievedAt: any(named: 'frequencyAchievedAt'),
+          achievedConsistency: any(named: 'achievedConsistency'),
+          consistencyAchievedAt: any(named: 'consistencyAchievedAt'),
+        )).thenAnswer((_) async => activeSession);
         when(() => mockRepository.endSession(sessionId))
             .thenAnswer((_) async {});
 
@@ -86,6 +95,15 @@ void main() {
 
         // Assert
         verify(() => mockRepository.getActiveSession()).called(1);
+        verify(() => mockRepository.updateSessionCriteria(
+          sessionId,
+          achievedDuration: any(named: 'achievedDuration'),
+          durationAchievedAt: any(named: 'durationAchievedAt'),
+          achievedFrequency: any(named: 'achievedFrequency'),
+          frequencyAchievedAt: any(named: 'frequencyAchievedAt'),
+          achievedConsistency: any(named: 'achievedConsistency'),
+          consistencyAchievedAt: any(named: 'consistencyAchievedAt'),
+        )).called(1);
         verify(() => mockRepository.endSession(sessionId)).called(1);
       });
 
@@ -168,6 +186,16 @@ void main() {
           sessionWithActiveContraction.activeContraction!.id,
         )).thenAnswer((_) async => stoppedContraction);
 
+        when(() => mockRepository.updateSessionCriteria(
+          sessionId,
+          achievedDuration: any(named: 'achievedDuration'),
+          durationAchievedAt: any(named: 'durationAchievedAt'),
+          achievedFrequency: any(named: 'achievedFrequency'),
+          frequencyAchievedAt: any(named: 'frequencyAchievedAt'),
+          achievedConsistency: any(named: 'achievedConsistency'),
+          consistencyAchievedAt: any(named: 'consistencyAchievedAt'),
+        )).thenAnswer((_) async => sessionAfterStop);
+
         when(() => mockRepository.endSession(sessionId))
             .thenAnswer((_) async {});
 
@@ -177,6 +205,15 @@ void main() {
         // Assert
         verify(() => mockRepository.stopContraction(
           sessionWithActiveContraction.activeContraction!.id,
+        )).called(1);
+        verify(() => mockRepository.updateSessionCriteria(
+          sessionId,
+          achievedDuration: any(named: 'achievedDuration'),
+          durationAchievedAt: any(named: 'durationAchievedAt'),
+          achievedFrequency: any(named: 'achievedFrequency'),
+          frequencyAchievedAt: any(named: 'frequencyAchievedAt'),
+          achievedConsistency: any(named: 'achievedConsistency'),
+          consistencyAchievedAt: any(named: 'consistencyAchievedAt'),
         )).called(1);
         verify(() => mockRepository.endSession(sessionId)).called(1);
       });

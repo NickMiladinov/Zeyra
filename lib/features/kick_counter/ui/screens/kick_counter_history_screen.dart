@@ -403,13 +403,14 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
       context: context,
       session: session,
       sessionAnalytics: sessionAnalytic,
+      onNoteUpdated: (sessionId, note) async {
+        await ref.read(kickHistoryProvider.notifier).updateSessionNote(sessionId, note);
+      },
     );
     
     if (result != null && mounted) {
       if (result.action == SessionAction.delete) {
         await ref.read(kickHistoryProvider.notifier).deleteSession(session.id);
-      } else if (result.action == SessionAction.editNote) {
-        await ref.read(kickHistoryProvider.notifier).updateSessionNote(session.id, result.note);
       }
     }
   }
@@ -481,12 +482,12 @@ class _SessionHistoryItem extends StatelessWidget {
     } else if (sessionDay == yesterday) {
       return 'Yesterday, ${_formatTime(date)}';
     } else {
-      return DateFormat('MMM d, h:mm a').format(date);
+      return DateFormat('MMM d, HH:mm').format(date);
     }
   }
 
   String _formatTime(DateTime date) {
-    return DateFormat('h:mm a').format(date);
+    return DateFormat('HH:mm').format(date);
   }
 
   @override

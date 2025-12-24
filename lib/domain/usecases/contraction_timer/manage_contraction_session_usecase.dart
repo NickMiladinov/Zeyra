@@ -4,6 +4,7 @@ import '../../entities/contraction_timer/contraction_session.dart';
 import '../../entities/contraction_timer/contraction_timer_constants.dart';
 import '../../exceptions/contraction_timer_exception.dart';
 import '../../repositories/contraction_timer_repository.dart';
+import 'calculate_511_rule_usecase.dart';
 
 /// Use case for managing contraction timing sessions.
 /// 
@@ -12,10 +13,13 @@ import '../../repositories/contraction_timer_repository.dart';
 /// to end, and proper contraction start/stop sequencing.
 class ManageContractionSessionUseCase {
   final ContractionTimerRepository _repository;
+  final Calculate511RuleUseCase _calculate511UseCase;
 
   const ManageContractionSessionUseCase({
     required ContractionTimerRepository repository,
-  }) : _repository = repository;
+    Calculate511RuleUseCase calculate511UseCase = const Calculate511RuleUseCase(),
+  }) : _repository = repository,
+       _calculate511UseCase = calculate511UseCase;
 
   // --------------------------------------------------------------------------
   // State Queries
@@ -232,6 +236,26 @@ class ManageContractionSessionUseCase {
         ContractionTimerErrorType.noContractionsRecorded,
       );
     }
+
+    // Use Calculate511RuleUseCase as single source of truth for criteria evaluation
+    final achieved = _calculate511UseCase.evaluateAchievedCriteria(session);
+    
+    // Update session with achieved flags before ending
+    await _repository.updateSessionCriteria(
+      sessionId,
+      achievedDuration: achieved.duration,
+      durationAchievedAt: achieved.duration && session.durationAchievedAt == null 
+          ? DateTime.now() 
+          : null, // Don't overwrite if already set
+      achievedFrequency: achieved.frequency,
+      frequencyAchievedAt: achieved.frequency && session.frequencyAchievedAt == null 
+          ? DateTime.now() 
+          : null,
+      achievedConsistency: achieved.consistency,
+      consistencyAchievedAt: achieved.consistency && session.consistencyAchievedAt == null 
+          ? DateTime.now() 
+          : null,
+    );
 
     await _repository.endSession(sessionId);
   }

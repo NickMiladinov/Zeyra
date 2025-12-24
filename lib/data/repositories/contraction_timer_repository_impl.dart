@@ -5,6 +5,7 @@ import '../../core/monitoring/logging_service.dart';
 import '../../domain/entities/contraction_timer/contraction.dart';
 import '../../domain/entities/contraction_timer/contraction_intensity.dart';
 import '../../domain/entities/contraction_timer/contraction_session.dart';
+import '../../domain/entities/contraction_timer/contraction_timer_constants.dart';
 import '../../domain/exceptions/contraction_timer_exception.dart';
 import '../../domain/repositories/contraction_timer_repository.dart';
 import '../../domain/repositories/pregnancy_repository.dart';
@@ -296,11 +297,22 @@ class ContractionTimerRepositoryImpl implements ContractionTimerRepository {
       }
 
       final now = DateTime.now();
+      final startTime = DateTime.fromMillisecondsSinceEpoch(existing.startTimeMillis);
+      final actualDuration = now.difference(startTime);
+      
+      // Cap duration at maximum threshold (2 minutes)
+      final cappedEndTime = actualDuration > ContractionTimerConstants.maxContractionDuration
+          ? startTime.add(ContractionTimerConstants.maxContractionDuration)
+          : now;
+      
+      if (actualDuration > ContractionTimerConstants.maxContractionDuration) {
+        _logger.debug('Capped contraction duration from ${actualDuration.inSeconds}s to ${ContractionTimerConstants.maxContractionDuration.inSeconds}s');
+      }
 
       await _dao.updateContractionFields(
         contractionId,
         ContractionsCompanion(
-          endTimeMillis: Value(now.millisecondsSinceEpoch),
+          endTimeMillis: Value(cappedEndTime.millisecondsSinceEpoch),
           updatedAtMillis: Value(now.millisecondsSinceEpoch),
         ),
       );

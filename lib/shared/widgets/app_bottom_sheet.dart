@@ -22,12 +22,16 @@ const Duration _exitAnimationDuration = AppEffects.durationNormal;
 /// - Consistent padding and spacing
 /// - Smooth animations
 /// - Automatically hides floating banners when visible
+/// - Supports both modal and draggable sheet modes
 class AppBottomSheet extends StatelessWidget {
   /// The content to display in the bottom sheet
   final Widget child;
   
   /// Optional title displayed at the top
   final String? title;
+  
+  /// Optional custom style for the title
+  final TextStyle? titleStyle;
   
   /// Whether to show a close button in the top right
   /// Recommended for accessibility if swipe gestures may be difficult
@@ -41,16 +45,32 @@ class AppBottomSheet extends StatelessWidget {
   
   /// Background color of the bottom sheet
   final Color? backgroundColor;
+  
+  /// Optional scroll controller for use in DraggableScrollableSheet
+  /// When provided, the sheet uses sliver layout for better dragging
+  final ScrollController? scrollController;
+  
+  /// Whether to use sliver layout (CustomScrollView) instead of Column
+  /// Automatically true when scrollController is provided
+  final bool useSliverLayout;
+  
+  /// Whether to apply padding to the content
+  /// Set to false when child handles its own padding (e.g., lists)
+  final bool applyContentPadding;
 
   const AppBottomSheet({
     super.key,
     required this.child,
     this.title,
+    this.titleStyle,
     this.showCloseButton = false,
     this.height,
     this.isDismissible = true,
     this.backgroundColor,
-  });
+    this.scrollController,
+    bool? useSliverLayout,
+    this.applyContentPadding = true,
+  }) : useSliverLayout = useSliverLayout ?? scrollController != null;
 
   /// Show the bottom sheet with standard modal configuration.
   /// 
@@ -60,6 +80,7 @@ class AppBottomSheet extends StatelessWidget {
     required BuildContext context,
     required Widget child,
     String? title,
+    TextStyle? titleStyle,
     bool showCloseButton = false,
     double? height,
     bool isDismissible = true,
@@ -92,6 +113,7 @@ class AppBottomSheet extends StatelessWidget {
         ),
         builder: (context) => AppBottomSheet(
           title: title,
+          titleStyle: titleStyle,
           showCloseButton: showCloseButton,
           height: height,
           isDismissible: isDismissible,
@@ -107,16 +129,69 @@ class AppBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBackgroundColor = backgroundColor ?? AppColors.surface;
+    
+    final decoration = BoxDecoration(
+      color: effectiveBackgroundColor,
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(AppEffects.radiusXXL),
+        topRight: Radius.circular(AppEffects.radiusXXL),
+      ),
+      boxShadow: AppEffects.shadowLG,
+    );
+    
+    // Use sliver layout for draggable sheets
+    if (useSliverLayout) {
+      return Container(
+        height: height,
+        decoration: decoration,
+        clipBehavior: Clip.antiAlias,
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            // Drag handle and header
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const _DragHandle(),
+                  if (title != null || showCloseButton)
+                    _Header(
+                      title: title,
+                      titleStyle: titleStyle,
+                      showCloseButton: showCloseButton,
+                    ),
+                ],
+              ),
+            ),
+            
+            // Content
+            SliverToBoxAdapter(
+              child: applyContentPadding
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.paddingXL,
+                        AppSpacing.paddingSM,
+                        AppSpacing.paddingXL,
+                        AppSpacing.paddingXL,
+                      ),
+                      child: child,
+                    )
+                  : child,
+            ),
+            
+            // Bottom safe area padding
+            SliverToBoxAdapter(
+              child: SizedBox(height: MediaQuery.of(context).padding.bottom),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Standard column layout for modal sheets
     return Container(
       height: height,
-      decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppEffects.radiusXXL),
-          topRight: Radius.circular(AppEffects.radiusXXL),
-        ),
-        boxShadow: AppEffects.shadowLG,
-      ),
+      decoration: decoration,
       child: Column(
         mainAxisSize: height == null ? MainAxisSize.min : MainAxisSize.max,
         children: [
@@ -127,20 +202,23 @@ class AppBottomSheet extends StatelessWidget {
           if (title != null || showCloseButton)
             _Header(
               title: title,
+              titleStyle: titleStyle,
               showCloseButton: showCloseButton,
             ),
           
           // Content
           Flexible(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.paddingXL,
-                AppSpacing.paddingSM,
-                AppSpacing.paddingXL,
-                AppSpacing.paddingXL,
-              ),
-              child: child,
-            ),
+            child: applyContentPadding
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.paddingXL,
+                      AppSpacing.paddingSM,
+                      AppSpacing.paddingXL,
+                      AppSpacing.paddingXL,
+                    ),
+                    child: child,
+                  )
+                : child,
           ),
           
           // Bottom safe area padding
@@ -162,8 +240,8 @@ class _DragHandle extends StatelessWidget {
         top: AppSpacing.marginMD,
         bottom: AppSpacing.marginSM,
       ),
-      width: 40.0,
-      height: 4.0,
+      width: AppSpacing.dragHandleWidth,
+      height: AppSpacing.dragHandleHeight,
       decoration: BoxDecoration(
         color: AppColors.backgroundGrey400,
         borderRadius: BorderRadius.circular(AppEffects.radiusSM),
@@ -175,10 +253,12 @@ class _DragHandle extends StatelessWidget {
 /// Header widget with optional title and close button
 class _Header extends StatelessWidget {
   final String? title;
+  final TextStyle? titleStyle;
   final bool showCloseButton;
 
   const _Header({
     this.title,
+    this.titleStyle,
     required this.showCloseButton,
   });
 
@@ -196,7 +276,7 @@ class _Header extends StatelessWidget {
             Expanded(
               child: Text(
                 title!,
-                style: AppTypography.headlineMedium,
+                style: titleStyle ?? AppTypography.headlineMedium,
               ),
             )
           else

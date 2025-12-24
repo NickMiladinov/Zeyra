@@ -3,10 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
 import '../../data/repositories/bump_photo_repository_impl.dart';
+import '../../data/repositories/contraction_timer_repository_impl.dart';
 import '../../data/repositories/kick_counter_repository_impl.dart';
 import '../../data/repositories/pregnancy_repository_impl.dart';
 import '../../data/repositories/user_profile_repository_impl.dart';
 import '../../domain/repositories/bump_photo_repository.dart';
+import '../../domain/repositories/contraction_timer_repository.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
 import '../../domain/repositories/pregnancy_repository.dart';
 import '../../domain/repositories/user_profile_repository.dart';
@@ -15,6 +17,8 @@ import '../../domain/usecases/bump_photo/get_bump_photos.dart';
 import '../../domain/usecases/bump_photo/save_bump_photo.dart';
 import '../../domain/usecases/bump_photo/save_bump_photo_note.dart';
 import '../../domain/usecases/bump_photo/update_bump_photo_note.dart';
+import '../../domain/usecases/contraction_timer/calculate_511_rule_usecase.dart';
+import '../../domain/usecases/contraction_timer/manage_contraction_session_usecase.dart';
 import '../../domain/usecases/kick_counter/calculate_analytics_usecase.dart';
 import '../../domain/usecases/kick_counter/manage_session_usecase.dart';
 import '../../domain/usecases/pregnancy/create_pregnancy_usecase.dart';
@@ -172,6 +176,41 @@ final manageSessionUseCaseProvider = FutureProvider<ManageSessionUseCase>((ref) 
 /// Handles statistical calculations for kick counter analytics.
 final calculateAnalyticsUseCaseProvider = Provider<CalculateAnalyticsUseCase>((ref) {
   return CalculateAnalyticsUseCase();
+});
+
+// ----------------------------------------------------------------------------
+// Contraction Timer Feature
+// ----------------------------------------------------------------------------
+
+/// Provider for the contraction timer repository.
+///
+/// Implements contraction timer data operations with SQLCipher-encrypted Drift persistence.
+final contractionTimerRepositoryProvider = FutureProvider<ContractionTimerRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+  final pregnancyRepo = await ref.watch(pregnancyRepositoryProvider.future);
+
+  return ContractionTimerRepositoryImpl(
+    dao: db.contractionTimerDao,
+    pregnancyRepository: pregnancyRepo,
+    logger: logging,
+  );
+});
+
+/// Provider for the manage contraction session use case.
+///
+/// Orchestrates contraction timing session operations with validation.
+final manageContractionSessionUseCaseProvider = FutureProvider<ManageContractionSessionUseCase>((ref) async {
+  final repository = await ref.watch(contractionTimerRepositoryProvider.future);
+
+  return ManageContractionSessionUseCase(repository: repository);
+});
+
+/// Provider for the calculate 5-1-1 rule use case.
+///
+/// Handles 5-1-1 rule calculations with rolling window and tolerances.
+final calculate511RuleUseCaseProvider = FutureProvider<Calculate511RuleUseCase>((ref) async {
+  return Calculate511RuleUseCase();
 });
 
 // ----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /// Contraction Timer Feature - All Tests Runner
 /// 
-/// This file imports and runs ALL contraction timer tests (195 tests total).
+/// This file imports and runs ALL contraction timer tests (265 tests total).
 /// Click the ▶️ Run button next to main() to run all tests for this feature.
 /// 
 /// Includes:
@@ -10,6 +10,8 @@
 /// - Data mapper tests (10 tests)
 /// - Data DAO tests (18 tests)
 /// - Data repository tests (36 tests)
+/// - Logic/state management tests (45 tests)
+/// - Widget tests (25 tests)
 @Tags(['contraction_timer'])
 library;
 
@@ -34,9 +36,25 @@ import '../../domain/usecases/contraction_timer/calculate_511_rule_usecase_test.
     as calculate_usecase_tests;
 import '../../domain/usecases/contraction_timer/manage_contraction_session_usecase_test.dart'
     as manage_usecase_tests;
+import '../../features/contraction_timer/logic/contraction_history_provider_test.dart'
+    as history_provider_tests;
+import '../../features/contraction_timer/logic/contraction_timer_banner_provider_test.dart'
+    as banner_provider_tests;
+import '../../features/contraction_timer/logic/contraction_timer_notifier_test.dart'
+    as timer_notifier_tests;
+import '../../features/contraction_timer/logic/contraction_timer_onboarding_provider_test.dart'
+    as onboarding_provider_tests;
+import '../../features/contraction_timer/ui/screens/contraction_session_detail_screen_test.dart'
+    as session_detail_screen_tests;
+import '../../features/contraction_timer/ui/screens/labour_overview_screen_test.dart'
+    as labour_overview_screen_tests;
+import '../../features/contraction_timer/ui/widgets/rule_511_progress_test.dart'
+    as rule_progress_widget_tests;
+import '../../features/contraction_timer/ui/widgets/session_511_status_card_test.dart'
+    as status_card_widget_tests;
 
 void main() {
-  group('[ContractionTimer] All Tests (195 tests)', () {
+  group('[ContractionTimer] All Tests (265 tests)', () {
     // -------------------------------------------------------------------------
     // Domain Layer Tests (131 tests)
     // -------------------------------------------------------------------------
@@ -72,6 +90,28 @@ void main() {
 
     group('6. Data Repositories (36 tests)', () {
       repository_tests.main();
+    });
+
+    // -------------------------------------------------------------------------
+    // Logic/State Management Tests (45 tests)
+    // -------------------------------------------------------------------------
+
+    group('7. Logic Tests (45 tests)', () {
+      timer_notifier_tests.main();
+      history_provider_tests.main();
+      banner_provider_tests.main();
+      onboarding_provider_tests.main();
+    });
+
+    // -------------------------------------------------------------------------
+    // Widget Tests (25 tests)
+    // -------------------------------------------------------------------------
+
+    group('8. Widget Tests (25 tests)', () {
+      rule_progress_widget_tests.main();
+      status_card_widget_tests.main();
+      labour_overview_screen_tests.main();
+      session_detail_screen_tests.main();
     });
   });
 }

@@ -346,6 +346,7 @@ class AppIcons {
   static const IconData moreVertical = Symbols.more_vert_rounded;
   static const IconData overview = Symbols.format_list_bulleted_rounded;
   static const IconData newTab = Symbols.open_in_new_rounded;
+  static const IconData flag = Symbols.flag_rounded;
   
   // Calendar & Time icons
   static const IconData today = Symbols.today_rounded;
@@ -415,6 +416,7 @@ class AppIcons {
   static const IconData bloodPressure = Symbols.blood_pressure_rounded;
   static const IconData temperature = Symbols.thermostat_rounded;
   static const IconData weight = Symbols.monitor_weight_gain_rounded;
+  static const IconData ecgHeart = Symbols.ecg_heart_rounded;
 
   // Data & Analytics icons
   static const IconData chart = Symbols.monitoring_rounded;

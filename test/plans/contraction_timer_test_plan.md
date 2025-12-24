@@ -165,10 +165,35 @@ The contraction timer tracks labor contractions with start/stop timing, intensit
 | `should reset frequency when gap > 20 minutes` | Test time gap reset |
 | `should reset consistency when pattern breaks` | Test consistency reset |
 | `should handle independent reset conditions` | Test separate tracking |
+| **Progress Calculations (Achievement-Based)** |
+| **Note:** Progress circles lock at 100% when achieved. Reset unlocks but shows current progress (not 0%) |
+| `should clamp all progress values between 0 and 1` | Test bounds checking |
+| `should calculate durationProgress based on last contraction` | Achievement: validDurationCount > 0 AND not reset → 100% (locked) |
+| `should show current durationProgress even when reset triggers` | Reset unlocks achievement but shows actual progress (25s/45s ≈ 56%) |
+| `should show partial durationProgress when approaching but not achieved` | No valid yet, no reset → show partial progress |
+| `should calculate frequencyProgress at 0% for 30+ min intervals` | No valid intervals yet → show 0% (30 min = 0% scale) |
+| `should calculate frequencyProgress at 100% for 6 min intervals` | Achievement: validFrequencyCount > 0 → 100% (locked) |
+| `should calculate frequencyProgress at ~50% for 18 min intervals` | No valid yet → show partial progress (18 min = 50% scale) |
+| `should calculate frequencyProgress at ~83% for 10 min intervals` | No valid yet → show partial progress (10 min = 83% scale) |
+| `should calculate frequencyProgress using inverse scale based on last interval` | Test last interval calculation (not average) |
+| **evaluateAchievedCriteria (Reuses calculate() logic)** |
+| `should return all false for empty session` | Test empty session handling |
+| `should achieve duration when at least 1 valid contraction and no reset` | At least 1 contraction ≥45s + no reset |
+| `should not achieve duration when no valid contractions` | No valid contractions → false |
+| `should not achieve duration when reset (3 consecutive short)` | Duration reset blocks achievement |
+| `should achieve frequency when at least 1 valid interval and no reset` | At least 1 interval ≤6min + no reset |
+| `should not achieve frequency when no valid intervals` | No valid intervals → false |
+| `should achieve consistency when alertActive is true` | Matches alertActive from calculate() |
+| `should not achieve consistency when alertActive is false` | Matches alertActive from calculate() |
+| `should calculate consistencyProgress even with < 6 contractions` | Shows progress even with < 6 contractions |
+| `should calculate consistencyProgress proportional to validity` | No achievement yet: 33% validity → ~41% progress |
+| `should calculate 100% consistencyProgress at 80% validity` | Achievement: 5+ valid contractions → 100% (locked, stays locked) |
+| `should cap consistencyProgress at 100% for > 80% validity` | Achievement: 5+ valid contractions → 100% (locked, stays locked) |
 | **Integration** |
 | `should return complete Rule511Status` | Test full status |
 | `should track achievement timestamps` | Test timestamp recording |
 | `should calculate progress metrics correctly` | Test all metrics |
+| `should not show 100% consistency when 6+ valid but < 80% validity (Bug Fix)` | Regression: 8 contractions with 6 valid (75%) should NOT show 100% progress |
 
 ---
 
@@ -290,6 +315,137 @@ The contraction timer tracks labor contractions with start/stop timing, intensit
 
 ---
 
+## 7. Logic Layer Tests
+
+### 7.1 ContractionTimerNotifier
+**File**: `test/features/contraction_timer/logic/contraction_timer_notifier_test.dart`
+
+| Test Group | Test Cases |
+|------------|------------|
+| **Initialization** | should initialize with null active session |
+| | should load existing active session on startup |
+| | should handle session restore with active contraction |
+| | should auto-archive session after 4 hours of inactivity |
+| | should detect contraction timeout after 20 minutes |
+| **startSession** | should create new session successfully |
+| | should update rule511Status after starting session |
+| | should set error when session already exists |
+| **startContraction** | should start contraction in active session |
+| | should recalculate 5-1-1 rule after starting |
+| | should handle error when no active session |
+| **stopContraction** | should stop active contraction |
+| | should update rule511Status after stopping |
+| **deleteContraction** | should delete contraction by ID |
+| | should recalculate 5-1-1 rule after delete |
+| **updateContraction** | should update contraction properties |
+| | should recalculate 5-1-1 rule after update |
+| **finishSession** | should end session and clear state |
+| | should stop active contraction before finishing |
+| | should update note if provided |
+| **discardSession** | should delete session and clear state |
+| **refresh** | should reload active session from repository |
+| **updateSessionNote** | should update session note |
+| **clearError** | should clear error state |
+
+### 7.2 ContractionHistoryNotifier
+**File**: `test/features/contraction_timer/logic/contraction_history_provider_test.dart`
+
+| Test Group | Test Cases |
+|------------|------------|
+| **Initialization** | should load history on creation |
+| | should handle loading error gracefully |
+| **refresh** | should reload session history |
+| **deleteSession** | should remove session from history |
+| | should update local state immediately |
+| | should handle delete error |
+| **updateSessionNote** | should update note in session |
+| | should handle update error |
+| **clearError** | should clear error state |
+
+### 7.3 ContractionTimerBannerNotifier
+**File**: `test/features/contraction_timer/logic/contraction_timer_banner_provider_test.dart`
+
+| Test Group | Test Cases |
+|------------|------------|
+| **Initial state** | should start hidden |
+| **show** | should set isVisible to true |
+| **hide** | should set isVisible to false |
+| **toggle** | show() and hide() should toggle state correctly |
+
+### 7.4 ContractionTimerOnboardingNotifier
+**File**: `test/features/contraction_timer/logic/contraction_timer_onboarding_provider_test.dart`
+
+| Test Group | Test Cases |
+|------------|------------|
+| **Initial state** | should load onboarding status (initially null, then false) |
+| **setHasStarted** | should mark onboarding complete |
+| **persistence** | should persist onboarding status across instances |
+
+---
+
+## 8. Widget Layer Tests
+
+### 8.1 Rule511Progress Widget
+**File**: `test/features/contraction_timer/ui/widgets/rule_511_progress_test.dart`
+
+| Test Cases |
+|------------|
+| should display progress tracking header |
+| should show alert message when alertActive is true |
+| should show duration/frequency achieved message |
+| should show frequency achieved message when only frequency met |
+| should show duration achieved message when only duration met |
+| should show default message when no criteria met |
+| should display three progress indicators |
+| should show check icon when progress is complete |
+| should apply alert styling when alertActive |
+
+### 8.2 Session511StatusCard Widget
+**File**: `test/features/contraction_timer/ui/widgets/session_511_status_card_test.dart`
+
+| Test Cases |
+|------------|
+| should display 5-1-1 Rule Progress header |
+| should show all three checklist items |
+| should check items when criteria achieved |
+| should not check items when criteria not achieved |
+| should show alert message when all criteria met |
+| should show partial progress message for two criteria |
+| should show single criterion message |
+| should show no criteria message when none achieved |
+| should apply alert styling when achieved511Alert |
+| should check exactly two items for partial achievement |
+
+### 8.3 LabourOverviewScreen Widget
+**File**: `test/features/contraction_timer/ui/screens/labour_overview_screen_test.dart`
+
+| Test Cases |
+|------------|
+| should display Labour Overview title |
+| should show empty state when no history |
+| should display session history cards |
+| should navigate to session detail on card tap |
+| should show FAB when no active session |
+| should hide FAB when active session exists |
+| should show info card with warning message |
+
+### 8.4 ContractionSessionDetailScreen Widget
+**File**: `test/features/contraction_timer/ui/screens/contraction_session_detail_screen_test.dart`
+
+| Test Cases |
+|------------|
+| should display session summary stats |
+| should display 5-1-1 status card |
+| should display note card with note text |
+| should display no note placeholder when no note |
+| should display complete log table |
+| should show popup menu with edit/delete options |
+| should navigate back on back button |
+| should display contractions in descending order |
+| should display intensity badges in log |
+
+---
+
 ## Test Runners
 
 ### Quick Test Runner
@@ -299,17 +455,23 @@ The contraction timer tracks labor contractions with start/stop timing, intensit
 - Data mapper tests
 
 ### Unit Test Runner
-**File**: `test/runners/contraction_timer/unit_test.dart`
+**File**: `test/runners/contraction_timer/unit_test.dart` (194 tests)
 - All quick tests
-- Domain use case tests
-- Data DAO tests
-- Data repository tests
+- Domain use case tests (90 tests)
+- Data DAO tests (18 tests)
+- Data repository tests (36 tests)
+- Logic/state management tests (45 tests)
 
 ### All Tests Runner
-**File**: `test/runners/contraction_timer/all_test.dart`
-- All unit tests
-- Integration tests (Phase 2)
-- Performance tests (Phase 2)
+**File**: `test/runners/contraction_timer/all_test.dart` (273 tests)
+- All unit tests (194 tests)
+- Widget tests (25 tests)
+- Data DAO tests (18 tests)
+- Data repository tests (36 tests)
+
+### Widget Test Runner
+**File**: `test/runners/all_widget_test.dart`
+- Includes all contraction timer widget tests
 
 ---
 
@@ -322,6 +484,24 @@ The contraction timer tracks labor contractions with start/stop timing, intensit
 | Data Mappers | 90% |
 | Data DAO | 85% |
 | Data Repository | 85% |
+| Logic/State Management | 85% |
+| Widgets | 75% |
+
+---
+
+## Test Summary
+
+| Test Category | Test Count |
+|---------------|------------|
+| Domain Entity Tests | 39 tests |
+| Domain Exception Tests | 10 tests |
+| Domain Use Case Tests | 107 tests |
+| Data Mapper Tests | 10 tests |
+| Data DAO Tests | 18 tests |
+| Data Repository Tests | 36 tests |
+| Logic/State Management Tests | 45 tests |
+| Widget Tests | 25 tests |
+| **Total** | **290 tests** |
 
 ---
 
@@ -331,6 +511,8 @@ The contraction timer tracks labor contractions with start/stop timing, intensit
 - Use mocktail for all mocking
 - Follow AAA pattern (Arrange, Act, Assert)
 - Tag all tests with `@Tags(['contraction_timer'])`
+- Widget tests use ProviderScope overrides for state management
+- Screen-level widget tests focus on key UI elements and interactions
 
 
 

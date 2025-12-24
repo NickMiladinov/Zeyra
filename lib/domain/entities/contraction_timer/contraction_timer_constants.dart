@@ -16,6 +16,19 @@ class ContractionTimerConstants {
   /// contractions to be counted.
   static const Duration durationValidThreshold = Duration(seconds: 45);
   
+  /// Maximum duration for a recorded contraction (120 seconds / 2 minutes)
+  /// 
+  /// Contractions longer than 2 minutes are automatically capped to prevent
+  /// recording errors (e.g., user forgot to stop timer). Clinical rationale:
+  /// Normal contractions rarely exceed 90 seconds, with 120s providing safety margin.
+  static const Duration maxContractionDuration = Duration(seconds: 120);
+  
+  /// Maximum editable duration for manual adjustments (90 seconds)
+  /// 
+  /// When editing contractions manually, duration is limited to 90 seconds
+  /// to ensure data quality while allowing for longer-than-typical contractions.
+  static const Duration maxEditableDuration = Duration(seconds: 90);
+  
   /// Duration below which a contraction is considered too weak/short (< 30 seconds)
   /// 
   /// Contractions shorter than this are likely Braxton Hicks or measurement errors.

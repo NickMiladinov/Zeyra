@@ -94,6 +94,10 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Data models (DTOs) mirror DB/API schema and map to/from domain entities.
 - Follow reactive update rules only for timeline, AI chat, and live trackers.
 
+# NAVIGATION
+- **ALWAYS use `CupertinoPageRoute`** for all screen transitions
+- **Button Debouncing**: For critical action buttons (timers, trackers, form submissions), implement a debounce flag
+
 # UI
 - Accessible text sizes and color contrast.
 - Follow design tokens from `app/theme/`.

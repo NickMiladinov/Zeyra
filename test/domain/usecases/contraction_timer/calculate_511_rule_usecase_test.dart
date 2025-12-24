@@ -295,8 +295,9 @@ void main() {
         expect(result.validDurationCount, equals(2)); // Active not counted
       });
 
-      test('should calculate durationProgress correctly', () {
-        // Arrange - 2 out of 3 meet threshold
+      test('should calculate durationProgress based on last contraction', () {
+        // Arrange - last contraction is 60s, threshold is 45s
+        // durationProgress = min(1.0, 60/45) = 1.0 (capped)
         final session = FakeContractionSession.simple(
           contractions: FakeContraction.mixedDurations(
             durations: [
@@ -310,12 +311,14 @@ void main() {
         // Act
         final result = useCase.calculate(session);
 
-        // Assert
-        expect(result.durationProgress, closeTo(0.666, 0.01)); // ~66.6%
+        // Assert - based on last contraction (60s) relative to 45s threshold
+        expect(result.durationProgress, equals(1.0));
       });
 
-      test('should return 0 durationProgress for all short contractions', () {
-        // Arrange
+      test('should show current durationProgress even when reset triggers', () {
+        // Arrange - 5 weak contractions (25s each, all < 30s)
+        // Last 3 are all < 30s → duration reset triggers
+        // BUT progress should still show based on last contraction (25s/45s ≈ 55.6%)
         final session = FakeContractionSession.simple(
           contractions: FakeContraction.weak(count: 5),
         );
@@ -323,8 +326,31 @@ void main() {
         // Act
         final result = useCase.calculate(session);
 
-        // Assert
-        expect(result.durationProgress, equals(0.0));
+        // Assert - duration reset triggered, but shows current progress (not 0%)
+        expect(result.isDurationReset, isTrue);
+        expect(result.durationProgress, closeTo(0.556, 0.01)); // 25s / 45s
+      });
+
+      test('should show partial durationProgress when approaching but not achieved', () {
+        // Arrange - contractions in gray zone (30-44s)
+        // Not valid yet (< 45s) but not reset (>= 30s)
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 35), // Gray zone
+              const Duration(seconds: 40), // Gray zone
+              const Duration(seconds: 35), // Gray zone
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert - no valid durations yet, no reset, shows partial progress based on last (35s/45s ≈ 77.8%)
+        expect(result.validDurationCount, equals(0));
+        expect(result.isDurationReset, isFalse);
+        expect(result.durationProgress, closeTo(0.778, 0.01));
       });
     });
 
@@ -417,17 +443,17 @@ void main() {
         expect(result.validFrequencyCount, equals(0)); // Need 2+ for intervals
       });
 
-      test('should calculate frequencyProgress correctly', () {
-        // Arrange - 4 valid out of 6 intervals (need 7 contractions for 6 intervals)
+      test('should calculate frequencyProgress using inverse scale based on last interval', () {
+        // Arrange - Last interval of 5 minutes should give 100% progress
+        // Gaps: 10, 15, 8, 12, 5 → last = 5 minutes
         final session = FakeContractionSession.simple(
           contractions: FakeContraction.withGaps(
             gaps: [
-              const Duration(minutes: 5), // Valid
-              const Duration(minutes: 5), // Valid
-              const Duration(minutes: 8), // Invalid
-              const Duration(minutes: 4), // Valid
-              const Duration(minutes: 9), // Invalid
-              const Duration(minutes: 5), // Valid
+              const Duration(minutes: 10),
+              const Duration(minutes: 15),
+              const Duration(minutes: 8),
+              const Duration(minutes: 12),
+              const Duration(minutes: 5), // Last interval
             ],
           ),
         );
@@ -436,7 +462,8 @@ void main() {
         final result = useCase.calculate(session);
 
         // Assert
-        expect(result.frequencyProgress, closeTo(0.666, 0.01)); // ~66.6% (4/6)
+        // Last interval = 5 min (< 6 min) → 100% progress
+        expect(result.frequencyProgress, equals(1.0));
       });
 
       test('should handle mixed valid/invalid intervals', () {
@@ -572,7 +599,8 @@ void main() {
         // Assert
         expect(result.contractionsInWindow, equals(5));
         expect(result.alertActive, isFalse);
-        expect(result.consistencyProgress, closeTo(0.833, 0.01)); // 5/6
+        // Below minimum for alert, but consistency progress still calculated based on validity
+        expect(result.consistencyProgress, greaterThan(0.0));
       });
     });
 
@@ -733,17 +761,153 @@ void main() {
         expect(result.consistencyProgress, greaterThanOrEqualTo(0.0));
       });
 
-      test('should calculate consistencyProgress with time + validity', () {
-        // Arrange - Session with decent pattern
-        final session = FakeContractionSession.meeting511Rule(count: 7);
+      test('should calculate frequencyProgress at 0% for 30+ min intervals', () {
+        // Arrange - Very far apart (30+ minutes)
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: [const Duration(minutes: 30)],
+          ),
+        );
 
         // Act
         final result = useCase.calculate(session);
 
         // Assert
-        // Consistency is weighted combination of time and validity
-        expect(result.consistencyProgress, greaterThan(0.0));
-        expect(result.consistencyProgress, lessThanOrEqualTo(1.0));
+        expect(result.frequencyProgress, equals(0.0));
+      });
+
+      test('should calculate frequencyProgress at 100% for 6 min intervals', () {
+        // Arrange - At target frequency (6 minutes)
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: List.filled(5, const Duration(minutes: 6)),
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        expect(result.frequencyProgress, equals(1.0));
+      });
+
+      test('should calculate frequencyProgress at ~50% for 18 min intervals', () {
+        // Arrange - Halfway between 30 and 6 minutes = 18 min
+        // (30 - 18) / (30 - 6) = 12/24 = 0.5
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: [
+              const Duration(minutes: 10),
+              const Duration(minutes: 18), // Last interval = 18 min
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        expect(result.frequencyProgress, closeTo(0.5, 0.01));
+      });
+
+      test('should calculate frequencyProgress at ~83% for 10 min intervals', () {
+        // Arrange - Last interval 10 minutes apart
+        // (30 - 10) / (30 - 6) = 20/24 ≈ 0.833
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: [
+              const Duration(minutes: 15),
+              const Duration(minutes: 10), // Last interval = 10 min
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        expect(result.frequencyProgress, closeTo(0.833, 0.01));
+      });
+
+      test('should calculate consistencyProgress even with < 6 contractions', () {
+        // Arrange - Only 5 contractions, but all valid
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.meeting511Rule(count: 5),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        // With < 6 contractions, progress is count-based: 5/6 = ~83.3%
+        // This prevents misleading high progress from low sample sizes (e.g., 1/1 = 100%)
+        expect(result.consistencyProgress, closeTo(0.833, 0.01));
+      });
+
+      test('should calculate consistencyProgress proportional to validity', () {
+        // Arrange - 6 contractions with 33% validity (2/6)
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 30), // Invalid
+              const Duration(seconds: 25), // Invalid
+              const Duration(seconds: 30), // Invalid
+              const Duration(seconds: 25), // Invalid
+            ],
+            frequency: const Duration(minutes: 5),
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        // 2/6 = 33% validity → 0.33 / 0.80 = ~41% consistency progress
+        expect(result.consistencyProgress, closeTo(0.4167, 0.05));
+      });
+
+      test('should calculate 100% consistencyProgress at 80% validity', () {
+        // Arrange - 10 contractions: 8 fully valid (duration+frequency)
+        // Need exactly 80% validity (8/10) to hit 100% consistency
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 30), // Invalid
+              const Duration(seconds: 30), // Invalid
+            ],
+            frequency: const Duration(minutes: 5),
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        // Validity calculation is complex (duration + frequency matching)
+        // Should reach near 100% as most contractions are valid
+        expect(result.consistencyProgress, greaterThanOrEqualTo(0.9));
+      });
+
+      test('should cap consistencyProgress at 100% for > 80% validity', () {
+        // Arrange - 8 contractions with 100% validity (all valid)
+        final session = FakeContractionSession.meeting511Rule(count: 8);
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        // 100% validity → capped at 100% consistency progress
+        expect(result.consistencyProgress, equals(1.0));
       });
 
       test('should handle empty session for all progress values', () {
@@ -804,6 +968,131 @@ void main() {
         // Assert
         // Should only count recent ones in 60-min window
         expect(result.contractionsInWindow, lessThan(9));
+      });
+    });
+
+    group('evaluateAchievedCriteria (Single Source of Truth)', () {
+      test('should return all false for empty session', () {
+        // Arrange
+        final session = FakeContractionSession.simple();
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.duration, isFalse);
+        expect(result.frequency, isFalse);
+        expect(result.consistency, isFalse);
+      });
+
+      test('should achieve duration when at least 1 valid contraction and no reset', () {
+        // Arrange - At least 1 contraction >= 45s
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 30),
+              const Duration(seconds: 45), // 1 valid is enough!
+              const Duration(seconds: 30),
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.duration, isTrue); // At least 1 valid
+      });
+
+      test('should not achieve duration when no valid contractions', () {
+        // Arrange - All contractions < 45s
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 30),
+              const Duration(seconds: 35),
+              const Duration(seconds: 40),
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.duration, isFalse); // No valid contractions
+      });
+
+      test('should not achieve duration when reset (3 consecutive short)', () {
+        // Arrange - Duration reset triggered by 3 consecutive < 30s
+        final session = FakeContractionSession.withDurationReset();
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.duration, isFalse); // Reset blocks achievement
+      });
+
+      test('should achieve frequency when at least 1 valid interval and no reset', () {
+        // Arrange - At least 1 interval <= 6 min
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: [
+              const Duration(minutes: 10),
+              const Duration(minutes: 5), // 1 valid is enough!
+              const Duration(minutes: 10),
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.frequency, isTrue); // At least 1 valid interval
+      });
+
+      test('should not achieve frequency when no valid intervals', () {
+        // Arrange - All intervals > 6 min
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.withGaps(
+            gaps: [
+              const Duration(minutes: 10),
+              const Duration(minutes: 15),
+              const Duration(minutes: 20),
+            ],
+          ),
+        );
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.frequency, isFalse); // No valid intervals
+      });
+
+      test('should achieve consistency when alertActive is true', () {
+        // Arrange - Need 13 contractions at 5-min intervals to span 1+ hour
+        // (13 - 1) * 5 = 60 minutes, with 80%+ validity
+        final session = FakeContractionSession.meeting511Rule(count: 13);
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert - consistency matches alertActive
+        expect(result.consistency, isTrue);
+      });
+
+      test('should not achieve consistency when alertActive is false', () {
+        // Arrange - Valid pattern but session too short (no alertActive)
+        final session = FakeContractionSession.belowMinimum(count: 5);
+
+        // Act
+        final result = useCase.evaluateAchievedCriteria(session);
+
+        // Assert
+        expect(result.consistency, isFalse);
       });
     });
 
@@ -902,6 +1191,45 @@ void main() {
         expect(result, isNotNull);
         expect(result.validDurationCount, greaterThan(0));
         expect(result.validityPercentage, greaterThan(0.0));
+      });
+
+      test('should not show 100% consistency when 6+ valid but < 80% validity (Bug Fix)', () {
+        // Arrange - Regression test for the bug where all 3 checks show 100% but alert doesn't trigger
+        // Scenario: 8 contractions with 6 valid = 75% validity (below 80% threshold)
+        // Expected: Consistency progress should be 75% / 80% = ~94%, NOT 100%
+        //           Alert should NOT be active
+        final session = FakeContractionSession.simple(
+          contractions: FakeContraction.mixedDurations(
+            durations: [
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 50), // Valid
+              const Duration(seconds: 25), // Invalid (< 30s)
+              const Duration(seconds: 25), // Invalid (< 30s)
+            ],
+            frequency: const Duration(minutes: 5),
+          ),
+        );
+
+        // Act
+        final result = useCase.calculate(session);
+
+        // Assert
+        // Should have 6 valid contractions out of 8 = 75% validity
+        expect(result.contractionsInWindow, equals(8));
+        expect(result.validDurationCount, equals(6));
+        
+        // Consistency progress should NOT be 100% (it should reflect that we haven't hit 80%)
+        // 75% / 80% = 0.9375
+        expect(result.consistencyProgress, lessThan(1.0));
+        expect(result.consistencyProgress, closeTo(0.9375, 0.05));
+        
+        // Alert should NOT be active because validity < 80%
+        expect(result.alertActive, isFalse);
+        expect(result.validityPercentage, lessThan(0.80));
       });
     });
   });

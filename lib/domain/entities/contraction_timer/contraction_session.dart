@@ -183,6 +183,63 @@ class ContractionSession {
     return shortest;
   }
 
+  /// Calculate average contraction duration for the last hour
+  /// 
+  /// Returns null if no completed contractions in the last hour.
+  /// Only counts contractions with endTime set that started within the last 60 minutes
+  /// from the session end time (or now if session is still active).
+  Duration? get averageDurationLastHour {
+    final referenceTime = endTime ?? DateTime.now();
+    final oneHourAgo = referenceTime.subtract(const Duration(hours: 1));
+    
+    final recentCompleted = contractions.where((c) => 
+      c.duration != null && 
+      c.startTime.isAfter(oneHourAgo)
+    ).toList();
+    
+    if (recentCompleted.isEmpty) return null;
+    
+    var totalDuration = Duration.zero;
+    for (final contraction in recentCompleted) {
+      totalDuration += contraction.duration!;
+    }
+    
+    return Duration(
+      milliseconds: totalDuration.inMilliseconds ~/ recentCompleted.length,
+    );
+  }
+
+  /// Calculate average time between contraction starts for the last hour
+  /// 
+  /// Returns null if less than 2 contractions in the last hour.
+  /// Only considers contractions that started within the last 60 minutes
+  /// from the session end time (or now if session is still active).
+  /// Frequency is measured start-to-start.
+  Duration? get averageFrequencyLastHour {
+    final referenceTime = endTime ?? DateTime.now();
+    final oneHourAgo = referenceTime.subtract(const Duration(hours: 1));
+    
+    final recentContractions = contractions.where((c) => 
+      c.startTime.isAfter(oneHourAgo)
+    ).toList();
+    
+    if (recentContractions.length < 2) return null;
+    
+    // Sort by start time to ensure correct order
+    final sorted = List<Contraction>.from(recentContractions)
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
+    
+    var totalInterval = Duration.zero;
+    for (var i = 1; i < sorted.length; i++) {
+      totalInterval += sorted[i].startTime.difference(sorted[i - 1].startTime);
+    }
+    
+    final intervals = sorted.length - 1;
+    return Duration(
+      milliseconds: totalInterval.inMilliseconds ~/ intervals,
+    );
+  }
+
   /// Create a copy with updated fields
   ContractionSession copyWith({
     String? id,

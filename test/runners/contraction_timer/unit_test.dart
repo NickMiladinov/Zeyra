@@ -1,13 +1,14 @@
 /// Contraction Timer Feature - Unit Tests Runner
 /// 
-/// This file imports and runs all unit tests for contraction timer (141 tests).
-/// Unit tests include domain entities, exceptions, use cases, and data mappers.
+/// This file imports and runs all unit tests for contraction timer (186 tests).
+/// Unit tests include domain entities, exceptions, use cases, data mappers, and logic tests.
 /// 
 /// Includes:
 /// - Domain entity tests (39 tests)
 /// - Domain exception tests (10 tests)
 /// - Domain use case tests (82 tests)
 /// - Data mapper tests (10 tests)
+/// - Logic/state management tests (45 tests)
 @Tags(['contraction_timer'])
 library;
 
@@ -30,9 +31,17 @@ import '../../domain/usecases/contraction_timer/calculate_511_rule_usecase_test.
     as calculate_usecase_tests;
 import '../../domain/usecases/contraction_timer/manage_contraction_session_usecase_test.dart'
     as manage_usecase_tests;
+import '../../features/contraction_timer/logic/contraction_history_provider_test.dart'
+    as history_provider_tests;
+import '../../features/contraction_timer/logic/contraction_timer_banner_provider_test.dart'
+    as banner_provider_tests;
+import '../../features/contraction_timer/logic/contraction_timer_notifier_test.dart'
+    as timer_notifier_tests;
+import '../../features/contraction_timer/logic/contraction_timer_onboarding_provider_test.dart'
+    as onboarding_provider_tests;
 
 void main() {
-  group('[ContractionTimer] Unit Tests (141 tests)', () {
+  group('[ContractionTimer] Unit Tests (186 tests)', () {
     // -------------------------------------------------------------------------
     // Domain Layer Tests (131 tests)
     // -------------------------------------------------------------------------
@@ -60,6 +69,17 @@ void main() {
     group('4. Data Mappers (10 tests)', () {
       contraction_mapper_tests.main();
       session_mapper_tests.main();
+    });
+
+    // -------------------------------------------------------------------------
+    // Logic/State Management Tests (45 tests)
+    // -------------------------------------------------------------------------
+
+    group('5. Logic Tests (45 tests)', () {
+      timer_notifier_tests.main();
+      history_provider_tests.main();
+      banner_provider_tests.main();
+      onboarding_provider_tests.main();
     });
   });
 }
