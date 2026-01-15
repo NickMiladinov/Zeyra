@@ -13,6 +13,7 @@ dependencies:
   supabase_flutter: ^2.0.0 # Check for the latest version
   flutter_dotenv: ^5.0.0 # Check for the latest version
   flutter_riverpod: ^2.6.1 # For state management
+  go_router: ^14.6.0 # Declarative routing with deep link support
   
   # Logging and monitoring
   talker: ^4.1.0 # Advanced logging framework

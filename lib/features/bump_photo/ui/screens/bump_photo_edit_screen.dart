@@ -4,19 +4,20 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../core/utils/image_format_utils.dart';
+import '../../../../shared/widgets/app_dialog.dart';
 import '../../logic/bump_photo_provider.dart';
 import '../widgets/image_source_picker.dart';
 import 'photo_crop_screen.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/core/utils/image_format_utils.dart';
-import 'package:zeyra/shared/widgets/app_dialog.dart';
 
 /// Screen for adding or editing a bump photo for a specific week.
 class BumpPhotoEditScreen extends ConsumerStatefulWidget {
@@ -157,7 +158,7 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
         elevation: AppSpacing.elevationNone,
         leading: IconButton(
           icon: Icon(AppIcons.back, color: AppColors.iconDefault),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           'Week ${widget.weekNumber}',
@@ -789,7 +790,7 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
               backgroundColor: AppColors.success,
             ),
           );
-          Navigator.of(context).pop();
+          context.pop();
         }
       } catch (e) {
         if (mounted) {

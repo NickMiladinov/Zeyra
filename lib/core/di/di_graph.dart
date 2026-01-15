@@ -9,15 +9,13 @@
 /// 3. Logging (depends on Sentry)
 /// 4. Database encryption service (for SQLCipher key management)
 /// 5. Supabase (backend & auth)
-/// 6. Auth listener (depends on Supabase)
-/// 7. SharedPreferences → TooltipPreferencesService
+/// 6. SharedPreferences → TooltipPreferencesService
 ///
 /// **Note:** The encrypted database is initialized lazily when a user logs in,
 /// not during app startup. See `main_providers.dart` for database provider.
 ///
 library;
 
-import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,7 +23,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_constants.dart';
 import '../monitoring/logging_service.dart';
 import '../monitoring/sentry_service.dart';
-import '../services/app_auth_listener.dart';
 import '../services/database_encryption_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../../main.dart' show logger;
@@ -35,7 +32,6 @@ class DIGraph {
   static SentryService? _sentryService;
   static DatabaseEncryptionService? _databaseEncryptionService;
   static TooltipPreferencesService? _tooltipPreferencesService;
-  static AppAuthListener? _appAuthListener;
 
   /// Get the initialized Sentry service.
   static SentryService get sentryService {
@@ -80,11 +76,8 @@ class DIGraph {
   /// **Must be called in main() before runApp().**
   ///
   /// Initializes all async services in the correct dependency order.
-  /// Returns the global navigator key for use in the app.
-  static Future<GlobalKey<NavigatorState>> initialize() async {
-    // Create global navigator key
-    final navigatorKey = GlobalKey<NavigatorState>();
-
+  /// Auth state is managed by [AuthNotifier] with go_router, not here.
+  static Future<void> initialize() async {
     // 1. Load environment variables (required by Sentry and Supabase)
     await AppConstants.loadEnv();
 
@@ -110,7 +103,7 @@ class DIGraph {
     logger.info('Database encryption service initialized');
 
     // 6. Initialize Supabase (backend & auth)
-    bool supabaseInitialized = false;
+    // Note: Auth state is managed by AuthNotifier with go_router
     try {
       await Supabase.initialize(
         url: AppConstants.supabaseUrl,
@@ -124,7 +117,6 @@ class DIGraph {
           eventsPerSecond: 2,
         ),
       );
-      supabaseInitialized = true;
       logger.info('Supabase initialized');
     } catch (e, stackTrace) {
       logger.error(
@@ -136,20 +128,8 @@ class DIGraph {
       // User will be shown login screen but won't be able to authenticate
     }
 
-    // 7. Initialize and start global authentication listener (depends on Supabase)
-    // Only initialize if Supabase is available
-    if (supabaseInitialized && isSupabaseAvailable) {
-      _appAuthListener = AppAuthListener(navigatorKey: navigatorKey);
-      _appAuthListener!.init();
-      logger.info('Auth listener initialized');
-    } else {
-      logger.warning(
-        'Auth listener NOT initialized - Supabase unavailable. '
-        'User will see login screen but cannot authenticate until network is restored.',
-      );
-    }
-
-    // 8. Initialize SharedPreferences for tooltip preferences
+    // 7. Initialize SharedPreferences for tooltip preferences
+    // Note: Auth state is now managed by AuthNotifier with go_router
     try {
       final prefs = await SharedPreferences.getInstance();
       _tooltipPreferencesService = TooltipPreferencesService(prefs);
@@ -164,7 +144,6 @@ class DIGraph {
     }
 
     logger.info('DIGraph initialization complete');
-    return navigatorKey;
   }
 
   /// Clear all cached encryption keys from memory.

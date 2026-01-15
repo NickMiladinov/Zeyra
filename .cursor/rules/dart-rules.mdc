@@ -95,7 +95,20 @@ Applies Flutter best practices and coding guidelines, focusing on constants, the
 - Follow reactive update rules only for timeline, AI chat, and live trackers.
 
 # NAVIGATION
-- **ALWAYS use `CupertinoPageRoute`** for all screen transitions
+- **Use go_router for all navigation** via context extensions:
+  - `context.go('/path')` for replacing the current route (tab switching, auth changes)
+  - `context.push('/path')` for stacking a new route (detail views, info screens)
+  - `context.pop()` to return to previous screen
+- **ALWAYS use route constants** from `app/router/routes.dart` - NEVER hardcode path strings
+  - Example: `context.push(ToolRoutes.kickCounterInfo)` NOT `context.push('/main/tools/kick-counter/info')`
+  - Use helper methods for parameterized routes: `ToolRoutes.bumpDiaryEditPath(week)`
+- **Pass data between screens** using:
+  - Path parameters for IDs: `:id`, `:week` in route definitions
+  - `extra` parameter for complex objects: `context.push(route, extra: session)`
+- **Custom transitions** are defined in `app_router.dart` via `CustomTransitionPage`:
+  - `_slideUpPage()` for full-screen active sessions
+  - `_slideRightPage()` for edit screens and detail views
+  - Define new transitions in the router file, not in individual screens
 - **Button Debouncing**: For critical action buttons (timers, trackers, form submissions), implement a debounce flag
 
 # UI

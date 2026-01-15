@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction_session.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction_intensity.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/session_511_status_card.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_history_provider.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/widgets/app_dialog.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../domain/entities/contraction_timer/contraction_session.dart';
+import '../../../../domain/entities/contraction_timer/contraction.dart';
+import '../../../../domain/entities/contraction_timer/contraction_intensity.dart';
+import '../../../../shared/widgets/app_dialog.dart';
+import '../widgets/session_511_status_card.dart';
+import '../../logic/contraction_history_provider.dart';
 
 /// Actions that can be performed on a session
 enum SessionAction {
@@ -118,7 +118,7 @@ class _ContractionSessionDetailScreenState extends ConsumerState<ContractionSess
           
           // Navigate back to history screen
           if (mounted) {
-            Navigator.of(this.context).pop();
+            context.pop();
           }
         }
         break;
@@ -168,7 +168,7 @@ class _ContractionSessionDetailScreenState extends ConsumerState<ContractionSess
             size: AppSpacing.iconMD,
             color: AppColors.iconDefault,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         actions: [
           PopupMenuButton<SessionAction>(
@@ -242,17 +242,7 @@ class _ContractionSessionDetailScreenState extends ConsumerState<ContractionSess
           _buildCompleteLogCard(),
         ],
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3, // Tools tab
-        onTap: (index) {
-          // If tapping the current tab, pop to root
-          if (index == 3 && Navigator.of(context).canPop()) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
-          // Update tab index
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
   

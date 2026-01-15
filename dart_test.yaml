@@ -57,6 +57,12 @@ tags:
   pregnancy:
     # Pregnancy feature tests
 
+  router:
+    # Router/navigation tests
+
+  routes:
+    # Route constants tests
+
   widgets:
     # Widget tests (UI component tests)
 

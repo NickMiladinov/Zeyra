@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/domain/entities/pregnancy/pregnancy.dart';
-import 'package:zeyra/features/baby/logic/pregnancy_data_provider.dart';
-import 'package:zeyra/shared/widgets/app_banner.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../domain/entities/pregnancy/pregnancy.dart';
+import '../../../../shared/widgets/app_banner.dart';
+import '../../logic/pregnancy_data_provider.dart';
 
 // TODO: TEMPORARY SCREEN - For testing pregnancy data only. Will be replaced with proper UI.
 /// Temporary screen for testing pregnancy data CRUD operations.
@@ -26,7 +25,6 @@ class PregnancyDataScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pregnancyAsync = ref.watch(pregnancyDataProvider);
-    final currentIndex = ref.watch(navigationIndexProvider);
 
     return Scaffold(
       body: Column(
@@ -122,12 +120,7 @@ class PregnancyDataScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
 

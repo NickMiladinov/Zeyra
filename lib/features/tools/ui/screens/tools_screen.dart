@@ -1,59 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/features/bump_photo/ui/screens/bump_diary_screen.dart';
-import 'package:zeyra/features/contraction_timer/ui/screens/labour_overview_screen.dart';
-import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_screen.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
-import 'package:zeyra/shared/widgets/app_banner.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/widgets/app_card.dart';
 
-/// Tools screen with nested navigation to preserve state.
-/// 
-/// Uses a nested Navigator to allow pushing screens (like KickCounterScreen)
-/// while keeping the bottom navigation bar visible. The nested Navigator's
-/// state is preserved when switching tabs thanks to IndexedStack in MainScreen.
-class ToolsScreen extends StatefulWidget {
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/app_banner.dart';
+import '../../../../shared/widgets/app_card.dart';
+
+/// Tools screen showing the grid of available tools.
+///
+/// Navigation is handled by go_router - no nested Navigator needed.
+/// The bottom navigation bar is provided by [MainShell].
+class ToolsScreen extends ConsumerWidget {
   const ToolsScreen({super.key});
 
   static const String routeName = '/tools';
 
   @override
-  State<ToolsScreen> createState() => _ToolsScreenState();
-}
-
-class _ToolsScreenState extends State<ToolsScreen> {
-  // GlobalKey ensures the Navigator maintains its identity and state
-  // across rebuilds. This is critical for preserving the navigation stack.
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
-  @override
-  Widget build(BuildContext context) {
-    return Navigator(
-      key: _navigatorKey,
-      onGenerateRoute: (settings) {
-        return MaterialPageRoute(
-          settings: settings,
-          builder: (context) => const _ToolsListScreen(),
-        );
-      },
-    );
-  }
-}
-
-/// The main tools list screen (now nested inside ToolsScreen's navigator)
-class _ToolsListScreen extends ConsumerWidget {
-  const _ToolsListScreen();
-
-  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(navigationIndexProvider);
-    
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -84,18 +52,13 @@ class _ToolsListScreen extends ConsumerWidget {
                 crossAxisCount: 2,
                 mainAxisSpacing: AppSpacing.gapXL,
                 crossAxisSpacing: AppSpacing.gapLG,
-                childAspectRatio: 0.85, // Adjusted for card height
+                childAspectRatio: 0.85,
               ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
 
@@ -103,54 +66,54 @@ class _ToolsListScreen extends ConsumerWidget {
     _ToolData(
       title: 'Kick Counter',
       subtitle: 'Track Movements',
-      icon: null, // Using custom baby icon in card logic if needed, or just icon
+      icon: null,
       isBabyIcon: true,
-      color: const Color(0xFFD9EAD3), // Placeholder color
-      destination: (context) => const KickCounterScreen(),
+      color: const Color(0xFFD9EAD3),
+      route: ToolRoutes.kickCounter,
     ),
     _ToolData(
       title: 'Bump Diary',
       subtitle: 'Watch Your Growth',
       icon: AppIcons.camera,
-      color: const Color(0xFFCFE2F3), // Placeholder color
-      destination: (context) => const BumpDiaryScreen(),
+      color: const Color(0xFFCFE2F3),
+      route: ToolRoutes.bumpDiary,
     ),
     _ToolData(
       title: 'Contraction Timer',
       subtitle: 'Time Your Surges',
       icon: Symbols.timer_rounded,
-      color: const Color(0xFF8DB6C6), // Placeholder color
-      destination: (context) => const LabourOverviewScreen(),
+      color: const Color(0xFF8DB6C6),
+      route: ToolRoutes.contractionTimer,
     ),
     _ToolData(
       title: 'Appointment Hub',
       subtitle: 'Visits & Calendar',
       icon: AppIcons.appointment,
-      color: const Color(0xFFE6B8AF), // Placeholder color
+      color: const Color(0xFFE6B8AF),
     ),
     _ToolData(
       title: 'Birth Plan',
       subtitle: 'Prepare Preferences',
       icon: AppIcons.birthPlan,
-      color: const Color(0xFFA2C8B9), // Placeholder color
+      color: const Color(0xFFA2C8B9),
     ),
     _ToolData(
       title: 'Hospital Chooser',
       subtitle: 'Find Your Birth Place',
       icon: AppIcons.hospital,
-      color: const Color(0xFFB8D8D8), // Placeholder color
+      color: const Color(0xFFB8D8D8),
     ),
     _ToolData(
       title: 'AI Assistant',
       subtitle: 'Ask a Question',
       icon: AppIcons.chat,
-      color: const Color(0xFFD0E0E3), // Placeholder color
+      color: const Color(0xFFD0E0E3),
     ),
     _ToolData(
       title: 'Shopping Lists',
       subtitle: 'Get Essentials Ready',
       icon: Symbols.shopping_basket_rounded,
-      color: const Color(0xFFEAD1DC), // Placeholder color
+      color: const Color(0xFFEAD1DC),
     ),
   ];
 }
@@ -161,7 +124,8 @@ class _ToolData {
   final IconData? icon;
   final bool isBabyIcon;
   final Color color;
-  final WidgetBuilder? destination;
+  /// Route path for navigation (uses go_router).
+  final String? route;
 
   _ToolData({
     required this.title,
@@ -169,7 +133,7 @@ class _ToolData {
     this.icon,
     this.isBabyIcon = false,
     required this.color,
-    this.destination,
+    this.route,
   });
 }
 
@@ -182,10 +146,8 @@ class _ToolCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: () {
-        if (tool.destination != null) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: tool.destination!),
-          );
+        if (tool.route != null) {
+          context.push(tool.route!);
         }
       },
       padding: const EdgeInsets.all(AppSpacing.paddingLG),

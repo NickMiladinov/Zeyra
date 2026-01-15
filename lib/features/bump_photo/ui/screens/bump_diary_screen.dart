@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
 import '../../logic/bump_photo_provider.dart';
 import '../../logic/bump_photo_state.dart';
 import '../widgets/bump_week_card.dart';
-import 'bump_photo_edit_screen.dart';
-
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
 
 /// Main bump diary screen showing all week photos.
 ///
@@ -30,7 +28,7 @@ class BumpDiaryScreen extends ConsumerWidget {
         elevation: AppSpacing.elevationNone,
         leading: IconButton(
           icon: Icon(AppIcons.back, color: AppColors.iconDefault),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         title: Text(
           'My Bump Diary',
@@ -60,17 +58,7 @@ class BumpDiaryScreen extends ConsumerWidget {
           ),
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3, // Tools tab
-        onTap: (index) {
-          // If tapping the current tab (Tools), pop back to root of this tab
-          if (index == 3 && Navigator.of(context).canPop()) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
-          // Update tab index (switches tabs or stays on same tab)
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
 
@@ -123,21 +111,6 @@ class BumpDiaryScreen extends ConsumerWidget {
   }
 
   void _navigateToEdit(BuildContext context, int weekNumber) {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            BumpPhotoEditScreen(weekNumber: weekNumber),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0); // Slide from right
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
+    context.push(ToolRoutes.bumpDiaryEditPath(weekNumber));
   }
 }

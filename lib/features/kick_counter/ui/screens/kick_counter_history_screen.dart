@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/core/di/main_providers.dart';
-import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
-import 'package:zeyra/features/kick_counter/logic/kick_history_provider.dart';
-import 'package:zeyra/features/kick_counter/ui/screens/kick_active_session_screen.dart';
-import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_info_screen.dart';
-import 'package:zeyra/features/kick_counter/ui/widgets/session_detail_overlay.dart';
-import 'package:zeyra/features/kick_counter/ui/widgets/kick_duration_graph_card.dart';
-import 'package:zeyra/domain/entities/kick_counter/kick_session.dart';
-import 'package:zeyra/domain/entities/kick_counter/kick_analytics.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/widgets/app_jit_tooltip.dart';
-import 'package:zeyra/shared/providers/tooltip_provider.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
+
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../core/di/main_providers.dart';
+import '../../../../domain/entities/kick_counter/kick_session.dart';
+import '../../../../domain/entities/kick_counter/kick_analytics.dart';
+import '../../../../shared/widgets/app_jit_tooltip.dart';
+import '../../../../shared/providers/tooltip_provider.dart';
+import '../../../../shared/providers/active_tracker_coordinator.dart';
+import '../../logic/kick_counter_state.dart';
+import '../../logic/kick_history_provider.dart';
+import '../widgets/session_detail_overlay.dart';
+import '../widgets/kick_duration_graph_card.dart';
 
 class KickCounterHistoryScreen extends ConsumerStatefulWidget {
   const KickCounterHistoryScreen({super.key});
@@ -228,6 +227,9 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
     final historyState = ref.watch(kickHistoryProvider);
     final history = historyState.history;
     final activeSession = ref.watch(kickCounterProvider).activeSession;
+    // Check if we can start a new kick counter session
+    // (no active kick counter OR contraction timer session)
+    final canStartSession = ref.watch(canStartKickCounterProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -235,18 +237,12 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
         centerTitle: true,
         leading: IconButton(
           icon: Icon(AppIcons.back, size: AppSpacing.iconMD, color: AppColors.iconDefault),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
             icon: Icon(AppIcons.infoIcon, size: AppSpacing.iconMD, color: AppColors.iconDefault),
-            onPressed: () {
-              Navigator.of(context).push(
-                CupertinoPageRoute(
-                  builder: (context) => const KickCounterInfoScreen(),
-                ),
-              );
-            },
+            onPressed: () => context.push(ToolRoutes.kickCounterInfo),
           ),
         ],
         backgroundColor: AppColors.surface,
@@ -297,78 +293,44 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
                 ],
               ),
             ),
-      // Hide FAB if there's an active session (show banner instead)
-      floatingActionButton: activeSession == null 
-        ? ConstrainedBox(
-        constraints: const BoxConstraints(
-          minHeight: AppSpacing.buttonHeightLG,
-          maxHeight: AppSpacing.buttonHeightLG,
-        ),
-        child: FloatingActionButton.extended(
-          // Unique hero tag to prevent conflicts during page transitions
-          heroTag: 'kick_counter_start_tracking_fab',
-          onPressed: () {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const KickActiveSessionScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-                  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                  return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
-                  );
-                },
-                transitionDuration: AppEffects.durationSlow,
-                reverseTransitionDuration: AppEffects.durationSlow,
+      // Hide FAB if there's an active session (kick counter OR contraction timer)
+      // When an active session exists, the banner is shown instead
+      floatingActionButton: canStartSession && activeSession == null
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(
+                minHeight: AppSpacing.buttonHeightLG,
+                maxHeight: AppSpacing.buttonHeightLG,
               ),
-            );
-          },
-          backgroundColor: AppColors.primary,
-          elevation: AppSpacing.elevationSM,
-          extendedPadding: const EdgeInsets.only(
-            left: AppSpacing.paddingMD,
-            right: AppSpacing.paddingLG,
-            top: 0,
-            bottom: 0,
-          ),
-          extendedIconLabelSpacing: AppSpacing.gapSM,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppEffects.roundedCircle,
-          ),
-          icon: const Icon(AppIcons.add, size: AppSpacing.iconMD, color: AppColors.white),
-          label: Text(
-            'Start Tracking',
-            style: AppTypography.labelLarge.copyWith(color: AppColors.white),
-          ),
-        ),
-      )
-      : null,
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3, // Tools tab
-        onTap: (index) {
-          // If tapping the current tab (Tools), pop back to root of this tab
-          if (index == 3 && Navigator.of(context).canPop()) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
-          // Update tab index (switches tabs or stays on same tab)
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+              child: FloatingActionButton.extended(
+                heroTag: 'kick_counter_start_tracking_fab',
+                onPressed: () => context.push(ToolRoutes.kickCounterActive),
+                backgroundColor: AppColors.primary,
+                elevation: AppSpacing.elevationSM,
+                extendedPadding: const EdgeInsets.only(
+                  left: AppSpacing.paddingMD,
+                  right: AppSpacing.paddingLG,
+                  top: 0,
+                  bottom: 0,
+                ),
+                extendedIconLabelSpacing: AppSpacing.gapSM,
+                shape: RoundedRectangleBorder(
+                  borderRadius: AppEffects.roundedCircle,
+                ),
+                icon: const Icon(AppIcons.add, size: AppSpacing.iconMD, color: AppColors.white),
+                label: Text(
+                  'Start Tracking',
+                  style: AppTypography.labelLarge.copyWith(color: AppColors.white),
+                ),
+              ),
+            )
+          : null,
+      // Bottom nav bar is provided by MainShell
     );
   }
 
   Widget _buildInfoCard() {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(
-            builder: (context) => const KickCounterInfoScreen(),
-          ),
-        );
-      },
+      onTap: () => context.push(ToolRoutes.kickCounterInfo),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.paddingLG),
         decoration: BoxDecoration(
