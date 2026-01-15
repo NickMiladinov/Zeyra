@@ -9,12 +9,16 @@ import 'package:zeyra/core/monitoring/logging_service.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/repositories/kick_counter_repository_impl.dart';
 import 'package:zeyra/domain/entities/kick_counter/kick.dart';
+import 'package:zeyra/domain/repositories/pregnancy_repository.dart';
 
 class MockLoggingService extends Mock implements LoggingService {}
+
+class MockPregnancyRepository extends Mock implements PregnancyRepository {}
 
 void main() {
   late AppDatabase database;
   late MockLoggingService mockLogger;
+  late MockPregnancyRepository mockPregnancyRepository;
   late KickCounterRepositoryImpl repository;
 
   setUp(() async {
@@ -22,8 +26,10 @@ void main() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     await database.customStatement('PRAGMA foreign_keys = ON');
     mockLogger = MockLoggingService();
+    mockPregnancyRepository = MockPregnancyRepository();
     repository = KickCounterRepositoryImpl(
       dao: database.kickCounterDao,
+      pregnancyRepository: mockPregnancyRepository,
       logger: mockLogger,
     );
 

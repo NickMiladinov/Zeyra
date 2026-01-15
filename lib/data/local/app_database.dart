@@ -8,10 +8,13 @@ import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
 
 import 'daos/bump_photo_dao.dart';
+import 'daos/contraction_timer_dao.dart';
 import 'daos/kick_counter_dao.dart';
 import 'daos/pregnancy_dao.dart';
 import 'daos/user_profile_dao.dart';
 import 'models/bump_photo_table.dart';
+import 'models/contraction_session_table.dart';
+import 'models/contraction_table.dart';
 import 'models/kick_session_table.dart';
 import 'models/kick_table.dart';
 import 'models/pause_event_table.dart';
@@ -44,6 +47,10 @@ part 'app_database.g.dart';
     Kicks,
     PauseEvents,
 
+    // Contraction timer feature
+    ContractionSessions,
+    Contractions,
+
     // Bump photo feature
     BumpPhotos,
   ],
@@ -54,6 +61,9 @@ part 'app_database.g.dart';
 
     // Kick counter DAO
     KickCounterDao,
+
+    // Contraction timer DAO
+    ContractionTimerDao,
 
     // Bump photo DAO
     BumpPhotoDao,

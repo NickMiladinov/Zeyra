@@ -130,6 +130,10 @@ class AppSpacing {
   static const double fabSize = 56.0;
   static const double fabSizeMini = 48.0;
 
+  /// Drag handle height and width
+  static const double dragHandleHeight = 4.0;
+  static const double dragHandleWidth = 40.0;
+
   // ============================================================================
   // APP-SPECIFIC SIZES
   // ============================================================================

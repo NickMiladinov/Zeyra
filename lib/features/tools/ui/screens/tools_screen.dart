@@ -6,6 +6,7 @@ import 'package:zeyra/app/theme/app_icons.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
 import 'package:zeyra/app/theme/app_typography.dart';
 import 'package:zeyra/features/bump_photo/ui/screens/bump_diary_screen.dart';
+import 'package:zeyra/features/contraction_timer/ui/screens/labour_overview_screen.dart';
 import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_screen.dart';
 import 'package:zeyra/shared/providers/navigation_provider.dart';
 import 'package:zeyra/shared/widgets/app_banner.dart';
@@ -119,6 +120,7 @@ class _ToolsListScreen extends ConsumerWidget {
       subtitle: 'Time Your Surges',
       icon: Symbols.timer_rounded,
       color: const Color(0xFF8DB6C6), // Placeholder color
+      destination: (context) => const LabourOverviewScreen(),
     ),
     _ToolData(
       title: 'Appointment Hub',

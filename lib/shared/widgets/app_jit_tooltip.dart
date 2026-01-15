@@ -204,7 +204,7 @@ class _AppJitTooltipState extends State<AppJitTooltip> {
             child: Container(
               width: screenSize.width,
               height: screenSize.height,
-              color: Colors.transparent,
+              color: Colors.black.withValues(alpha: 0.1),
             ),
           ),
         ),
@@ -300,7 +300,7 @@ class _AppJitTooltipState extends State<AppJitTooltip> {
                         Text(
                           config.message,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],

@@ -35,6 +35,7 @@ class AppColors {
   static const Color backgroundGrey100 = Color(0xFFE0E0E0);
   static const Color backgroundGrey400 = Color(0xFFBDBDBD);
   static const Color backgroundGrey500 = Color(0xFF8D8D8D);
+  static const Color backgroundGrey600 = Color(0xFF7E7E7E);
   static const Color backgroundPrimarySubtle = Color(0xFFE0F2F1);
   static const Color backgroundPrimaryVerySubtle = Color(0xFFF1F9F8);
   static const Color backgroundSecondarySubtle = Color(0xFFFFECE5);

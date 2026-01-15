@@ -27,14 +27,16 @@ class SessionDetailResult {
 }
 
 /// Overlay showing session details with edit/delete options
-class SessionDetailOverlay extends StatelessWidget {
+class SessionDetailOverlay extends StatefulWidget {
   final KickSession session;
   final KickSessionAnalytics? sessionAnalytics;
+  final Future<void> Function(String sessionId, String? note)? onNoteUpdated;
 
   const SessionDetailOverlay({
     super.key,
     required this.session,
     this.sessionAnalytics,
+    this.onNoteUpdated,
   });
 
   /// Show the session detail overlay
@@ -42,21 +44,36 @@ class SessionDetailOverlay extends StatelessWidget {
     required BuildContext context,
     required KickSession session,
     KickSessionAnalytics? sessionAnalytics,
+    Future<void> Function(String sessionId, String? note)? onNoteUpdated,
   }) async {
     return await AppBottomSheet.show<SessionDetailResult>(
       context: context,
       child: SessionDetailOverlay(
         session: session,
         sessionAnalytics: sessionAnalytics,
+        onNoteUpdated: onNoteUpdated,
       ),
       isDismissible: true,
       enableDrag: true,
     );
   }
 
+  @override
+  State<SessionDetailOverlay> createState() => _SessionDetailOverlayState();
+}
+
+class _SessionDetailOverlayState extends State<SessionDetailOverlay> {
+  late String? _currentNote;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentNote = widget.session.note;
+  }
+
   String _formatDate() {
     final now = DateTime.now();
-    final sessionDate = session.startTime;
+    final sessionDate = widget.session.startTime;
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
     final sessionDay = DateTime(sessionDate.year, sessionDate.month, sessionDate.day);
@@ -86,10 +103,10 @@ class SessionDetailOverlay extends StatelessWidget {
   /// Get duration display - uses durationToTenthKick for valid sessions,
   /// activeDuration for incomplete sessions. Rounds to nearest minute.
   String _getDurationDisplay() {
-    final hasMinimumKicks = sessionAnalytics?.hasMinimumKicks ?? (session.kicks.length >= 10);
-    final durationSeconds = hasMinimumKicks && session.durationToTenthKick != null
-        ? session.durationToTenthKick!.inSeconds
-        : session.activeDuration.inSeconds;
+    final hasMinimumKicks = widget.sessionAnalytics?.hasMinimumKicks ?? (widget.session.kicks.length >= 10);
+    final durationSeconds = hasMinimumKicks && widget.session.durationToTenthKick != null
+        ? widget.session.durationToTenthKick!.inSeconds
+        : widget.session.activeDuration.inSeconds;
     // Round to nearest minute
     final minutes = durationSeconds > 0 ? ((durationSeconds + 30) / 60).floor().clamp(1, 999) : 1;
     return '$minutes';
@@ -122,19 +139,23 @@ class SessionDetailOverlay extends StatelessWidget {
               menuPadding: EdgeInsets.zero,
               onSelected: (action) async {
                 if (action == SessionAction.editNote) {
-                  if (!context.mounted) return;
+                  if (!mounted) return;
                   final note = await _showEditNoteDialog(context);
-                  if (note != null && context.mounted) {
-                    Navigator.of(context).pop(SessionDetailResult(
-                      action: SessionAction.editNote,
-                      note: note,
-                    ));
+                  if (note != null && mounted) {
+                    // Update the note via callback if provided
+                    if (widget.onNoteUpdated != null) {
+                      await widget.onNoteUpdated!(widget.session.id, note.isEmpty ? null : note);
+                    }
+                    // Update local state to reflect the change
+                    setState(() {
+                      _currentNote = note.isEmpty ? null : note;
+                    });
                   }
                 } else if (action == SessionAction.delete) {
-                  if (!context.mounted) return;
+                  if (!mounted) return;
                   final confirmed = await _showDeleteConfirmation(context);
-                  if (confirmed == true && context.mounted) {
-                    Navigator.of(context).pop(const SessionDetailResult(
+                  if (confirmed == true && mounted) {
+                    Navigator.of(this.context).pop(const SessionDetailResult(
                       action: SessionAction.delete,
                     ));
                   }
@@ -169,8 +190,8 @@ class SessionDetailOverlay extends StatelessWidget {
         const SizedBox(height: AppSpacing.gapLG),
         
         // Warning card for abnormal sessions
-        if (sessionAnalytics != null && (!sessionAnalytics!.hasMinimumKicks || sessionAnalytics!.isOutlier)) ...[
-          if (!sessionAnalytics!.hasMinimumKicks)
+        if (widget.sessionAnalytics != null && (!widget.sessionAnalytics!.hasMinimumKicks || widget.sessionAnalytics!.isOutlier)) ...[
+          if (!widget.sessionAnalytics!.hasMinimumKicks)
             Container(
               padding: const EdgeInsets.all(AppSpacing.paddingLG),
               decoration: BoxDecoration(
@@ -197,7 +218,7 @@ class SessionDetailOverlay extends StatelessWidget {
                 ],
               ),
             )
-          else if (sessionAnalytics!.isOutlier)
+          else if (widget.sessionAnalytics!.isOutlier)
             Container(
               padding: const EdgeInsets.all(AppSpacing.paddingLG),
               decoration: BoxDecoration(
@@ -232,9 +253,9 @@ class SessionDetailOverlay extends StatelessWidget {
           children: [
             Expanded(
               child: _StatCard(
-                value: '${session.kickCount}',
+                value: '${widget.session.kickCount}',
                 label: 'Movements',
-                isHighlighted: sessionAnalytics?.hasMinimumKicks == false,
+                isHighlighted: widget.sessionAnalytics?.hasMinimumKicks == false,
               ),
             ),
             const SizedBox(width: AppSpacing.gapMD),
@@ -243,7 +264,7 @@ class SessionDetailOverlay extends StatelessWidget {
                 // For sessions with 10+ kicks, show time to 10 movements (matches graph)
                 value: _getDurationDisplay(),
                 label: 'Minutes',
-                isHighlighted: sessionAnalytics?.isOutlier == true && sessionAnalytics?.hasMinimumKicks == true,
+                isHighlighted: widget.sessionAnalytics?.isOutlier == true && widget.sessionAnalytics?.hasMinimumKicks == true,
               ),
             ),
           ],
@@ -264,9 +285,9 @@ class SessionDetailOverlay extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppEffects.radiusMD),
           ),
           child: Text(
-            session.note ?? 'No note added',
+            _currentNote ?? 'No note added',
             style: AppTypography.bodyLarge.copyWith(
-              color: session.note != null ? AppColors.textPrimary : AppColors.textSecondary,
+              color: _currentNote != null ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
         ),
@@ -275,7 +296,7 @@ class SessionDetailOverlay extends StatelessWidget {
   }
 
   Future<String?> _showEditNoteDialog(BuildContext context) {
-    final controller = TextEditingController(text: session.note ?? '');
+    final controller = TextEditingController(text: _currentNote ?? '');
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(

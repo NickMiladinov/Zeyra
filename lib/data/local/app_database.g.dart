@@ -2952,6 +2952,1386 @@ class PauseEventsCompanion extends UpdateCompanion<PauseEventDto> {
   }
 }
 
+class $ContractionSessionsTable extends ContractionSessions
+    with TableInfo<$ContractionSessionsTable, ContractionSessionDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContractionSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startTimeMillisMeta = const VerificationMeta(
+    'startTimeMillis',
+  );
+  @override
+  late final GeneratedColumn<int> startTimeMillis = GeneratedColumn<int>(
+    'start_time_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endTimeMillisMeta = const VerificationMeta(
+    'endTimeMillis',
+  );
+  @override
+  late final GeneratedColumn<int> endTimeMillis = GeneratedColumn<int>(
+    'end_time_millis',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _achievedDurationMeta = const VerificationMeta(
+    'achievedDuration',
+  );
+  @override
+  late final GeneratedColumn<bool> achievedDuration = GeneratedColumn<bool>(
+    'achieved_duration',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("achieved_duration" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _durationAchievedAtMillisMeta =
+      const VerificationMeta('durationAchievedAtMillis');
+  @override
+  late final GeneratedColumn<int> durationAchievedAtMillis =
+      GeneratedColumn<int>(
+        'duration_achieved_at_millis',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _achievedFrequencyMeta = const VerificationMeta(
+    'achievedFrequency',
+  );
+  @override
+  late final GeneratedColumn<bool> achievedFrequency = GeneratedColumn<bool>(
+    'achieved_frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("achieved_frequency" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _frequencyAchievedAtMillisMeta =
+      const VerificationMeta('frequencyAchievedAtMillis');
+  @override
+  late final GeneratedColumn<int> frequencyAchievedAtMillis =
+      GeneratedColumn<int>(
+        'frequency_achieved_at_millis',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _achievedConsistencyMeta =
+      const VerificationMeta('achievedConsistency');
+  @override
+  late final GeneratedColumn<bool> achievedConsistency = GeneratedColumn<bool>(
+    'achieved_consistency',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("achieved_consistency" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _consistencyAchievedAtMillisMeta =
+      const VerificationMeta('consistencyAchievedAtMillis');
+  @override
+  late final GeneratedColumn<int> consistencyAchievedAtMillis =
+      GeneratedColumn<int>(
+        'consistency_achieved_at_millis',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    startTimeMillis,
+    endTimeMillis,
+    isActive,
+    achievedDuration,
+    durationAchievedAtMillis,
+    achievedFrequency,
+    frequencyAchievedAtMillis,
+    achievedConsistency,
+    consistencyAchievedAtMillis,
+    note,
+    createdAtMillis,
+    updatedAtMillis,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contraction_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContractionSessionDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('start_time_millis')) {
+      context.handle(
+        _startTimeMillisMeta,
+        startTimeMillis.isAcceptableOrUnknown(
+          data['start_time_millis']!,
+          _startTimeMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startTimeMillisMeta);
+    }
+    if (data.containsKey('end_time_millis')) {
+      context.handle(
+        _endTimeMillisMeta,
+        endTimeMillis.isAcceptableOrUnknown(
+          data['end_time_millis']!,
+          _endTimeMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    if (data.containsKey('achieved_duration')) {
+      context.handle(
+        _achievedDurationMeta,
+        achievedDuration.isAcceptableOrUnknown(
+          data['achieved_duration']!,
+          _achievedDurationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration_achieved_at_millis')) {
+      context.handle(
+        _durationAchievedAtMillisMeta,
+        durationAchievedAtMillis.isAcceptableOrUnknown(
+          data['duration_achieved_at_millis']!,
+          _durationAchievedAtMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('achieved_frequency')) {
+      context.handle(
+        _achievedFrequencyMeta,
+        achievedFrequency.isAcceptableOrUnknown(
+          data['achieved_frequency']!,
+          _achievedFrequencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('frequency_achieved_at_millis')) {
+      context.handle(
+        _frequencyAchievedAtMillisMeta,
+        frequencyAchievedAtMillis.isAcceptableOrUnknown(
+          data['frequency_achieved_at_millis']!,
+          _frequencyAchievedAtMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('achieved_consistency')) {
+      context.handle(
+        _achievedConsistencyMeta,
+        achievedConsistency.isAcceptableOrUnknown(
+          data['achieved_consistency']!,
+          _achievedConsistencyMeta,
+        ),
+      );
+    }
+    if (data.containsKey('consistency_achieved_at_millis')) {
+      context.handle(
+        _consistencyAchievedAtMillisMeta,
+        consistencyAchievedAtMillis.isAcceptableOrUnknown(
+          data['consistency_achieved_at_millis']!,
+          _consistencyAchievedAtMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ContractionSessionDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContractionSessionDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      startTimeMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_time_millis'],
+      )!,
+      endTimeMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_time_millis'],
+      ),
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      achievedDuration: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}achieved_duration'],
+      )!,
+      durationAchievedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_achieved_at_millis'],
+      ),
+      achievedFrequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}achieved_frequency'],
+      )!,
+      frequencyAchievedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}frequency_achieved_at_millis'],
+      ),
+      achievedConsistency: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}achieved_consistency'],
+      )!,
+      consistencyAchievedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}consistency_achieved_at_millis'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+    );
+  }
+
+  @override
+  $ContractionSessionsTable createAlias(String alias) {
+    return $ContractionSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class ContractionSessionDto extends DataClass
+    implements Insertable<ContractionSessionDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// When the session started (stored as millis since epoch for precision)
+  final int startTimeMillis;
+
+  /// When the session ended (null if still active)
+  final int? endTimeMillis;
+
+  /// Whether this session is currently active
+  /// Active sessions appear in the UI and prevent new session creation
+  final bool isActive;
+
+  /// Whether duration criterion achieved (contractions >= 1 min)
+  final bool achievedDuration;
+
+  /// When duration criterion was first achieved
+  final int? durationAchievedAtMillis;
+
+  /// Whether frequency criterion achieved (contractions <= 5 min apart)
+  final bool achievedFrequency;
+
+  /// When frequency criterion was first achieved
+  final int? frequencyAchievedAtMillis;
+
+  /// Whether consistency criterion achieved (pattern for 1 hour)
+  final bool achievedConsistency;
+
+  /// When consistency criterion was first achieved
+  final int? consistencyAchievedAtMillis;
+
+  /// Optional encrypted note attached to this session
+  /// Users can add personal observations about the session
+  final String? note;
+
+  /// Timestamp when record was created (stored as millis since epoch)
+  final int createdAtMillis;
+
+  /// Timestamp when record was last updated (stored as millis since epoch)
+  final int updatedAtMillis;
+  const ContractionSessionDto({
+    required this.id,
+    required this.startTimeMillis,
+    this.endTimeMillis,
+    required this.isActive,
+    required this.achievedDuration,
+    this.durationAchievedAtMillis,
+    required this.achievedFrequency,
+    this.frequencyAchievedAtMillis,
+    required this.achievedConsistency,
+    this.consistencyAchievedAtMillis,
+    this.note,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['start_time_millis'] = Variable<int>(startTimeMillis);
+    if (!nullToAbsent || endTimeMillis != null) {
+      map['end_time_millis'] = Variable<int>(endTimeMillis);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    map['achieved_duration'] = Variable<bool>(achievedDuration);
+    if (!nullToAbsent || durationAchievedAtMillis != null) {
+      map['duration_achieved_at_millis'] = Variable<int>(
+        durationAchievedAtMillis,
+      );
+    }
+    map['achieved_frequency'] = Variable<bool>(achievedFrequency);
+    if (!nullToAbsent || frequencyAchievedAtMillis != null) {
+      map['frequency_achieved_at_millis'] = Variable<int>(
+        frequencyAchievedAtMillis,
+      );
+    }
+    map['achieved_consistency'] = Variable<bool>(achievedConsistency);
+    if (!nullToAbsent || consistencyAchievedAtMillis != null) {
+      map['consistency_achieved_at_millis'] = Variable<int>(
+        consistencyAchievedAtMillis,
+      );
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    return map;
+  }
+
+  ContractionSessionsCompanion toCompanion(bool nullToAbsent) {
+    return ContractionSessionsCompanion(
+      id: Value(id),
+      startTimeMillis: Value(startTimeMillis),
+      endTimeMillis: endTimeMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTimeMillis),
+      isActive: Value(isActive),
+      achievedDuration: Value(achievedDuration),
+      durationAchievedAtMillis: durationAchievedAtMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationAchievedAtMillis),
+      achievedFrequency: Value(achievedFrequency),
+      frequencyAchievedAtMillis:
+          frequencyAchievedAtMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(frequencyAchievedAtMillis),
+      achievedConsistency: Value(achievedConsistency),
+      consistencyAchievedAtMillis:
+          consistencyAchievedAtMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(consistencyAchievedAtMillis),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+    );
+  }
+
+  factory ContractionSessionDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContractionSessionDto(
+      id: serializer.fromJson<String>(json['id']),
+      startTimeMillis: serializer.fromJson<int>(json['startTimeMillis']),
+      endTimeMillis: serializer.fromJson<int?>(json['endTimeMillis']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      achievedDuration: serializer.fromJson<bool>(json['achievedDuration']),
+      durationAchievedAtMillis: serializer.fromJson<int?>(
+        json['durationAchievedAtMillis'],
+      ),
+      achievedFrequency: serializer.fromJson<bool>(json['achievedFrequency']),
+      frequencyAchievedAtMillis: serializer.fromJson<int?>(
+        json['frequencyAchievedAtMillis'],
+      ),
+      achievedConsistency: serializer.fromJson<bool>(
+        json['achievedConsistency'],
+      ),
+      consistencyAchievedAtMillis: serializer.fromJson<int?>(
+        json['consistencyAchievedAtMillis'],
+      ),
+      note: serializer.fromJson<String?>(json['note']),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'startTimeMillis': serializer.toJson<int>(startTimeMillis),
+      'endTimeMillis': serializer.toJson<int?>(endTimeMillis),
+      'isActive': serializer.toJson<bool>(isActive),
+      'achievedDuration': serializer.toJson<bool>(achievedDuration),
+      'durationAchievedAtMillis': serializer.toJson<int?>(
+        durationAchievedAtMillis,
+      ),
+      'achievedFrequency': serializer.toJson<bool>(achievedFrequency),
+      'frequencyAchievedAtMillis': serializer.toJson<int?>(
+        frequencyAchievedAtMillis,
+      ),
+      'achievedConsistency': serializer.toJson<bool>(achievedConsistency),
+      'consistencyAchievedAtMillis': serializer.toJson<int?>(
+        consistencyAchievedAtMillis,
+      ),
+      'note': serializer.toJson<String?>(note),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+    };
+  }
+
+  ContractionSessionDto copyWith({
+    String? id,
+    int? startTimeMillis,
+    Value<int?> endTimeMillis = const Value.absent(),
+    bool? isActive,
+    bool? achievedDuration,
+    Value<int?> durationAchievedAtMillis = const Value.absent(),
+    bool? achievedFrequency,
+    Value<int?> frequencyAchievedAtMillis = const Value.absent(),
+    bool? achievedConsistency,
+    Value<int?> consistencyAchievedAtMillis = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    int? createdAtMillis,
+    int? updatedAtMillis,
+  }) => ContractionSessionDto(
+    id: id ?? this.id,
+    startTimeMillis: startTimeMillis ?? this.startTimeMillis,
+    endTimeMillis: endTimeMillis.present
+        ? endTimeMillis.value
+        : this.endTimeMillis,
+    isActive: isActive ?? this.isActive,
+    achievedDuration: achievedDuration ?? this.achievedDuration,
+    durationAchievedAtMillis: durationAchievedAtMillis.present
+        ? durationAchievedAtMillis.value
+        : this.durationAchievedAtMillis,
+    achievedFrequency: achievedFrequency ?? this.achievedFrequency,
+    frequencyAchievedAtMillis: frequencyAchievedAtMillis.present
+        ? frequencyAchievedAtMillis.value
+        : this.frequencyAchievedAtMillis,
+    achievedConsistency: achievedConsistency ?? this.achievedConsistency,
+    consistencyAchievedAtMillis: consistencyAchievedAtMillis.present
+        ? consistencyAchievedAtMillis.value
+        : this.consistencyAchievedAtMillis,
+    note: note.present ? note.value : this.note,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+  );
+  ContractionSessionDto copyWithCompanion(ContractionSessionsCompanion data) {
+    return ContractionSessionDto(
+      id: data.id.present ? data.id.value : this.id,
+      startTimeMillis: data.startTimeMillis.present
+          ? data.startTimeMillis.value
+          : this.startTimeMillis,
+      endTimeMillis: data.endTimeMillis.present
+          ? data.endTimeMillis.value
+          : this.endTimeMillis,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      achievedDuration: data.achievedDuration.present
+          ? data.achievedDuration.value
+          : this.achievedDuration,
+      durationAchievedAtMillis: data.durationAchievedAtMillis.present
+          ? data.durationAchievedAtMillis.value
+          : this.durationAchievedAtMillis,
+      achievedFrequency: data.achievedFrequency.present
+          ? data.achievedFrequency.value
+          : this.achievedFrequency,
+      frequencyAchievedAtMillis: data.frequencyAchievedAtMillis.present
+          ? data.frequencyAchievedAtMillis.value
+          : this.frequencyAchievedAtMillis,
+      achievedConsistency: data.achievedConsistency.present
+          ? data.achievedConsistency.value
+          : this.achievedConsistency,
+      consistencyAchievedAtMillis: data.consistencyAchievedAtMillis.present
+          ? data.consistencyAchievedAtMillis.value
+          : this.consistencyAchievedAtMillis,
+      note: data.note.present ? data.note.value : this.note,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContractionSessionDto(')
+          ..write('id: $id, ')
+          ..write('startTimeMillis: $startTimeMillis, ')
+          ..write('endTimeMillis: $endTimeMillis, ')
+          ..write('isActive: $isActive, ')
+          ..write('achievedDuration: $achievedDuration, ')
+          ..write('durationAchievedAtMillis: $durationAchievedAtMillis, ')
+          ..write('achievedFrequency: $achievedFrequency, ')
+          ..write('frequencyAchievedAtMillis: $frequencyAchievedAtMillis, ')
+          ..write('achievedConsistency: $achievedConsistency, ')
+          ..write('consistencyAchievedAtMillis: $consistencyAchievedAtMillis, ')
+          ..write('note: $note, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    startTimeMillis,
+    endTimeMillis,
+    isActive,
+    achievedDuration,
+    durationAchievedAtMillis,
+    achievedFrequency,
+    frequencyAchievedAtMillis,
+    achievedConsistency,
+    consistencyAchievedAtMillis,
+    note,
+    createdAtMillis,
+    updatedAtMillis,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContractionSessionDto &&
+          other.id == this.id &&
+          other.startTimeMillis == this.startTimeMillis &&
+          other.endTimeMillis == this.endTimeMillis &&
+          other.isActive == this.isActive &&
+          other.achievedDuration == this.achievedDuration &&
+          other.durationAchievedAtMillis == this.durationAchievedAtMillis &&
+          other.achievedFrequency == this.achievedFrequency &&
+          other.frequencyAchievedAtMillis == this.frequencyAchievedAtMillis &&
+          other.achievedConsistency == this.achievedConsistency &&
+          other.consistencyAchievedAtMillis ==
+              this.consistencyAchievedAtMillis &&
+          other.note == this.note &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis);
+}
+
+class ContractionSessionsCompanion
+    extends UpdateCompanion<ContractionSessionDto> {
+  final Value<String> id;
+  final Value<int> startTimeMillis;
+  final Value<int?> endTimeMillis;
+  final Value<bool> isActive;
+  final Value<bool> achievedDuration;
+  final Value<int?> durationAchievedAtMillis;
+  final Value<bool> achievedFrequency;
+  final Value<int?> frequencyAchievedAtMillis;
+  final Value<bool> achievedConsistency;
+  final Value<int?> consistencyAchievedAtMillis;
+  final Value<String?> note;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<int> rowid;
+  const ContractionSessionsCompanion({
+    this.id = const Value.absent(),
+    this.startTimeMillis = const Value.absent(),
+    this.endTimeMillis = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.achievedDuration = const Value.absent(),
+    this.durationAchievedAtMillis = const Value.absent(),
+    this.achievedFrequency = const Value.absent(),
+    this.frequencyAchievedAtMillis = const Value.absent(),
+    this.achievedConsistency = const Value.absent(),
+    this.consistencyAchievedAtMillis = const Value.absent(),
+    this.note = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContractionSessionsCompanion.insert({
+    required String id,
+    required int startTimeMillis,
+    this.endTimeMillis = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.achievedDuration = const Value.absent(),
+    this.durationAchievedAtMillis = const Value.absent(),
+    this.achievedFrequency = const Value.absent(),
+    this.frequencyAchievedAtMillis = const Value.absent(),
+    this.achievedConsistency = const Value.absent(),
+    this.consistencyAchievedAtMillis = const Value.absent(),
+    this.note = const Value.absent(),
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       startTimeMillis = Value(startTimeMillis),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis);
+  static Insertable<ContractionSessionDto> custom({
+    Expression<String>? id,
+    Expression<int>? startTimeMillis,
+    Expression<int>? endTimeMillis,
+    Expression<bool>? isActive,
+    Expression<bool>? achievedDuration,
+    Expression<int>? durationAchievedAtMillis,
+    Expression<bool>? achievedFrequency,
+    Expression<int>? frequencyAchievedAtMillis,
+    Expression<bool>? achievedConsistency,
+    Expression<int>? consistencyAchievedAtMillis,
+    Expression<String>? note,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (startTimeMillis != null) 'start_time_millis': startTimeMillis,
+      if (endTimeMillis != null) 'end_time_millis': endTimeMillis,
+      if (isActive != null) 'is_active': isActive,
+      if (achievedDuration != null) 'achieved_duration': achievedDuration,
+      if (durationAchievedAtMillis != null)
+        'duration_achieved_at_millis': durationAchievedAtMillis,
+      if (achievedFrequency != null) 'achieved_frequency': achievedFrequency,
+      if (frequencyAchievedAtMillis != null)
+        'frequency_achieved_at_millis': frequencyAchievedAtMillis,
+      if (achievedConsistency != null)
+        'achieved_consistency': achievedConsistency,
+      if (consistencyAchievedAtMillis != null)
+        'consistency_achieved_at_millis': consistencyAchievedAtMillis,
+      if (note != null) 'note': note,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContractionSessionsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? startTimeMillis,
+    Value<int?>? endTimeMillis,
+    Value<bool>? isActive,
+    Value<bool>? achievedDuration,
+    Value<int?>? durationAchievedAtMillis,
+    Value<bool>? achievedFrequency,
+    Value<int?>? frequencyAchievedAtMillis,
+    Value<bool>? achievedConsistency,
+    Value<int?>? consistencyAchievedAtMillis,
+    Value<String?>? note,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<int>? rowid,
+  }) {
+    return ContractionSessionsCompanion(
+      id: id ?? this.id,
+      startTimeMillis: startTimeMillis ?? this.startTimeMillis,
+      endTimeMillis: endTimeMillis ?? this.endTimeMillis,
+      isActive: isActive ?? this.isActive,
+      achievedDuration: achievedDuration ?? this.achievedDuration,
+      durationAchievedAtMillis:
+          durationAchievedAtMillis ?? this.durationAchievedAtMillis,
+      achievedFrequency: achievedFrequency ?? this.achievedFrequency,
+      frequencyAchievedAtMillis:
+          frequencyAchievedAtMillis ?? this.frequencyAchievedAtMillis,
+      achievedConsistency: achievedConsistency ?? this.achievedConsistency,
+      consistencyAchievedAtMillis:
+          consistencyAchievedAtMillis ?? this.consistencyAchievedAtMillis,
+      note: note ?? this.note,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (startTimeMillis.present) {
+      map['start_time_millis'] = Variable<int>(startTimeMillis.value);
+    }
+    if (endTimeMillis.present) {
+      map['end_time_millis'] = Variable<int>(endTimeMillis.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (achievedDuration.present) {
+      map['achieved_duration'] = Variable<bool>(achievedDuration.value);
+    }
+    if (durationAchievedAtMillis.present) {
+      map['duration_achieved_at_millis'] = Variable<int>(
+        durationAchievedAtMillis.value,
+      );
+    }
+    if (achievedFrequency.present) {
+      map['achieved_frequency'] = Variable<bool>(achievedFrequency.value);
+    }
+    if (frequencyAchievedAtMillis.present) {
+      map['frequency_achieved_at_millis'] = Variable<int>(
+        frequencyAchievedAtMillis.value,
+      );
+    }
+    if (achievedConsistency.present) {
+      map['achieved_consistency'] = Variable<bool>(achievedConsistency.value);
+    }
+    if (consistencyAchievedAtMillis.present) {
+      map['consistency_achieved_at_millis'] = Variable<int>(
+        consistencyAchievedAtMillis.value,
+      );
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContractionSessionsCompanion(')
+          ..write('id: $id, ')
+          ..write('startTimeMillis: $startTimeMillis, ')
+          ..write('endTimeMillis: $endTimeMillis, ')
+          ..write('isActive: $isActive, ')
+          ..write('achievedDuration: $achievedDuration, ')
+          ..write('durationAchievedAtMillis: $durationAchievedAtMillis, ')
+          ..write('achievedFrequency: $achievedFrequency, ')
+          ..write('frequencyAchievedAtMillis: $frequencyAchievedAtMillis, ')
+          ..write('achievedConsistency: $achievedConsistency, ')
+          ..write('consistencyAchievedAtMillis: $consistencyAchievedAtMillis, ')
+          ..write('note: $note, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ContractionsTable extends Contractions
+    with TableInfo<$ContractionsTable, ContractionDto> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ContractionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startTimeMillisMeta = const VerificationMeta(
+    'startTimeMillis',
+  );
+  @override
+  late final GeneratedColumn<int> startTimeMillis = GeneratedColumn<int>(
+    'start_time_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endTimeMillisMeta = const VerificationMeta(
+    'endTimeMillis',
+  );
+  @override
+  late final GeneratedColumn<int> endTimeMillis = GeneratedColumn<int>(
+    'end_time_millis',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _intensityMeta = const VerificationMeta(
+    'intensity',
+  );
+  @override
+  late final GeneratedColumn<int> intensity = GeneratedColumn<int>(
+    'intensity',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _createdAtMillisMeta = const VerificationMeta(
+    'createdAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> createdAtMillis = GeneratedColumn<int>(
+    'created_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMillisMeta = const VerificationMeta(
+    'updatedAtMillis',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAtMillis = GeneratedColumn<int>(
+    'updated_at_millis',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    startTimeMillis,
+    endTimeMillis,
+    intensity,
+    createdAtMillis,
+    updatedAtMillis,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'contractions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ContractionDto> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('start_time_millis')) {
+      context.handle(
+        _startTimeMillisMeta,
+        startTimeMillis.isAcceptableOrUnknown(
+          data['start_time_millis']!,
+          _startTimeMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startTimeMillisMeta);
+    }
+    if (data.containsKey('end_time_millis')) {
+      context.handle(
+        _endTimeMillisMeta,
+        endTimeMillis.isAcceptableOrUnknown(
+          data['end_time_millis']!,
+          _endTimeMillisMeta,
+        ),
+      );
+    }
+    if (data.containsKey('intensity')) {
+      context.handle(
+        _intensityMeta,
+        intensity.isAcceptableOrUnknown(data['intensity']!, _intensityMeta),
+      );
+    }
+    if (data.containsKey('created_at_millis')) {
+      context.handle(
+        _createdAtMillisMeta,
+        createdAtMillis.isAcceptableOrUnknown(
+          data['created_at_millis']!,
+          _createdAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMillisMeta);
+    }
+    if (data.containsKey('updated_at_millis')) {
+      context.handle(
+        _updatedAtMillisMeta,
+        updatedAtMillis.isAcceptableOrUnknown(
+          data['updated_at_millis']!,
+          _updatedAtMillisMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMillisMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ContractionDto map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ContractionDto(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      startTimeMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_time_millis'],
+      )!,
+      endTimeMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_time_millis'],
+      ),
+      intensity: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}intensity'],
+      )!,
+      createdAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at_millis'],
+      )!,
+      updatedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at_millis'],
+      )!,
+    );
+  }
+
+  @override
+  $ContractionsTable createAlias(String alias) {
+    return $ContractionsTable(attachedDatabase, alias);
+  }
+}
+
+class ContractionDto extends DataClass implements Insertable<ContractionDto> {
+  /// Unique identifier (UUID)
+  final String id;
+
+  /// Foreign key to the session this contraction belongs to
+  /// Links to ContractionSessions.id
+  final String sessionId;
+
+  /// When the contraction started (stored as millis since epoch for precision)
+  final int startTimeMillis;
+
+  /// When the contraction ended (null if currently active/being timed)
+  final int? endTimeMillis;
+
+  /// Perceived intensity as reported by user
+  /// Stored as integer: 0 = mild, 1 = moderate, 2 = strong
+  /// Maps to ContractionIntensity enum
+  final int intensity;
+
+  /// Timestamp when record was created (stored as millis since epoch)
+  final int createdAtMillis;
+
+  /// Timestamp when record was last updated (stored as millis since epoch)
+  final int updatedAtMillis;
+  const ContractionDto({
+    required this.id,
+    required this.sessionId,
+    required this.startTimeMillis,
+    this.endTimeMillis,
+    required this.intensity,
+    required this.createdAtMillis,
+    required this.updatedAtMillis,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['start_time_millis'] = Variable<int>(startTimeMillis);
+    if (!nullToAbsent || endTimeMillis != null) {
+      map['end_time_millis'] = Variable<int>(endTimeMillis);
+    }
+    map['intensity'] = Variable<int>(intensity);
+    map['created_at_millis'] = Variable<int>(createdAtMillis);
+    map['updated_at_millis'] = Variable<int>(updatedAtMillis);
+    return map;
+  }
+
+  ContractionsCompanion toCompanion(bool nullToAbsent) {
+    return ContractionsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      startTimeMillis: Value(startTimeMillis),
+      endTimeMillis: endTimeMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTimeMillis),
+      intensity: Value(intensity),
+      createdAtMillis: Value(createdAtMillis),
+      updatedAtMillis: Value(updatedAtMillis),
+    );
+  }
+
+  factory ContractionDto.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ContractionDto(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      startTimeMillis: serializer.fromJson<int>(json['startTimeMillis']),
+      endTimeMillis: serializer.fromJson<int?>(json['endTimeMillis']),
+      intensity: serializer.fromJson<int>(json['intensity']),
+      createdAtMillis: serializer.fromJson<int>(json['createdAtMillis']),
+      updatedAtMillis: serializer.fromJson<int>(json['updatedAtMillis']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'startTimeMillis': serializer.toJson<int>(startTimeMillis),
+      'endTimeMillis': serializer.toJson<int?>(endTimeMillis),
+      'intensity': serializer.toJson<int>(intensity),
+      'createdAtMillis': serializer.toJson<int>(createdAtMillis),
+      'updatedAtMillis': serializer.toJson<int>(updatedAtMillis),
+    };
+  }
+
+  ContractionDto copyWith({
+    String? id,
+    String? sessionId,
+    int? startTimeMillis,
+    Value<int?> endTimeMillis = const Value.absent(),
+    int? intensity,
+    int? createdAtMillis,
+    int? updatedAtMillis,
+  }) => ContractionDto(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    startTimeMillis: startTimeMillis ?? this.startTimeMillis,
+    endTimeMillis: endTimeMillis.present
+        ? endTimeMillis.value
+        : this.endTimeMillis,
+    intensity: intensity ?? this.intensity,
+    createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+    updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+  );
+  ContractionDto copyWithCompanion(ContractionsCompanion data) {
+    return ContractionDto(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      startTimeMillis: data.startTimeMillis.present
+          ? data.startTimeMillis.value
+          : this.startTimeMillis,
+      endTimeMillis: data.endTimeMillis.present
+          ? data.endTimeMillis.value
+          : this.endTimeMillis,
+      intensity: data.intensity.present ? data.intensity.value : this.intensity,
+      createdAtMillis: data.createdAtMillis.present
+          ? data.createdAtMillis.value
+          : this.createdAtMillis,
+      updatedAtMillis: data.updatedAtMillis.present
+          ? data.updatedAtMillis.value
+          : this.updatedAtMillis,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContractionDto(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('startTimeMillis: $startTimeMillis, ')
+          ..write('endTimeMillis: $endTimeMillis, ')
+          ..write('intensity: $intensity, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    startTimeMillis,
+    endTimeMillis,
+    intensity,
+    createdAtMillis,
+    updatedAtMillis,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ContractionDto &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.startTimeMillis == this.startTimeMillis &&
+          other.endTimeMillis == this.endTimeMillis &&
+          other.intensity == this.intensity &&
+          other.createdAtMillis == this.createdAtMillis &&
+          other.updatedAtMillis == this.updatedAtMillis);
+}
+
+class ContractionsCompanion extends UpdateCompanion<ContractionDto> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<int> startTimeMillis;
+  final Value<int?> endTimeMillis;
+  final Value<int> intensity;
+  final Value<int> createdAtMillis;
+  final Value<int> updatedAtMillis;
+  final Value<int> rowid;
+  const ContractionsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.startTimeMillis = const Value.absent(),
+    this.endTimeMillis = const Value.absent(),
+    this.intensity = const Value.absent(),
+    this.createdAtMillis = const Value.absent(),
+    this.updatedAtMillis = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ContractionsCompanion.insert({
+    required String id,
+    required String sessionId,
+    required int startTimeMillis,
+    this.endTimeMillis = const Value.absent(),
+    this.intensity = const Value.absent(),
+    required int createdAtMillis,
+    required int updatedAtMillis,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sessionId = Value(sessionId),
+       startTimeMillis = Value(startTimeMillis),
+       createdAtMillis = Value(createdAtMillis),
+       updatedAtMillis = Value(updatedAtMillis);
+  static Insertable<ContractionDto> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<int>? startTimeMillis,
+    Expression<int>? endTimeMillis,
+    Expression<int>? intensity,
+    Expression<int>? createdAtMillis,
+    Expression<int>? updatedAtMillis,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (startTimeMillis != null) 'start_time_millis': startTimeMillis,
+      if (endTimeMillis != null) 'end_time_millis': endTimeMillis,
+      if (intensity != null) 'intensity': intensity,
+      if (createdAtMillis != null) 'created_at_millis': createdAtMillis,
+      if (updatedAtMillis != null) 'updated_at_millis': updatedAtMillis,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ContractionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<int>? startTimeMillis,
+    Value<int?>? endTimeMillis,
+    Value<int>? intensity,
+    Value<int>? createdAtMillis,
+    Value<int>? updatedAtMillis,
+    Value<int>? rowid,
+  }) {
+    return ContractionsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      startTimeMillis: startTimeMillis ?? this.startTimeMillis,
+      endTimeMillis: endTimeMillis ?? this.endTimeMillis,
+      intensity: intensity ?? this.intensity,
+      createdAtMillis: createdAtMillis ?? this.createdAtMillis,
+      updatedAtMillis: updatedAtMillis ?? this.updatedAtMillis,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (startTimeMillis.present) {
+      map['start_time_millis'] = Variable<int>(startTimeMillis.value);
+    }
+    if (endTimeMillis.present) {
+      map['end_time_millis'] = Variable<int>(endTimeMillis.value);
+    }
+    if (intensity.present) {
+      map['intensity'] = Variable<int>(intensity.value);
+    }
+    if (createdAtMillis.present) {
+      map['created_at_millis'] = Variable<int>(createdAtMillis.value);
+    }
+    if (updatedAtMillis.present) {
+      map['updated_at_millis'] = Variable<int>(updatedAtMillis.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ContractionsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('startTimeMillis: $startTimeMillis, ')
+          ..write('endTimeMillis: $endTimeMillis, ')
+          ..write('intensity: $intensity, ')
+          ..write('createdAtMillis: $createdAtMillis, ')
+          ..write('updatedAtMillis: $updatedAtMillis, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $BumpPhotosTable extends BumpPhotos
     with TableInfo<$BumpPhotosTable, BumpPhotoDto> {
   @override
@@ -3511,12 +4891,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $KickSessionsTable kickSessions = $KickSessionsTable(this);
   late final $KicksTable kicks = $KicksTable(this);
   late final $PauseEventsTable pauseEvents = $PauseEventsTable(this);
+  late final $ContractionSessionsTable contractionSessions =
+      $ContractionSessionsTable(this);
+  late final $ContractionsTable contractions = $ContractionsTable(this);
   late final $BumpPhotosTable bumpPhotos = $BumpPhotosTable(this);
   late final UserProfileDao userProfileDao = UserProfileDao(
     this as AppDatabase,
   );
   late final PregnancyDao pregnancyDao = PregnancyDao(this as AppDatabase);
   late final KickCounterDao kickCounterDao = KickCounterDao(
+    this as AppDatabase,
+  );
+  late final ContractionTimerDao contractionTimerDao = ContractionTimerDao(
     this as AppDatabase,
   );
   late final BumpPhotoDao bumpPhotoDao = BumpPhotoDao(this as AppDatabase);
@@ -3530,6 +4916,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     kickSessions,
     kicks,
     pauseEvents,
+    contractionSessions,
+    contractions,
     bumpPhotos,
   ];
   @override
@@ -5609,6 +6997,640 @@ typedef $$PauseEventsTableProcessedTableManager =
       PauseEventDto,
       PrefetchHooks Function({bool sessionId})
     >;
+typedef $$ContractionSessionsTableCreateCompanionBuilder =
+    ContractionSessionsCompanion Function({
+      required String id,
+      required int startTimeMillis,
+      Value<int?> endTimeMillis,
+      Value<bool> isActive,
+      Value<bool> achievedDuration,
+      Value<int?> durationAchievedAtMillis,
+      Value<bool> achievedFrequency,
+      Value<int?> frequencyAchievedAtMillis,
+      Value<bool> achievedConsistency,
+      Value<int?> consistencyAchievedAtMillis,
+      Value<String?> note,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<int> rowid,
+    });
+typedef $$ContractionSessionsTableUpdateCompanionBuilder =
+    ContractionSessionsCompanion Function({
+      Value<String> id,
+      Value<int> startTimeMillis,
+      Value<int?> endTimeMillis,
+      Value<bool> isActive,
+      Value<bool> achievedDuration,
+      Value<int?> durationAchievedAtMillis,
+      Value<bool> achievedFrequency,
+      Value<int?> frequencyAchievedAtMillis,
+      Value<bool> achievedConsistency,
+      Value<int?> consistencyAchievedAtMillis,
+      Value<String?> note,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<int> rowid,
+    });
+
+class $$ContractionSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ContractionSessionsTable> {
+  $$ContractionSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get achievedDuration => $composableBuilder(
+    column: $table.achievedDuration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationAchievedAtMillis => $composableBuilder(
+    column: $table.durationAchievedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get achievedFrequency => $composableBuilder(
+    column: $table.achievedFrequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get frequencyAchievedAtMillis => $composableBuilder(
+    column: $table.frequencyAchievedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get achievedConsistency => $composableBuilder(
+    column: $table.achievedConsistency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get consistencyAchievedAtMillis => $composableBuilder(
+    column: $table.consistencyAchievedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ContractionSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ContractionSessionsTable> {
+  $$ContractionSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get achievedDuration => $composableBuilder(
+    column: $table.achievedDuration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationAchievedAtMillis => $composableBuilder(
+    column: $table.durationAchievedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get achievedFrequency => $composableBuilder(
+    column: $table.achievedFrequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get frequencyAchievedAtMillis => $composableBuilder(
+    column: $table.frequencyAchievedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get achievedConsistency => $composableBuilder(
+    column: $table.achievedConsistency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get consistencyAchievedAtMillis => $composableBuilder(
+    column: $table.consistencyAchievedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContractionSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ContractionSessionsTable> {
+  $$ContractionSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<bool> get achievedDuration => $composableBuilder(
+    column: $table.achievedDuration,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationAchievedAtMillis => $composableBuilder(
+    column: $table.durationAchievedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get achievedFrequency => $composableBuilder(
+    column: $table.achievedFrequency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get frequencyAchievedAtMillis => $composableBuilder(
+    column: $table.frequencyAchievedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get achievedConsistency => $composableBuilder(
+    column: $table.achievedConsistency,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get consistencyAchievedAtMillis => $composableBuilder(
+    column: $table.consistencyAchievedAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+}
+
+class $$ContractionSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ContractionSessionsTable,
+          ContractionSessionDto,
+          $$ContractionSessionsTableFilterComposer,
+          $$ContractionSessionsTableOrderingComposer,
+          $$ContractionSessionsTableAnnotationComposer,
+          $$ContractionSessionsTableCreateCompanionBuilder,
+          $$ContractionSessionsTableUpdateCompanionBuilder,
+          (
+            ContractionSessionDto,
+            BaseReferences<
+              _$AppDatabase,
+              $ContractionSessionsTable,
+              ContractionSessionDto
+            >,
+          ),
+          ContractionSessionDto,
+          PrefetchHooks Function()
+        > {
+  $$ContractionSessionsTableTableManager(
+    _$AppDatabase db,
+    $ContractionSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContractionSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContractionSessionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ContractionSessionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> startTimeMillis = const Value.absent(),
+                Value<int?> endTimeMillis = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> achievedDuration = const Value.absent(),
+                Value<int?> durationAchievedAtMillis = const Value.absent(),
+                Value<bool> achievedFrequency = const Value.absent(),
+                Value<int?> frequencyAchievedAtMillis = const Value.absent(),
+                Value<bool> achievedConsistency = const Value.absent(),
+                Value<int?> consistencyAchievedAtMillis = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContractionSessionsCompanion(
+                id: id,
+                startTimeMillis: startTimeMillis,
+                endTimeMillis: endTimeMillis,
+                isActive: isActive,
+                achievedDuration: achievedDuration,
+                durationAchievedAtMillis: durationAchievedAtMillis,
+                achievedFrequency: achievedFrequency,
+                frequencyAchievedAtMillis: frequencyAchievedAtMillis,
+                achievedConsistency: achievedConsistency,
+                consistencyAchievedAtMillis: consistencyAchievedAtMillis,
+                note: note,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int startTimeMillis,
+                Value<int?> endTimeMillis = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<bool> achievedDuration = const Value.absent(),
+                Value<int?> durationAchievedAtMillis = const Value.absent(),
+                Value<bool> achievedFrequency = const Value.absent(),
+                Value<int?> frequencyAchievedAtMillis = const Value.absent(),
+                Value<bool> achievedConsistency = const Value.absent(),
+                Value<int?> consistencyAchievedAtMillis = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<int> rowid = const Value.absent(),
+              }) => ContractionSessionsCompanion.insert(
+                id: id,
+                startTimeMillis: startTimeMillis,
+                endTimeMillis: endTimeMillis,
+                isActive: isActive,
+                achievedDuration: achievedDuration,
+                durationAchievedAtMillis: durationAchievedAtMillis,
+                achievedFrequency: achievedFrequency,
+                frequencyAchievedAtMillis: frequencyAchievedAtMillis,
+                achievedConsistency: achievedConsistency,
+                consistencyAchievedAtMillis: consistencyAchievedAtMillis,
+                note: note,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContractionSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ContractionSessionsTable,
+      ContractionSessionDto,
+      $$ContractionSessionsTableFilterComposer,
+      $$ContractionSessionsTableOrderingComposer,
+      $$ContractionSessionsTableAnnotationComposer,
+      $$ContractionSessionsTableCreateCompanionBuilder,
+      $$ContractionSessionsTableUpdateCompanionBuilder,
+      (
+        ContractionSessionDto,
+        BaseReferences<
+          _$AppDatabase,
+          $ContractionSessionsTable,
+          ContractionSessionDto
+        >,
+      ),
+      ContractionSessionDto,
+      PrefetchHooks Function()
+    >;
+typedef $$ContractionsTableCreateCompanionBuilder =
+    ContractionsCompanion Function({
+      required String id,
+      required String sessionId,
+      required int startTimeMillis,
+      Value<int?> endTimeMillis,
+      Value<int> intensity,
+      required int createdAtMillis,
+      required int updatedAtMillis,
+      Value<int> rowid,
+    });
+typedef $$ContractionsTableUpdateCompanionBuilder =
+    ContractionsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<int> startTimeMillis,
+      Value<int?> endTimeMillis,
+      Value<int> intensity,
+      Value<int> createdAtMillis,
+      Value<int> updatedAtMillis,
+      Value<int> rowid,
+    });
+
+class $$ContractionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ContractionsTable> {
+  $$ContractionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get intensity => $composableBuilder(
+    column: $table.intensity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ContractionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ContractionsTable> {
+  $$ContractionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get intensity => $composableBuilder(
+    column: $table.intensity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ContractionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ContractionsTable> {
+  $$ContractionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<int> get startTimeMillis => $composableBuilder(
+    column: $table.startTimeMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get endTimeMillis => $composableBuilder(
+    column: $table.endTimeMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get intensity =>
+      $composableBuilder(column: $table.intensity, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAtMillis => $composableBuilder(
+    column: $table.createdAtMillis,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAtMillis => $composableBuilder(
+    column: $table.updatedAtMillis,
+    builder: (column) => column,
+  );
+}
+
+class $$ContractionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ContractionsTable,
+          ContractionDto,
+          $$ContractionsTableFilterComposer,
+          $$ContractionsTableOrderingComposer,
+          $$ContractionsTableAnnotationComposer,
+          $$ContractionsTableCreateCompanionBuilder,
+          $$ContractionsTableUpdateCompanionBuilder,
+          (
+            ContractionDto,
+            BaseReferences<_$AppDatabase, $ContractionsTable, ContractionDto>,
+          ),
+          ContractionDto,
+          PrefetchHooks Function()
+        > {
+  $$ContractionsTableTableManager(_$AppDatabase db, $ContractionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ContractionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ContractionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ContractionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<int> startTimeMillis = const Value.absent(),
+                Value<int?> endTimeMillis = const Value.absent(),
+                Value<int> intensity = const Value.absent(),
+                Value<int> createdAtMillis = const Value.absent(),
+                Value<int> updatedAtMillis = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ContractionsCompanion(
+                id: id,
+                sessionId: sessionId,
+                startTimeMillis: startTimeMillis,
+                endTimeMillis: endTimeMillis,
+                intensity: intensity,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String sessionId,
+                required int startTimeMillis,
+                Value<int?> endTimeMillis = const Value.absent(),
+                Value<int> intensity = const Value.absent(),
+                required int createdAtMillis,
+                required int updatedAtMillis,
+                Value<int> rowid = const Value.absent(),
+              }) => ContractionsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                startTimeMillis: startTimeMillis,
+                endTimeMillis: endTimeMillis,
+                intensity: intensity,
+                createdAtMillis: createdAtMillis,
+                updatedAtMillis: updatedAtMillis,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ContractionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ContractionsTable,
+      ContractionDto,
+      $$ContractionsTableFilterComposer,
+      $$ContractionsTableOrderingComposer,
+      $$ContractionsTableAnnotationComposer,
+      $$ContractionsTableCreateCompanionBuilder,
+      $$ContractionsTableUpdateCompanionBuilder,
+      (
+        ContractionDto,
+        BaseReferences<_$AppDatabase, $ContractionsTable, ContractionDto>,
+      ),
+      ContractionDto,
+      PrefetchHooks Function()
+    >;
 typedef $$BumpPhotosTableCreateCompanionBuilder =
     BumpPhotosCompanion Function({
       required String id,
@@ -5890,6 +7912,10 @@ class $AppDatabaseManager {
       $$KicksTableTableManager(_db, _db.kicks);
   $$PauseEventsTableTableManager get pauseEvents =>
       $$PauseEventsTableTableManager(_db, _db.pauseEvents);
+  $$ContractionSessionsTableTableManager get contractionSessions =>
+      $$ContractionSessionsTableTableManager(_db, _db.contractionSessions);
+  $$ContractionsTableTableManager get contractions =>
+      $$ContractionsTableTableManager(_db, _db.contractions);
   $$BumpPhotosTableTableManager get bumpPhotos =>
       $$BumpPhotosTableTableManager(_db, _db.bumpPhotos);
 }

@@ -47,7 +47,7 @@ class TooltipNotifier extends StateNotifier<TooltipState> {
     final shownTooltips = <String, bool>{};
 
     // Load all known tooltip IDs
-    for (final tooltipId in KickCounterTooltipIds.all) {
+    for (final tooltipId in [...KickCounterTooltipIds.all, ...ContractionTimerTooltipIds.all]) {
       shownTooltips[tooltipId] = prefs.getBool('$_prefix$tooltipId') ?? false;
     }
 
@@ -97,4 +97,15 @@ class KickCounterTooltipIds {
 
   /// All tooltip IDs for this feature.
   static const List<String> all = [firstSession, graphUnlocked];
+}
+
+/// Predefined tooltip IDs for the contraction timer feature.
+class ContractionTimerTooltipIds {
+  ContractionTimerTooltipIds._();
+
+  /// Shown after recording the first session.
+  static const String firstSession = 'contraction_timer_first_session';
+
+  /// All tooltip IDs for this feature.
+  static const List<String> all = [firstSession];
 }

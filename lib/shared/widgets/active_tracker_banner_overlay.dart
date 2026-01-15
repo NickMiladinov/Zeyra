@@ -2,30 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:zeyra/app/theme/app_effects.dart';
 import 'package:zeyra/app/theme/app_spacing.dart';
+import 'package:zeyra/shared/providers/active_tracker_coordinator.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_banner_provider.dart';
 import 'package:zeyra/features/kick_counter/ui/screens/kick_active_session_screen.dart';
 import 'package:zeyra/features/kick_counter/ui/widgets/kick_counter_banner.dart';
+import 'package:zeyra/features/contraction_timer/logic/contraction_timer_banner_provider.dart';
+import 'package:zeyra/features/contraction_timer/ui/screens/contraction_active_session_screen.dart';
+import 'package:zeyra/features/contraction_timer/ui/widgets/contraction_timer_banner.dart';
 
-/// Global overlay widget that displays the kick counter banner.
+/// Unified overlay widget that displays the appropriate active tracker banner.
 /// 
-/// Wrap this around your app's main content to show the floating banner
-/// when the user has an active kick counter session and navigates away
-/// from the active session screen.
+/// Shows either the kick counter or contraction timer banner depending on
+/// which tracker is currently active. Only one can be active at a time,
+/// as enforced by [activeTrackerProvider].
 /// 
 /// The banner automatically hides when bottom sheets are shown via
-/// [isBottomSheetVisibleProvider], ensuring proper z-ordering.
+/// [isModalOverlayVisibleProvider], ensuring proper z-ordering.
 /// 
 /// Usage in MaterialApp.builder:
 /// ```dart
 /// builder: (context, child) {
-///   return KickCounterBannerOverlay(
+///   return ActiveTrackerBannerOverlay(
 ///     navigatorKey: navigatorKey,
 ///     child: child ?? const SizedBox.shrink(),
 ///   );
 /// }
 /// ```
-class KickCounterBannerOverlay extends ConsumerStatefulWidget {
-  const KickCounterBannerOverlay({
+class ActiveTrackerBannerOverlay extends ConsumerStatefulWidget {
+  const ActiveTrackerBannerOverlay({
     super.key,
     required this.child,
     required this.navigatorKey,
@@ -38,10 +42,10 @@ class KickCounterBannerOverlay extends ConsumerStatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
 
   @override
-  ConsumerState<KickCounterBannerOverlay> createState() => _KickCounterBannerOverlayState();
+  ConsumerState<ActiveTrackerBannerOverlay> createState() => _ActiveTrackerBannerOverlayState();
 }
 
-class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOverlay>
+class _ActiveTrackerBannerOverlayState extends ConsumerState<ActiveTrackerBannerOverlay>
     with TickerProviderStateMixin {
   /// Key for the banner to track its position
   final GlobalKey _bannerKey = GlobalKey();
@@ -58,6 +62,7 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
   
   bool _isExpanding = false;
   bool _previousShouldShow = false;
+  ActiveTrackerType? _previousTrackerType;
 
   @override
   void initState() {
@@ -114,8 +119,8 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
     super.dispose();
   }
 
-  /// Handle banner tap - animate and navigate to active session
-  void _onBannerTap() async {
+  /// Handle banner tap - animate and navigate to appropriate active session
+  void _onBannerTap(ActiveTrackerType trackerType) async {
     if (_isExpanding) return;
     
     setState(() {
@@ -125,17 +130,26 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
     // Start expand/scale animation
     await _expandController.forward();
     
-    // Hide banner before navigating
-    ref.read(kickCounterBannerProvider.notifier).hide();
+    // Hide the appropriate banner before navigating
+    if (trackerType == ActiveTrackerType.kickCounter) {
+      ref.read(kickCounterBannerProvider.notifier).hide();
+    } else if (trackerType == ActiveTrackerType.contractionTimer) {
+      ref.read(contractionTimerBannerProvider.notifier).hide();
+    }
     
-    // Navigate to active session with slide-up animation
-    // Use navigatorKey since overlay is at MaterialApp.builder level (above Navigator)
+    // Navigate to appropriate active session with slide-up animation
     final navigator = widget.navigatorKey.currentState;
     if (mounted && navigator != null) {
+      Widget targetScreen;
+      if (trackerType == ActiveTrackerType.kickCounter) {
+        targetScreen = const KickActiveSessionScreen();
+      } else {
+        targetScreen = const ContractionActiveSessionScreen();
+      }
+      
       await navigator.push(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => 
-              const KickActiveSessionScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
@@ -162,11 +176,25 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
 
   @override
   Widget build(BuildContext context) {
-    final shouldShowBanner = ref.watch(shouldShowKickCounterBannerProvider);
+    // Determine which banner should be shown (if any)
+    final shouldShowKickBanner = ref.watch(shouldShowKickCounterBannerProvider);
+    final shouldShowContractionBanner = ref.watch(shouldShowContractionTimerBannerProvider);
     
-    // Trigger entrance/exit animation when visibility changes
-    if (shouldShowBanner != _previousShouldShow) {
+    // Determine active tracker type for the banner
+    ActiveTrackerType? activeType;
+    if (shouldShowKickBanner) {
+      activeType = ActiveTrackerType.kickCounter;
+    } else if (shouldShowContractionBanner) {
+      activeType = ActiveTrackerType.contractionTimer;
+    }
+    
+    final shouldShowBanner = activeType != null;
+    
+    // Trigger entrance/exit animation when visibility or type changes
+    if (shouldShowBanner != _previousShouldShow || activeType != _previousTrackerType) {
       _previousShouldShow = shouldShowBanner;
+      _previousTrackerType = activeType;
+      
       if (shouldShowBanner) {
         _entranceController.forward();
       } else if (!_isExpanding) {
@@ -185,8 +213,6 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
             left: 0,
             right: 0,
             // Position above bottom nav bar (which itself is above safe area)
-            // The Scaffold positions bottomNavigationBar above safe area, so:
-            // banner bottom = safe_area + bottom_nav_height + gap
             bottom: MediaQuery.of(context).padding.bottom + 
                     AppSpacing.bottomNavHeight + 
                     AppSpacing.paddingMD,
@@ -194,7 +220,6 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
               child: AnimatedBuilder(
                 animation: Listenable.merge([_expandController, _entranceController]),
                 builder: (context, child) {
-                  // Combine entrance and expand animations
                   final isExpanding = _expandController.isAnimating || _isExpanding;
                   
                   return SlideTransition(
@@ -208,14 +233,30 @@ class _KickCounterBannerOverlayState extends ConsumerState<KickCounterBannerOver
                     ),
                   );
                 },
-                child: KickCounterBanner(
-                  key: _bannerKey,
-                  onTap: _onBannerTap,
-                ),
+                child: _buildBanner(activeType),
               ),
             ),
           ),
       ],
     );
   }
+  
+  /// Build the appropriate banner widget based on tracker type
+  Widget _buildBanner(ActiveTrackerType? trackerType) {
+    if (trackerType == ActiveTrackerType.kickCounter) {
+      return KickCounterBanner(
+        key: _bannerKey,
+        onTap: () => _onBannerTap(ActiveTrackerType.kickCounter),
+      );
+    } else if (trackerType == ActiveTrackerType.contractionTimer) {
+      return ContractionTimerBanner(
+        key: _bannerKey,
+        onTap: () => _onBannerTap(ActiveTrackerType.contractionTimer),
+      );
+    }
+    
+    // Fallback - should not happen but prevents crash
+    return const SizedBox.shrink();
+  }
 }
+

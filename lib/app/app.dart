@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:zeyra/features/auth/ui/widgets/auth_gate.dart';
-import 'package:zeyra/features/kick_counter/ui/widgets/kick_counter_banner_overlay.dart';
+import 'package:zeyra/shared/widgets/active_tracker_banner_overlay.dart';
 import 'package:zeyra/app/theme/app_theme.dart';
 import 'package:zeyra/main.dart' show logger;
 
@@ -25,9 +25,10 @@ class App extends StatelessWidget {
         navigatorObservers: [
           TalkerRouteObserver(logger.talker),
         ],
-        // Wrap all routes with KickCounterBannerOverlay for global banner visibility
+        // Wrap all routes with unified banner overlay for active trackers
+        // Shows appropriate banner (kick counter or contraction timer) based on active session
         builder: (context, child) {
-          return KickCounterBannerOverlay(
+          return ActiveTrackerBannerOverlay(
             navigatorKey: navigatorKey,
             child: child ?? const SizedBox.shrink(),
           );
