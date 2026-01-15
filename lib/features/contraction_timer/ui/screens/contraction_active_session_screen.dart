@@ -1,25 +1,27 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_timer_state.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_timer_banner_provider.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_history_provider.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/rule_511_progress.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/contraction_list_sheet.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/animated_contraction_circle.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/edit_contraction_sheet.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/session_complete_overlay.dart';
-import 'package:zeyra/features/contraction_timer/ui/screens/contraction_timer_info_screen.dart';
-import 'package:zeyra/shared/widgets/app_dialog.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction_timer_constants.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../domain/entities/contraction_timer/contraction.dart';
+import '../../../../domain/entities/contraction_timer/contraction_timer_constants.dart';
+import '../../../../shared/widgets/app_dialog.dart';
+import '../../logic/contraction_timer_state.dart';
+import '../../logic/contraction_timer_banner_provider.dart';
+import '../../logic/contraction_history_provider.dart';
+import '../widgets/rule_511_progress.dart';
+import '../widgets/contraction_list_sheet.dart';
+import '../widgets/animated_contraction_circle.dart';
+import '../widgets/edit_contraction_sheet.dart';
+import '../widgets/session_complete_overlay.dart';
 
 class ContractionActiveSessionScreen extends ConsumerStatefulWidget {
   const ContractionActiveSessionScreen({super.key});
@@ -69,7 +71,7 @@ class _ContractionActiveSessionScreenState
     if (hasActiveSession) {
       ref.read(contractionTimerBannerProvider.notifier).show();
     }
-    Navigator.of(context).pop();
+    context.pop();
   }
   
   void _startTimer() {
@@ -298,13 +300,13 @@ class _ContractionActiveSessionScreenState
         // Refresh history so the new session appears in the list
         await ref.read(contractionHistoryProvider.notifier).refresh();
         if (mounted) {
-          Navigator.of(context).pop();
+          context.pop();
         }
       } else {
         // Discard the session
         await notifier.discardSession();
         if (mounted) {
-          Navigator.of(context).pop();
+          context.pop();
         }
       }
     }
@@ -323,7 +325,7 @@ class _ContractionActiveSessionScreenState
     if (confirmed == true && mounted) {
       await ref.read(contractionTimerNotifierProvider)?.discardSession();
       if (mounted) {
-        Navigator.of(context).pop();
+        context.pop();
       }
     }
   }
@@ -405,13 +407,7 @@ class _ContractionActiveSessionScreenState
               size: AppSpacing.iconMD,
               color: AppColors.iconDefault,
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                CupertinoPageRoute(
-                  builder: (context) => const ContractionTimerInfoScreen(),
-                ),
-              );
-            },
+            onPressed: () => context.push(ToolRoutes.contractionTimerInfo),
           ),
         ],
         backgroundColor: Colors.transparent,

@@ -1,24 +1,22 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_timer_state.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_history_provider.dart';
-import 'package:zeyra/features/contraction_timer/logic/contraction_timer_onboarding_provider.dart';
-import 'package:zeyra/features/contraction_timer/ui/screens/contraction_active_session_screen.dart';
-import 'package:zeyra/features/contraction_timer/ui/screens/contraction_timer_info_screen.dart';
-import 'package:zeyra/features/contraction_timer/ui/screens/contraction_session_detail_screen.dart';
-import 'package:zeyra/features/contraction_timer/ui/widgets/contraction_timer_intro_overlay.dart';
-import 'package:zeyra/domain/entities/contraction_timer/contraction_session.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
-import 'package:zeyra/shared/widgets/app_jit_tooltip.dart';
-import 'package:zeyra/shared/providers/tooltip_provider.dart';
-import 'package:zeyra/shared/providers/navigation_provider.dart';
+
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../domain/entities/contraction_timer/contraction_session.dart';
+import '../../../../shared/widgets/app_jit_tooltip.dart';
+import '../../../../shared/providers/tooltip_provider.dart';
+import '../../../../shared/providers/active_tracker_coordinator.dart';
+import '../../logic/contraction_timer_state.dart';
+import '../../logic/contraction_history_provider.dart';
+import '../../logic/contraction_timer_onboarding_provider.dart';
+import '../widgets/contraction_timer_intro_overlay.dart';
 
 class LabourOverviewScreen extends ConsumerStatefulWidget {
   const LabourOverviewScreen({super.key});
@@ -238,7 +236,11 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
       // Provider dependencies still loading or error occurred
       activeSession = null;
     }
-    
+
+    // Check if we can start a new contraction timer session
+    // (no active contraction timer OR kick counter session)
+    final canStartSession = ref.watch(canStartContractionTimerProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Labour Overview', style: AppTypography.headlineSmall),
@@ -249,7 +251,7 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
             size: AppSpacing.iconMD,
             color: AppColors.iconDefault,
           ),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
@@ -258,13 +260,7 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
               size: AppSpacing.iconMD,
               color: AppColors.iconDefault,
             ),
-            onPressed: () {
-              Navigator.of(context).push(
-                CupertinoPageRoute(
-                  builder: (context) => const ContractionTimerInfoScreen(),
-                ),
-              );
-            },
+            onPressed: () => context.push(ToolRoutes.contractionTimerInfo),
           ),
         ],
         backgroundColor: AppColors.surface,
@@ -331,8 +327,9 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
                 ],
               ),
             ),
-      // Hide FAB if there's an active session (show banner instead via global overlay)
-      floatingActionButton: activeSession == null
+      // Hide FAB if there's an active session (contraction timer OR kick counter)
+      // When an active session exists, the banner is shown instead via MainShell
+      floatingActionButton: canStartSession && activeSession == null
           ? ConstrainedBox(
               constraints: const BoxConstraints(
                 minHeight: AppSpacing.buttonHeightLG,
@@ -340,28 +337,7 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
               ),
               child: FloatingActionButton.extended(
                 heroTag: 'contraction_timer_start_fab',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const ContractionActiveSessionScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                        const begin = Offset(0.0, 1.0);
-                        const end = Offset.zero;
-                        const curve = Curves.easeInOut;
-                        final tween = Tween(begin: begin, end: end)
-                            .chain(CurveTween(curve: curve));
-                        return SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        );
-                      },
-                      transitionDuration: AppEffects.durationSlow,
-                      reverseTransitionDuration: AppEffects.durationSlow,
-                    ),
-                  );
-                },
+                onPressed: () => context.push(ToolRoutes.contractionTimerActive),
                 backgroundColor: AppColors.primary,
                 elevation: AppSpacing.elevationSM,
                 extendedPadding: const EdgeInsets.only(
@@ -388,17 +364,7 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
               ),
             )
           : null,
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: 3, // Tools tab
-        onTap: (index) {
-          // If tapping the current tab, pop to root
-          if (index == 3 && Navigator.of(context).canPop()) {
-            Navigator.of(context).popUntil((route) => route.isFirst);
-          }
-          // Update tab index
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
   
@@ -439,10 +405,10 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
   }
   
   void _showSessionDetail(BuildContext context, ContractionSession session) {
-    Navigator.of(context).push(
-      CupertinoPageRoute(
-        builder: (context) => ContractionSessionDetailScreen(session: session),
-      ),
+    // Pass session via extra parameter since it's a complex object
+    context.push(
+      ToolRoutes.contractionSessionDetailPath(session.id),
+      extra: session,
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/shared/widgets/app_accordion.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../shared/widgets/app_accordion.dart';
 
 /// Information screen about baby's movements and kick counting.
 /// 
@@ -25,7 +27,7 @@ class KickCounterInfoScreen extends StatelessWidget {
         centerTitle: false,
         leading: IconButton(
           icon: Icon(AppIcons.back, color: AppColors.iconDefault),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () => context.pop(),
         ),
         backgroundColor: AppColors.surface,
         elevation: 0,

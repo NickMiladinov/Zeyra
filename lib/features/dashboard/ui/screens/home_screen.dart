@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase for auth
-import 'package:zeyra/shared/providers/navigation_provider.dart';
-import 'package:zeyra/shared/widgets/app_bottom_nav_bar.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Home screen (Today tab).
+///
+/// The bottom navigation bar is provided by [MainShell].
+/// Auth state changes are handled by [AuthNotifier] which will redirect
+/// to the auth screen on sign out.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   Future<void> _signOut(BuildContext context) async {
     try {
       await Supabase.instance.client.auth.signOut();
+      // AuthNotifier will handle the redirect to auth screen
     } on AuthException catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -24,8 +28,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(navigationIndexProvider);
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -33,7 +35,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => _signOut(context), // Call the sign out method
+            onPressed: () => _signOut(context),
           ),
         ],
       ),
@@ -61,17 +63,11 @@ class HomeScreen extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey[700]),
               ),
-              // Add more introductory elements or quick actions here later
             ],
           ),
         ),
       ),
-      bottomNavigationBar: AppBottomNavBar(
-        currentIndex: currentIndex,
-        onTap: (index) {
-          ref.read(navigationIndexProvider.notifier).state = index;
-        },
-      ),
+      // Bottom nav bar is provided by MainShell
     );
   }
 } 

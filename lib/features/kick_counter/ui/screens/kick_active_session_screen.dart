@@ -1,20 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:zeyra/app/theme/app_colors.dart';
-import 'package:zeyra/app/theme/app_effects.dart';
-import 'package:zeyra/app/theme/app_spacing.dart';
-import 'package:zeyra/app/theme/app_typography.dart';
-import 'package:zeyra/app/theme/app_icons.dart';
-import 'package:zeyra/domain/entities/kick_counter/kick.dart';
-import 'package:zeyra/features/kick_counter/logic/kick_counter_banner_provider.dart';
-import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
-import 'package:zeyra/features/kick_counter/logic/kick_history_provider.dart';
-import 'package:zeyra/features/kick_counter/ui/screens/kick_counter_info_screen.dart';
-import 'package:zeyra/features/kick_counter/ui/widgets/rate_intensity_overlay.dart';
-import 'package:zeyra/features/kick_counter/ui/widgets/session_complete_overlay.dart';
-import 'package:zeyra/shared/widgets/app_dialog.dart';
 import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../app/router/routes.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../domain/entities/kick_counter/kick.dart';
+import '../../../../shared/widgets/app_dialog.dart';
+import '../../logic/kick_counter_banner_provider.dart';
+import '../../logic/kick_counter_state.dart';
+import '../../logic/kick_history_provider.dart';
+import '../widgets/rate_intensity_overlay.dart';
+import '../widgets/session_complete_overlay.dart';
 
 class KickActiveSessionScreen extends ConsumerStatefulWidget {
   const KickActiveSessionScreen({super.key});
@@ -49,7 +51,7 @@ class _KickActiveSessionScreenState extends ConsumerState<KickActiveSessionScree
     if (state.activeSession != null) {
       ref.read(kickCounterBannerProvider.notifier).show();
     }
-    Navigator.of(context).pop();
+    context.pop();
   }
 
   String _formatDuration(Duration duration) {
@@ -89,13 +91,7 @@ class _KickActiveSessionScreenState extends ConsumerState<KickActiveSessionScree
         actions: [
           IconButton(
             icon: Icon(AppIcons.infoIcon, size: AppSpacing.iconMD, color: AppColors.iconDefault),
-            onPressed: () {
-              Navigator.of(context).push(
-                CupertinoPageRoute(
-                  builder: (context) => const KickCounterInfoScreen(),
-                ),
-              );
-            },
+            onPressed: () => context.push(ToolRoutes.kickCounterInfo),
           ),
         ],
       ),
