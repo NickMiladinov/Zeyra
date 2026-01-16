@@ -8,7 +8,11 @@ class AppConstants {
   // Sentry Configuration
   static String sentryDsn = '';
 
-  // Add other constants here as needed
+  // RevenueCat Configuration
+  // Note: For testing, both platforms can use the same API key.
+  // In production, use platform-specific keys from RevenueCat dashboard.
+  static String revenueCatApiKeyIOS = '';
+  static String revenueCatApiKeyAndroid = '';
 
   // Private constructor to prevent instantiation
   AppConstants._();
@@ -19,12 +23,21 @@ class AppConstants {
       supabaseUrl = dotenv.env['SUPABASE_URL'] ?? '';
       supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? '';
       sentryDsn = dotenv.env['SENTRY_DSN'] ?? '';
+      
+      // RevenueCat API keys (can be the same for testing)
+      revenueCatApiKeyIOS = dotenv.env['REVENUECAT_API_KEY_IOS'] ?? '';
+      revenueCatApiKeyAndroid = dotenv.env['REVENUECAT_API_KEY_ANDROID'] ?? '';
 
       // Note: Logging now handled by centralized logging service
       // Will be initialized after this method completes
       if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
         // ignore: avoid_print
         print('Warning: .env file loaded but SUPABASE_URL or SUPABASE_ANON_KEY might be missing or empty.');
+      }
+      
+      if (revenueCatApiKeyIOS.isEmpty && revenueCatApiKeyAndroid.isEmpty) {
+        // ignore: avoid_print
+        print('Warning: RevenueCat API keys not configured. Payment features will not work.');
       }
     } catch (e, stackTrace) {
       // ignore: avoid_print
@@ -35,6 +48,8 @@ class AppConstants {
       supabaseUrl = ''; // Fallback to empty or a default dev URL
       supabaseAnonKey = ''; // Fallback to empty or a default dev key
       sentryDsn = ''; // Fallback to empty (Sentry will be disabled)
+      revenueCatApiKeyIOS = ''; // Fallback to empty
+      revenueCatApiKeyAndroid = ''; // Fallback to empty
     }
   }
 } 

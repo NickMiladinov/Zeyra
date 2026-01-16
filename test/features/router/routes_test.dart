@@ -9,9 +9,49 @@ void main() {
     test('should have correct auth path', () {
       expect(AuthRoutes.auth, equals('/auth'));
     });
+  });
 
-    test('should have correct onboarding path', () {
-      expect(AuthRoutes.onboarding, equals('/onboarding'));
+  group('[Router] OnboardingRoutes', () {
+    test('should have correct base path', () {
+      expect(OnboardingRoutes.base, equals('/onboarding'));
+    });
+
+    test('should have correct welcome path', () {
+      expect(OnboardingRoutes.welcome, equals('/onboarding/welcome'));
+    });
+
+    test('should have correct screen paths', () {
+      expect(OnboardingRoutes.name, equals('/onboarding/name'));
+      expect(OnboardingRoutes.dueDate, equals('/onboarding/due-date'));
+      expect(OnboardingRoutes.congratulations, equals('/onboarding/congratulations'));
+      expect(OnboardingRoutes.valueProp1, equals('/onboarding/value-1'));
+      expect(OnboardingRoutes.valueProp2, equals('/onboarding/value-2'));
+      expect(OnboardingRoutes.valueProp3, equals('/onboarding/value-3'));
+      expect(OnboardingRoutes.birthDate, equals('/onboarding/birth-date'));
+      expect(OnboardingRoutes.notifications, equals('/onboarding/notifications'));
+      expect(OnboardingRoutes.paywall, equals('/onboarding/paywall'));
+      expect(OnboardingRoutes.auth, equals('/onboarding/auth'));
+    });
+
+    test('orderedRoutes should have 11 routes', () {
+      expect(OnboardingRoutes.orderedRoutes.length, equals(11));
+    });
+
+    test('getRouteForStep should return correct route', () {
+      expect(OnboardingRoutes.getRouteForStep(0), equals(OnboardingRoutes.welcome));
+      expect(OnboardingRoutes.getRouteForStep(3), equals(OnboardingRoutes.congratulations));
+      expect(OnboardingRoutes.getRouteForStep(10), equals(OnboardingRoutes.auth));
+    });
+
+    test('getRouteForStep should return welcome for invalid step', () {
+      expect(OnboardingRoutes.getRouteForStep(-1), equals(OnboardingRoutes.welcome));
+      expect(OnboardingRoutes.getRouteForStep(100), equals(OnboardingRoutes.welcome));
+    });
+
+    test('getStepForRoute should return correct step index', () {
+      expect(OnboardingRoutes.getStepForRoute(OnboardingRoutes.welcome), equals(0));
+      expect(OnboardingRoutes.getStepForRoute(OnboardingRoutes.paywall), equals(9));
+      expect(OnboardingRoutes.getStepForRoute(OnboardingRoutes.auth), equals(10));
     });
   });
 

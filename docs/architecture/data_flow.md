@@ -341,23 +341,126 @@ WARNING: This is irreversible. All encrypted data becomes unrecoverable.
 
 ---
 
-## 💳 Payment Flow (Needs to be checked often, do not rely on locally stored payment info)
+## 💳 Payment Flow (RevenueCat - Do NOT store subscription locally)
+
+**Important**: Subscription status is managed entirely by RevenueCat SDK. Do not create local Subscription entities.
+
 ```
 User → opens app
-     → signs in via Supabase OAuth
-     → taps "Upgrade to Premium"
+     → completes onboarding
          ↓
-In-app Purchase flow (Play Store / App Store)
+RevenueCat SDK presents paywall
          ↓
-Store returns receipt / purchase token
+User selects plan and completes purchase (Play Store / App Store)
          ↓
-App validates it locally (via `in_app_purchase`)
+RevenueCat validates receipt automatically
          ↓
-(optional) Send token to backend (Supabase function) for server-side validation
+App checks entitlements via Purchases.getCustomerInfo()
          ↓
-Backend verifies with Google/Apple APIs and updates `Subscription` table
-         ↓
-UserProfile.subscriptionStatus = 'active'
+CustomerInfo.entitlements.active.containsKey('premium') = true
 ```
+
+**Key Methods** (`PaymentService`):
+- `isPremium()` → Check if user has active premium entitlement
+- `purchase(Package)` → Initiate purchase flow
+- `restore()` → Restore purchases for returning users
+- `linkToAuthUser(authId)` → Link RevenueCat customer to Supabase user
+
+---
+
+## 🚀 Onboarding Flow
+
+The app uses a **data-first** onboarding approach: user completes all screens (info collection, paywall) before authentication. Data is stored temporarily until auth succeeds, then persisted to `UserProfile` and `Pregnancy` entities.
+
+**Important**: This is a **paid-only app** - the paywall cannot be skipped.
+
+### Screen Progression (11 Screens)
+
+```
+1. Welcome → 2. Name → 3. Due Date/LMP → 4. Congratulations
+     ↓
+5. Value Prop 1 → 6. Value Prop 2 → 7. Value Prop 3
+     ↓
+8. Birth Date → 9. Notifications → 10. Paywall → 11. OAuth
+```
+
+### Onboarding State Flow
+
+```
+User opens app (not authenticated)
+    │
+    ▼
+Welcome Screen
+    │
+    ├─► "I already have an account" pressed
+    │       │
+    │       ▼
+    │   OAuth Login
+    │       │
+    │       ├─► Account exists with onboarding_completed = true
+    │       │       └─► Navigate to Main App (check premium first)
+    │       │
+    │       ├─► Account exists with onboarding_completed = false
+    │       │       └─► Resume onboarding from saved step
+    │       │
+    │       └─► NEW account (no metadata)
+    │               └─► Clear pending data, restart onboarding from Welcome
+    │
+    └─► "Continue" pressed
+            │
+            ▼
+    Name → Due Date/LMP → Congratulations → Value Props (x3)
+            │
+            ▼
+    Birth Date → Notifications → Paywall (mandatory) → OAuth
+            │
+            ▼
+    OnboardingService.finalizeOnboarding()
+        │
+        ├─► Create UserProfile entity
+        ├─► Create Pregnancy entity (with calculated startDate/dueDate)
+        ├─► Link RevenueCat customer to Supabase authId
+        ├─► Update Supabase user metadata: onboarding_completed = true
+        └─► Clear SharedPreferences onboarding data
+            │
+            ▼
+    Navigate to Main App
+```
+
+### Due Date / LMP Calculation
+
+The app supports bidirectional calculation between Expected Due Date (EDD) and Last Menstrual Period (LMP):
+
+- Standard pregnancy duration: **280 days (40 weeks)**
+- `dueDate = startDate + 280 days`
+- `startDate (LMP) = dueDate - 280 days`
+
+User can enter either value on the Due Date screen; the other is calculated automatically. Both can be fine-tuned later in app settings.
+
+### OnboardingData (Temporary Entity)
+
+Stored in SharedPreferences until authentication completes.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| firstName | String? | User's first name |
+| dueDate | DateTime? | Expected due date (calculated if LMP provided) |
+| startDate | DateTime? | LMP date (calculated if dueDate provided) |
+| dateOfBirth | DateTime? | User's birth date |
+| notificationsEnabled | bool | Notification permission granted |
+| purchaseCompleted | bool | RevenueCat purchase successful |
+| currentStep | int | Current onboarding screen index (0-10) |
+
+### Onboarding Completion Flag
+
+Stored in Supabase user metadata after successful onboarding:
+
+```dart
+await Supabase.instance.client.auth.updateUser(
+  UserAttributes(data: {'onboarding_completed': true}),
+);
+```
+
+Checked on app launch via `AuthNotifier.hasCompletedOnboarding`.
 
 

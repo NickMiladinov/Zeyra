@@ -1,32 +1,119 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:sign_in_button/sign_in_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../app/router/auth_notifier.dart';
+import '../../../app/router/routes.dart';
 import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_effects.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../features/onboarding/logic/onboarding_providers.dart';
 
 /// Authentication screen with OAuth-only login (Apple + Google).
 ///
-/// Users authenticate via their Apple or Google accounts. Password management
-/// is handled by the OAuth providers, so no email/password or password reset
-/// functionality is needed.
-///
-/// After successful authentication, the [AuthNotifier] will notify go_router,
-/// which will automatically redirect to the main screen (or onboarding).
-class AuthScreen extends StatefulWidget {
+/// This screen is used at the end of onboarding to create an account.
+/// After successful authentication:
+/// 1. Checks if onboarding was completed
+/// 2. If not, finalizes onboarding (creates UserProfile + Pregnancy)
+/// 3. Navigates to main app
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLoading = false;
   String? _errorMessage;
+  StreamSubscription<AuthState>? _authSubscription;
 
   final _supabase = Supabase.instance.client;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAuthListener();
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Listen for auth state changes to handle OAuth callback.
+  void _setupAuthListener() {
+    _authSubscription = _supabase.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      final session = data.session;
+
+      if (event == AuthChangeEvent.signedIn && session != null) {
+        await _handleAuthSuccess();
+      }
+    });
+  }
+
+  /// Handle successful authentication.
+  Future<void> _handleAuthSuccess() async {
+    if (!mounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final authNotifier = ref.read(authNotifierProvider);
+
+      // Check if this user already completed onboarding
+      await authNotifier.checkOnboardingStatus();
+
+      if (authNotifier.hasCompletedOnboarding) {
+        // Existing user - go to main app
+        if (mounted) {
+          context.go(MainRoutes.today);
+        }
+        return;
+      }
+
+      // New user or incomplete onboarding - finalize it
+      final onboardingNotifier = await ref.read(onboardingNotifierProviderAsync.future);
+      final onboardingService = await ref.read(onboardingServiceProvider.future);
+
+      // Get the collected onboarding data
+      final data = onboardingNotifier.data;
+
+      // Finalize onboarding (create UserProfile + Pregnancy)
+      final success = await onboardingService.finalizeOnboarding(data);
+
+      if (success) {
+        // Clear local onboarding data
+        await onboardingNotifier.clearAfterFinalization();
+
+        if (mounted) {
+          context.go(MainRoutes.today);
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Failed to complete setup. Please try again.';
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'An error occurred. Please try again.';
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   /// Sign in with Google OAuth.
   Future<void> _signInWithGoogle() async {
@@ -38,27 +125,20 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await _supabase.auth.signInWithOAuth(
         OAuthProvider.google,
-        // For web, redirectTo can be null to use Supabase dashboard settings.
-        // For mobile, specify your custom deep link.
         redirectTo: kIsWeb ? null : 'com.zeyra.app://login-callback',
       );
-
-      // The auth state listener (AuthNotifier) will handle navigation
+      // Auth listener will handle the callback
     } on AuthException catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.message;
+          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'An unexpected error occurred with Google Sign-In: $e';
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
+          _errorMessage = 'An unexpected error occurred with Google Sign-In';
           _isLoading = false;
         });
       }
@@ -75,27 +155,20 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       await _supabase.auth.signInWithOAuth(
         OAuthProvider.apple,
-        // For web, redirectTo can be null to use Supabase dashboard settings.
-        // For mobile, specify your custom deep link.
         redirectTo: kIsWeb ? null : 'com.zeyra.app://login-callback',
       );
-
-      // The auth state listener (AuthNotifier) will handle navigation
+      // Auth listener will handle the callback
     } on AuthException catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.message;
+          _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'An unexpected error occurred with Apple Sign-In: $e';
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
+          _errorMessage = 'An unexpected error occurred with Apple Sign-In';
           _isLoading = false;
         });
       }
@@ -105,159 +178,117 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.white,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.paddingXL),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // App branding/logo
-                  _buildHeader(),
-                  const SizedBox(height: AppSpacing.xxxl),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.screenPaddingHorizontal,
+            vertical: AppSpacing.screenPaddingVertical,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AppSpacing.gapXXL),
 
-                  // Error message
-                  if (_errorMessage != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.paddingMD),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-                      ),
-                      child: Text(
-                        _errorMessage!,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.error,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.gapXL),
-                  ],
-
-                  // OAuth buttons
-                  if (_isLoading)
-                    const Center(
-                      child: CircularProgressIndicator(),
-                    )
-                  else ...[
-                    _buildAppleButton(),
-                    const SizedBox(height: AppSpacing.gapMD),
-                    _buildGoogleButton(),
-                  ],
-
-                  const SizedBox(height: AppSpacing.xxxl),
-
-                  // Terms and privacy notice
-                  _buildTermsNotice(),
-                ],
+              // Heading
+              Text(
+                "Let's Secure Your Journey",
+                style: AppTypography.headlineLarge.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 26,                
+                ),
               ),
-            ),
+
+              const SizedBox(height: AppSpacing.gapSM),
+
+              // Subtitle
+              Text(
+                'Create an account to save your progress and keep your data safe.',
+                style: AppTypography.bodyLarge.copyWith(
+                  fontSize: 18,
+                ),
+              ),
+
+              // Error message
+              if (_errorMessage != null) ...[
+                const SizedBox(height: AppSpacing.gapLG),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.paddingMD),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: AppEffects.roundedMD,
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+
+              // Mascot image
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.paddingLG,
+                    ),
+                    child: Image.asset(
+                      'assets/images/OnboardingAuth.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+
+              // OAuth buttons
+              if (_isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSpacing.paddingXL),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else ...[
+                // Sign in with Apple - Black button variant
+                SizedBox(
+                  width: double.infinity,
+                  height: AppSpacing.buttonHeightXXL,
+                  child: SignInButton(
+                    Buttons.appleDark,
+                    onPressed: _signInWithApple,
+                    text: 'Sign in with Apple',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppEffects.roundedCircle,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.gapXL),
+
+                // Sign in with Google - Official styling from sign_in_button
+                SizedBox(
+                  width: double.infinity,
+                  height: AppSpacing.buttonHeightXXL,
+                  child: SignInButton(
+                    Buttons.googleDark,
+                    onPressed: _signInWithGoogle,
+                    text: 'Sign in with Google',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppEffects.roundedCircle,
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: AppSpacing.screenPaddingVertical),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        // App logo placeholder
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AppColors.primaryLight,
-            borderRadius: BorderRadius.circular(AppEffects.radiusXL),
-          ),
-          child: Icon(
-            Icons.health_and_safety_rounded,
-            size: 60,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.gapXL),
-        Text(
-          'Welcome to Zeyra',
-          style: AppTypography.headlineLarge.copyWith(
-            color: AppColors.textPrimary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: AppSpacing.gapSM),
-        Text(
-          'Your secure pregnancy health companion',
-          style: AppTypography.bodyLarge.copyWith(
-            color: AppColors.textSecondary,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAppleButton() {
-    return SizedBox(
-      height: AppSpacing.buttonHeightLG,
-      child: ElevatedButton.icon(
-        onPressed: _signInWithApple,
-        icon: const Icon(Icons.apple_rounded, size: 24),
-        label: Text(
-          'Continue with Apple',
-          style: AppTypography.labelLarge.copyWith(
-            color: AppColors.white,
-          ),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
-          foregroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGoogleButton() {
-    return SizedBox(
-      height: AppSpacing.buttonHeightLG,
-      child: OutlinedButton.icon(
-        onPressed: _signInWithGoogle,
-        icon: Image.network(
-          'https://www.google.com/favicon.ico',
-          width: 20,
-          height: 20,
-          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 24),
-        ),
-        label: Text(
-          'Continue with Google',
-          style: AppTypography.labelLarge.copyWith(
-            color: AppColors.textPrimary,
-          ),
-        ),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: BorderSide(color: AppColors.border, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTermsNotice() {
-    return Text(
-      'By continuing, you agree to our Terms of Service and Privacy Policy',
-      style: AppTypography.bodySmall.copyWith(
-        color: AppColors.textSecondary,
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
 }
