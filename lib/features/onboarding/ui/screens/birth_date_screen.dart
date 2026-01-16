@@ -31,7 +31,7 @@ class _BirthDateScreenState extends ConsumerState<BirthDateScreen> {
   @override
   void initState() {
     super.initState();
-    // Default to a reasonable age (20 years ago)
+    // Default to a reasonable age (25 years ago)
     _selectedDate = DateTime.now().subtract(const Duration(days: 365 * 25));
 
     // Load existing data after async provider is ready
@@ -133,10 +133,10 @@ class _BirthDateScreenState extends ConsumerState<BirthDateScreen> {
   }
 
   Widget _buildDatePicker() {
-    // Birth date constraints: must be at least 13 years old, max 100 years ago
+    // Birth date constraints: must be at least 18 years old, max 100 years ago
     final minDate = DateTime.now().subtract(const Duration(days: 365 * 100));
-    final maxDate = DateTime.now().subtract(const Duration(days: 365 * 13));
-    final defaultDate = DateTime.now().subtract(const Duration(days: 365 * 20));
+    final maxDate = DateTime.now().subtract(const Duration(days: 365 * 18));
+    final defaultDate = DateTime.now().subtract(const Duration(days: 365 * 25));
 
     return CustomDatePicker(
       minDate: minDate,

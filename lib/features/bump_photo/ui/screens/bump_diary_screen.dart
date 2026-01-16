@@ -38,25 +38,7 @@ class BumpDiaryScreen extends ConsumerWidget {
       body: stateAsync.when(
         data: (state) => _buildBody(context, ref, state),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Failed to load bump diary: $error',
-                style: AppTypography.bodyLarge.copyWith(color: AppColors.error),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.gapLG),
-              ElevatedButton(
-                onPressed: () {
-                  ref.invalidate(bumpPhotoProvider);
-                },
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+        error: (error, stack) => _buildErrorState(context, ref, error),
       ),
       // Bottom nav bar is provided by MainShell
     );
@@ -112,5 +94,60 @@ class BumpDiaryScreen extends ConsumerWidget {
 
   void _navigateToEdit(BuildContext context, int weekNumber) {
     context.push(ToolRoutes.bumpDiaryEditPath(weekNumber));
+  }
+
+  /// Build error state with appropriate messaging.
+  ///
+  /// Shows a user-friendly message when pregnancy data is missing,
+  /// rather than exposing internal error details.
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, Object error) {
+    // Check if this is a pregnancy-not-found error
+    final isPregnancyMissing = error.toString().contains('pregnancy');
+    
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.paddingXL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isPregnancyMissing ? Icons.sync_problem_rounded : Icons.error_outline,
+              size: 64,
+              color: isPregnancyMissing 
+                  ? AppColors.warning.withValues(alpha: 0.7) 
+                  : AppColors.error,
+            ),
+            const SizedBox(height: AppSpacing.gapLG),
+            Text(
+              isPregnancyMissing 
+                  ? 'Pregnancy Data Missing'
+                  : 'Unable to Load Bump Diary',
+              style: AppTypography.headlineSmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.gapMD),
+            Text(
+              isPregnancyMissing
+                  ? 'Your pregnancy data could not be found. Please go to the Baby tab to set up your pregnancy.'
+                  : 'Something went wrong. Please try again.',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.gapXL),
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.invalidate(bumpPhotoProvider);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

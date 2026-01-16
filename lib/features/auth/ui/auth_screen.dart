@@ -13,6 +13,7 @@ import '../../../app/theme/app_colors.dart';
 import '../../../app/theme/app_effects.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
+import '../../../core/di/main_providers.dart';
 import '../../../features/onboarding/logic/onboarding_providers.dart';
 
 /// Authentication screen with OAuth-only login (Apple + Google).
@@ -61,6 +62,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   /// Handle successful authentication.
+  ///
+  /// Checks if onboarding is complete in metadata AND verifies local entities exist.
+  /// If metadata says complete but local entities are missing, re-runs finalization.
   Future<void> _handleAuthSuccess() async {
     if (!mounted) return;
 
@@ -69,13 +73,38 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       final authNotifier = ref.read(authNotifierProvider);
 
-      // Check if this user already completed onboarding
+      // Check if this user already completed onboarding (from Supabase metadata)
       await authNotifier.checkOnboardingStatus();
 
       if (authNotifier.hasCompletedOnboarding) {
-        // Existing user - go to main app
+        // Metadata says complete - verify local entities actually exist
+        final hasLocalEntities = await _verifyLocalEntitiesExist();
+        
+        if (hasLocalEntities) {
+          // All good - go to main app
+          if (mounted) {
+            context.go(MainRoutes.today);
+          }
+          return;
+        }
+        
+        // Metadata says complete but local entities missing!
+        // This can happen after reinstall or data loss.
+        // Try to recreate entities using available onboarding data.
+        final recreated = await _recreateLocalEntities();
+        if (recreated) {
+          if (mounted) {
+            context.go(MainRoutes.today);
+          }
+          return;
+        }
+        
+        // Failed to recreate - show error
         if (mounted) {
-          context.go(MainRoutes.today);
+          setState(() {
+            _errorMessage = 'Your data could not be restored. Please complete setup again.';
+            _isLoading = false;
+          });
         }
         return;
       }
@@ -112,6 +141,41 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  /// Verify that required local entities (UserProfile and Pregnancy) exist.
+  Future<bool> _verifyLocalEntitiesExist() async {
+    try {
+      // Check for active pregnancy - this implicitly requires user profile too
+      final getActivePregnancyUseCase = await ref.read(getActivePregnancyUseCaseProvider.future);
+      final pregnancy = await getActivePregnancyUseCase.execute();
+      return pregnancy != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Attempt to recreate local entities using available onboarding data.
+  ///
+  /// This is a recovery path for users whose local data was lost but
+  /// Supabase metadata says onboarding was completed.
+  Future<bool> _recreateLocalEntities() async {
+    try {
+      final onboardingNotifier = await ref.read(onboardingNotifierProviderAsync.future);
+      final onboardingService = await ref.read(onboardingServiceProvider.future);
+      
+      // Check if we have onboarding data to work with
+      final data = onboardingNotifier.data;
+      if (!data.isComplete) {
+        // No complete onboarding data available - can't recreate
+        return false;
+      }
+      
+      // Try to recreate entities
+      return await onboardingService.finalizeOnboarding(data);
+    } catch (e) {
+      return false;
     }
   }
 
