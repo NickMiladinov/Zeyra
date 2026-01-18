@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../baby/logic/pregnancy_data_provider.dart';
+
 /// Home screen (Today tab).
 ///
 /// The bottom navigation bar is provided by [MainShell].
@@ -10,8 +12,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<void> _signOut(BuildContext context) async {
+  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     try {
+      // Invalidate pregnancy provider to clear cached data on logout
+      // This ensures next user gets fresh data, not stale cached data
+      ref.invalidate(pregnancyDataProvider);
+      
       await Supabase.instance.client.auth.signOut();
       // AuthNotifier will handle the redirect to auth screen
     } on AuthException catch (e) {
@@ -35,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => _signOut(context),
+            onPressed: () => _signOut(context, ref),
           ),
         ],
       ),

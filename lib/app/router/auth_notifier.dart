@@ -14,6 +14,11 @@ const String _kOnboardingCompletedKey = 'onboarding_completed';
 /// SharedPreferences key for saved onboarding step.
 const String _kSavedOnboardingStepKey = 'onboarding_current_step';
 
+/// SharedPreferences key for device onboarding completion.
+/// This flag persists even after logout to indicate that this device
+/// has been onboarded at least once.
+const String _kDeviceOnboardedKey = 'device_onboarding_completed';
+
 /// Notifies listeners when authentication state changes.
 ///
 /// This is used by go_router's `refreshListenable` to trigger route
@@ -29,6 +34,8 @@ class AuthNotifier extends ChangeNotifier {
   bool _isCheckingOnboarding = false;
   int _savedOnboardingStep = 0;
   bool _onboardingStepLoaded = false;
+  bool _deviceOnboarded = false;
+  bool _deviceOnboardedLoaded = false;
 
   StreamSubscription<AuthState>? _authSubscription;
 
@@ -37,8 +44,9 @@ class AuthNotifier extends ChangeNotifier {
   }
 
   void _initialize() {
-    // Load saved onboarding step from SharedPreferences
+    // Load saved onboarding step and device onboarded flag from SharedPreferences
     _loadSavedOnboardingStep();
+    _loadDeviceOnboardedFlag();
 
     // Check if Supabase is available before accessing auth
     if (!DIGraph.isSupabaseAvailable) {
@@ -136,6 +144,15 @@ class AuthNotifier extends ChangeNotifier {
   /// Whether the saved onboarding step has been loaded.
   bool get onboardingStepLoaded => _onboardingStepLoaded;
 
+  /// Whether this device has completed onboarding at least once.
+  ///
+  /// This flag persists even after logout. When true, logged out users
+  /// should be directed to the auth screen instead of onboarding.
+  bool get deviceOnboarded => _deviceOnboarded;
+
+  /// Whether the device onboarded flag has been loaded.
+  bool get deviceOnboardedLoaded => _deviceOnboardedLoaded;
+
   /// Load saved onboarding step from SharedPreferences.
   ///
   /// This is called asynchronously during initialization.
@@ -171,6 +188,37 @@ class AuthNotifier extends ChangeNotifier {
   void clearSavedOnboardingStep() {
     _savedOnboardingStep = 0;
     logger.debug('AuthNotifier: Saved onboarding step cleared');
+  }
+
+  /// Load the device onboarded flag from SharedPreferences.
+  Future<void> _loadDeviceOnboardedFlag() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _deviceOnboarded = prefs.getBool(_kDeviceOnboardedKey) ?? false;
+      _deviceOnboardedLoaded = true;
+      logger.debug('AuthNotifier: Device onboarded flag loaded - onboarded: $_deviceOnboarded');
+      notifyListeners();
+    } catch (e) {
+      logger.warning('AuthNotifier: Failed to load device onboarded flag', error: e);
+      _deviceOnboarded = false;
+      _deviceOnboardedLoaded = true;
+    }
+  }
+
+  /// Mark this device as having completed onboarding.
+  ///
+  /// This flag persists even after logout. Once set, users who log out
+  /// will be directed to the auth screen instead of onboarding.
+  Future<void> markDeviceOnboarded() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_kDeviceOnboardedKey, true);
+      _deviceOnboarded = true;
+      logger.info('AuthNotifier: Device marked as onboarded');
+      notifyListeners();
+    } catch (e) {
+      logger.error('AuthNotifier: Failed to mark device as onboarded', error: e);
+    }
   }
 
   /// Load onboarding completion status from Supabase user metadata.

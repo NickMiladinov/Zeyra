@@ -51,8 +51,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     observers: [TalkerRouteObserver(logger.talker)],
     errorBuilder: (context, state) => ErrorPage(error: state.error),
     redirect: (context, state) {
+      // Wait for async SharedPreferences data to load before making routing decisions.
+      // The notifyListeners() calls in the async load methods will re-trigger
+      // redirect evaluation once the data is ready.
+      if (!authNotifier.onboardingStepLoaded || !authNotifier.deviceOnboardedLoaded) {
+        logger.debug('Router redirect: Waiting for async initialization to complete');
+        return null; // Defer redirect until data is loaded
+      }
+
       final isLoggedIn = authNotifier.isAuthenticated;
       final hasCompletedOnboarding = authNotifier.hasCompletedOnboarding;
+      final deviceOnboarded = authNotifier.deviceOnboarded;
       final savedStep = authNotifier.savedOnboardingStep;
       final isAuthRoute = state.matchedLocation == AuthRoutes.auth;
       final isOnboardingRoute = state.matchedLocation.startsWith(OnboardingRoutes.base);
@@ -67,10 +76,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return OnboardingRoutes.welcome;
       }
 
-      // Not logged in and not on onboarding → redirect to onboarding
+      // Not logged in - check if device has been onboarded before
       if (!isLoggedIn && !isOnboardingRoute && !isAuthRoute) {
-        logger.debug('Router redirect: Not authenticated, redirecting to onboarding');
-        return getOnboardingRoute();
+        if (deviceOnboarded) {
+          // Device was onboarded before - go to auth screen
+          logger.debug('Router redirect: Not authenticated, device onboarded, redirecting to auth');
+          return AuthRoutes.auth;
+        } else {
+          // Fresh device - go to onboarding
+          logger.debug('Router redirect: Not authenticated, new device, redirecting to onboarding');
+          return getOnboardingRoute();
+        }
       }
 
       // Logged in but onboarding not complete → redirect to onboarding

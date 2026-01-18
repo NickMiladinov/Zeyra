@@ -47,4 +47,11 @@ class PregnancyDao extends DatabaseAccessor<AppDatabase>
   Future<int> deletePregnancy(String id) {
     return (delete(pregnancies)..where((p) => p.id.equals(id))).go();
   }
+
+  /// Delete all pregnancies for a specific user.
+  ///
+  /// Used to clean up stale data when a different user logs in.
+  Future<int> deletePregnanciesByUserId(String userId) {
+    return (delete(pregnancies)..where((p) => p.userId.equals(userId))).go();
+  }
 }

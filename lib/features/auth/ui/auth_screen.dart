@@ -14,6 +14,7 @@ import '../../../app/theme/app_effects.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../app/theme/app_typography.dart';
 import '../../../core/di/main_providers.dart';
+import '../../../features/baby/logic/pregnancy_data_provider.dart';
 import '../../../features/onboarding/logic/onboarding_providers.dart';
 
 /// Authentication screen with OAuth-only login (Apple + Google).
@@ -34,6 +35,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   StreamSubscription<AuthState>? _authSubscription;
+  
+  /// Flag to prevent concurrent calls to _handleAuthSuccess (race condition guard)
+  bool _isHandlingAuth = false;
 
   final _supabase = Supabase.instance.client;
 
@@ -41,6 +45,21 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   void initState() {
     super.initState();
     _setupAuthListener();
+    // Check if already authenticated (e.g., returning from onboarding flow)
+    _checkExistingAuth();
+  }
+
+  /// Check if user is already authenticated and handle accordingly.
+  ///
+  /// This handles the case where a user is already logged in but arrives
+  /// at the auth screen (e.g., going through onboarding after logging in
+  /// on a device that was previously onboarded by another user).
+  Future<void> _checkExistingAuth() async {
+    final session = _supabase.auth.currentSession;
+    if (session != null) {
+      // User is already authenticated - process as if they just signed in
+      await _handleAuthSuccess();
+    }
   }
 
   @override
@@ -67,6 +86,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   /// If metadata says complete but local entities are missing, re-runs finalization.
   Future<void> _handleAuthSuccess() async {
     if (!mounted) return;
+    
+    // Guard against concurrent calls (race condition from listener + checkExistingAuth)
+    if (_isHandlingAuth) return;
+    _isHandlingAuth = true;
 
     setState(() => _isLoading = true);
 
@@ -81,7 +104,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         final hasLocalEntities = await _verifyLocalEntitiesExist();
         
         if (hasLocalEntities) {
-          // All good - go to main app
+          // All good - ensure device is marked as onboarded and go to main app
+          await authNotifier.markDeviceOnboarded();
+          // Invalidate pregnancy provider to ensure fresh data is loaded
+          ref.invalidate(pregnancyDataProvider);
           if (mounted) {
             context.go(MainRoutes.today);
           }
@@ -93,6 +119,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         // Try to recreate entities using available onboarding data.
         final recreated = await _recreateLocalEntities();
         if (recreated) {
+          // markDeviceOnboarded is called in finalizeOnboarding
+          // Invalidate pregnancy provider to ensure fresh data is loaded
+          ref.invalidate(pregnancyDataProvider);
           if (mounted) {
             context.go(MainRoutes.today);
           }
@@ -109,19 +138,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         return;
       }
 
-      // New user or incomplete onboarding - finalize it
+      // New user or incomplete onboarding - check if we have data to finalize
       final onboardingNotifier = await ref.read(onboardingNotifierProviderAsync.future);
-      final onboardingService = await ref.read(onboardingServiceProvider.future);
-
-      // Get the collected onboarding data
       final data = onboardingNotifier.data;
 
-      // Finalize onboarding (create UserProfile + Pregnancy)
+      // Check if onboarding data is complete
+      if (!data.isComplete) {
+        // No complete onboarding data - redirect to onboarding flow
+        // User is already authenticated, so they'll skip the auth step at the end
+        if (mounted) {
+          context.go(OnboardingRoutes.welcome);
+        }
+        return;
+      }
+
+      // We have complete data - finalize it
+      final onboardingService = await ref.read(onboardingServiceProvider.future);
       final success = await onboardingService.finalizeOnboarding(data);
 
       if (success) {
         // Clear local onboarding data
         await onboardingNotifier.clearAfterFinalization();
+        
+        // Invalidate pregnancy provider to ensure fresh data is loaded
+        // when the baby tab is accessed (prevents stale data from previous user)
+        ref.invalidate(pregnancyDataProvider);
 
         if (mounted) {
           context.go(MainRoutes.today);
@@ -141,6 +182,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _isLoading = false;
         });
       }
+    } finally {
+      // Always reset the guard flag to allow future auth attempts
+      _isHandlingAuth = false;
     }
   }
 

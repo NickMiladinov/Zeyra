@@ -73,6 +73,10 @@ class OnboardingService {
       await _authNotifier.completeOnboarding();
       _logger.info('Onboarding marked as complete');
 
+      // 5. Mark this device as onboarded (persists after logout)
+      await _authNotifier.markDeviceOnboarded();
+      _logger.info('Device marked as onboarded');
+
       return true;
     } catch (e, stackTrace) {
       _logger.error(

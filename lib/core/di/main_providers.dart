@@ -268,6 +268,7 @@ final userProfileRepositoryProvider = FutureProvider<UserProfileRepository>((ref
 
   return UserProfileRepositoryImpl(
     dao: db.userProfileDao,
+    pregnancyDao: db.pregnancyDao,
     logger: logging,
   );
 });
