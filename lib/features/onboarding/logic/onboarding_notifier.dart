@@ -310,11 +310,6 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   // Early Auth Flow
   // ---------------------------------------------------------------------------
 
-  /// Set early auth flow mode (when user presses "I already have an account").
-  void setEarlyAuthFlow(bool isEarlyAuth) {
-    state = state.copyWith(isEarlyAuthFlow: isEarlyAuth);
-  }
-
   /// Clear all onboarding data and reset to initial state.
   ///
   /// Used when a new account is created via "I already have an account" flow.

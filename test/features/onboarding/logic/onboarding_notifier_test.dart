@@ -367,15 +367,9 @@ void main() {
     // -------------------------------------------------------------------------
     // Early Auth Flow Tests
     // -------------------------------------------------------------------------
-    group('Early Auth Flow', () {
+    group('Clear and Restart', () {
       setUp(() {
         notifier = createNotifier();
-      });
-
-      test('should set early auth flow flag', () {
-        notifier.setEarlyAuthFlow(true);
-
-        expect(notifier.state.isEarlyAuthFlow, isTrue);
       });
 
       test('should clear and restart', () async {
@@ -394,12 +388,12 @@ void main() {
       test('should reset to initial state', () async {
         // Set some state
         await notifier.updateName('Jane');
-        notifier.setEarlyAuthFlow(true);
 
         // Reset
         await notifier.clearAndRestart();
 
-        expect(notifier.state.isEarlyAuthFlow, isFalse);
+        expect(notifier.state.data.firstName, isNull);
+        expect(notifier.state.currentStep, equals(0));
       });
     });
 

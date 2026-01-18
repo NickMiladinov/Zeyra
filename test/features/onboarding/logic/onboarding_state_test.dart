@@ -31,11 +31,6 @@ void main() {
         expect(state.error, isNull);
       });
 
-      test('should have isEarlyAuthFlow false initially', () {
-        final state = OnboardingState.initial();
-
-        expect(state.isEarlyAuthFlow, isFalse);
-      });
     });
 
     // -------------------------------------------------------------------------
@@ -141,21 +136,11 @@ void main() {
         expect(cleared.error, isNull);
       });
 
-      test('should update isEarlyAuthFlow', () {
-        final original = OnboardingState.initial();
-
-        final updated = original.copyWith(isEarlyAuthFlow: true);
-
-        expect(updated.isEarlyAuthFlow, isTrue);
-        expect(original.isEarlyAuthFlow, isFalse); // Original unchanged
-      });
-
       test('should preserve unspecified fields', () {
         final original = OnboardingState(
           data: const OnboardingData(firstName: 'Jane', currentStep: 5),
           isLoading: true,
           error: 'Some error',
-          isEarlyAuthFlow: true,
         );
 
         final updated = original.copyWith(isLoading: false);
@@ -164,7 +149,6 @@ void main() {
         expect(updated.data.currentStep, equals(5));
         expect(updated.isLoading, isFalse);
         expect(updated.error, equals('Some error'));
-        expect(updated.isEarlyAuthFlow, isTrue);
       });
     });
 
@@ -177,14 +161,12 @@ void main() {
           data: const OnboardingData(firstName: 'Jane', currentStep: 5),
           isLoading: true,
           error: 'Error',
-          isEarlyAuthFlow: true,
         );
 
         final state2 = OnboardingState(
           data: const OnboardingData(firstName: 'Jane', currentStep: 5),
           isLoading: true,
           error: 'Error',
-          isEarlyAuthFlow: true,
         );
 
         expect(state1, equals(state2));

@@ -13,14 +13,10 @@ class OnboardingState {
   /// Error message if an operation failed.
   final String? error;
 
-  /// Whether this is an early auth flow ("I already have an account").
-  final bool isEarlyAuthFlow;
-
   const OnboardingState({
     required this.data,
     this.isLoading = false,
     this.error,
-    this.isEarlyAuthFlow = false,
   });
 
   /// Create initial state with empty onboarding data.
@@ -48,14 +44,12 @@ class OnboardingState {
     OnboardingData? data,
     bool? isLoading,
     String? error,
-    bool? isEarlyAuthFlow,
     bool clearError = false,
   }) {
     return OnboardingState(
       data: data ?? this.data,
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
-      isEarlyAuthFlow: isEarlyAuthFlow ?? this.isEarlyAuthFlow,
     );
   }
 
@@ -66,15 +60,10 @@ class OnboardingState {
           runtimeType == other.runtimeType &&
           data == other.data &&
           isLoading == other.isLoading &&
-          error == other.error &&
-          isEarlyAuthFlow == other.isEarlyAuthFlow;
+          error == other.error;
 
   @override
-  int get hashCode =>
-      data.hashCode ^
-      isLoading.hashCode ^
-      error.hashCode ^
-      isEarlyAuthFlow.hashCode;
+  int get hashCode => data.hashCode ^ isLoading.hashCode ^ error.hashCode;
 
   @override
   String toString() =>

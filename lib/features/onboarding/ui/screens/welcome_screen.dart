@@ -86,8 +86,8 @@ class WelcomeScreen extends ConsumerWidget {
         ),
         secondaryAction: GestureDetector(
           onTap: () {
-            // Set early auth flow flag and navigate to auth
-            notifier.setEarlyAuthFlow(true);
+            // Navigate directly to auth - the auth screen handles returning users
+            // by checking Supabase metadata for onboarding completion status
             context.go(AuthRoutes.auth);
           },
           child: Text(

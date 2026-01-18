@@ -180,7 +180,6 @@ flutter test --preset=onboarding
 | 3.1.1.1 | should create initial state with empty data | Factory creates defaults | Initial state |
 | 3.1.1.2 | should have isLoading false initially | Not loading by default | Loading flag |
 | 3.1.1.3 | should have null error initially | No error by default | Error state |
-| 3.1.1.4 | should have isEarlyAuthFlow false initially | Normal flow by default | Auth flow flag |
 
 #### 3.1.2 Computed Properties Group (4 tests)
 
