@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:purchases_ui_flutter/purchases_ui_flutter.dart';
@@ -274,7 +275,7 @@ class PaymentService {
   /// Purchase a package (subscription product).
   ///
   /// Returns CustomerInfo with updated entitlements after purchase.
-  /// Throws PurchasesException if purchase fails.
+  /// Throws PlatformException if purchase fails.
   Future<CustomerInfo> purchase(Package package) async {
     _ensureInitialized();
     try {
@@ -282,8 +283,18 @@ class PaymentService {
       final result = await Purchases.purchasePackage(package);
       _logger.info('Purchase completed successfully');
       return result;
-    } on PurchasesErrorCode catch (e) {
-      _logger.warning('Purchase cancelled or failed: $e');
+    } on PlatformException catch (e) {
+      // RevenueCat throws PlatformException with error details
+      final errorCode = parseErrorCode(e);
+      final userCancelled = _didUserCancel(e);
+
+      if (userCancelled) {
+        _logger.info('Purchase cancelled by user');
+      } else {
+        _logger.warning(
+          'Purchase failed: ${errorCode?.name ?? e.code} - ${e.message}',
+        );
+      }
       rethrow;
     } catch (e, stackTrace) {
       _logger.error(
@@ -451,6 +462,111 @@ class PaymentService {
         return 'This receipt is already in use by another user';
       default:
         return 'Purchase failed. Please try again.';
+    }
+  }
+
+  /// Parse PurchasesErrorCode from a PlatformException.
+  ///
+  /// RevenueCat throws PlatformException with error details in the `details` map.
+  /// Returns null if the error code cannot be parsed.
+  static PurchasesErrorCode? parseErrorCode(PlatformException exception) {
+    final details = exception.details;
+    if (details is! Map) return null;
+
+    // Try 'readableErrorCode' first (more reliable)
+    final readableCode = details['readableErrorCode'] as String?;
+    if (readableCode != null) {
+      return _errorCodeFromString(readableCode);
+    }
+
+    // Fall back to numeric code
+    final code = details['code'] as int?;
+    if (code != null) {
+      return _errorCodeFromInt(code);
+    }
+
+    return null;
+  }
+
+  /// Check if the user cancelled the purchase from a PlatformException.
+  static bool _didUserCancel(PlatformException exception) {
+    final details = exception.details;
+    if (details is Map) {
+      return details['userCancelled'] == true;
+    }
+    return false;
+  }
+
+  /// Get user-friendly error message from a PlatformException.
+  ///
+  /// Extracts the error code and returns an appropriate message.
+  static String getErrorMessageFromException(PlatformException exception) {
+    // Check if user cancelled
+    if (_didUserCancel(exception)) {
+      return 'Purchase was cancelled';
+    }
+
+    // Try to parse the error code
+    final errorCode = parseErrorCode(exception);
+    if (errorCode != null) {
+      return getPurchaseErrorMessage(errorCode);
+    }
+
+    // Fall back to the exception message if available
+    if (exception.message != null && exception.message!.isNotEmpty) {
+      return exception.message!;
+    }
+
+    return 'Purchase failed. Please try again.';
+  }
+
+  /// Map readable error code string to PurchasesErrorCode enum.
+  static PurchasesErrorCode? _errorCodeFromString(String code) {
+    // RevenueCat uses PascalCase for readableErrorCode
+    switch (code) {
+      case 'PurchaseCancelledError':
+        return PurchasesErrorCode.purchaseCancelledError;
+      case 'NetworkError':
+        return PurchasesErrorCode.networkError;
+      case 'ProductNotAvailableForPurchaseError':
+        return PurchasesErrorCode.productNotAvailableForPurchaseError;
+      case 'PurchaseNotAllowedError':
+        return PurchasesErrorCode.purchaseNotAllowedError;
+      case 'PurchaseInvalidError':
+        return PurchasesErrorCode.purchaseInvalidError;
+      case 'StoreProblemError':
+        return PurchasesErrorCode.storeProblemError;
+      case 'ReceiptAlreadyInUseError':
+        return PurchasesErrorCode.receiptAlreadyInUseError;
+      case 'UnknownError':
+        return PurchasesErrorCode.unknownError;
+      default:
+        return null;
+    }
+  }
+
+  /// Map numeric error code to PurchasesErrorCode enum.
+  static PurchasesErrorCode? _errorCodeFromInt(int code) {
+    // RevenueCat error codes (from SDK documentation)
+    switch (code) {
+      case 1:
+        return PurchasesErrorCode.purchaseCancelledError;
+      case 2:
+        return PurchasesErrorCode.storeProblemError;
+      case 3:
+        return PurchasesErrorCode.purchaseNotAllowedError;
+      case 4:
+        return PurchasesErrorCode.purchaseInvalidError;
+      case 5:
+        return PurchasesErrorCode.productNotAvailableForPurchaseError;
+      case 6:
+        return PurchasesErrorCode.productAlreadyPurchasedError;
+      case 7:
+        return PurchasesErrorCode.receiptAlreadyInUseError;
+      case 10:
+        return PurchasesErrorCode.networkError;
+      default:
+        return null;
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
@@ -240,11 +241,20 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         );
         return false;
       }
-    } on PurchasesErrorCode catch (e) {
-      _logger.warning('Purchase cancelled or failed: $e');
+    } on PlatformException catch (e) {
+      // RevenueCat throws PlatformException with error details
+      final errorMessage = PaymentService.getErrorMessageFromException(e);
+      final userCancelled = e.details is Map && e.details['userCancelled'] == true;
+      
+      if (userCancelled) {
+        _logger.info('Purchase cancelled by user');
+      } else {
+        _logger.warning('Purchase failed: $errorMessage');
+      }
+      
       state = state.copyWith(
         isLoading: false,
-        error: _getPurchaseErrorMessage(e),
+        error: userCancelled ? null : errorMessage,
       );
       return false;
     } catch (e, stackTrace) {
@@ -287,22 +297,6 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
         error: 'Failed to restore purchases. Please try again.',
       );
       return false;
-    }
-  }
-
-  /// Get user-friendly error message for purchase errors.
-  String _getPurchaseErrorMessage(PurchasesErrorCode errorCode) {
-    switch (errorCode) {
-      case PurchasesErrorCode.purchaseCancelledError:
-        return 'Purchase was cancelled';
-      case PurchasesErrorCode.networkError:
-        return 'Network error. Please check your connection.';
-      case PurchasesErrorCode.productNotAvailableForPurchaseError:
-        return 'This product is not available for purchase';
-      case PurchasesErrorCode.purchaseNotAllowedError:
-        return 'Purchases are not allowed on this device';
-      default:
-        return 'Purchase failed. Please try again.';
     }
   }
 

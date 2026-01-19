@@ -38,6 +38,10 @@ class _DueDateScreenState extends ConsumerState<DueDateScreen> {
   /// The calculated or entered due date.
   DateTime? _dueDate;
 
+  /// Whether initial data has been loaded from storage.
+  /// Used to force date picker rebuild when saved data is loaded.
+  bool _dataLoaded = false;
+
   /// Date format for display.
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -53,26 +57,17 @@ class _DueDateScreenState extends ConsumerState<DueDateScreen> {
       final notifierAsync = ref.read(onboardingNotifierProviderAsync);
       notifierAsync.whenData((notifier) {
         final existingDueDate = notifier.data.dueDate;
-        final existingStartDate = notifier.data.startDate;
 
-        if (existingDueDate != null || existingStartDate != null) {
-          setState(() {
-            // Determine which mode the user was in based on saved data
-            // If startDate (LMP) exists, they were in LMP mode
-            final wasInLMPMode = existingStartDate != null;
-            _isDueDateMode = !wasInLMPMode;
-
-            if (wasInLMPMode) {
-              // User was in LMP mode - restore the LMP date
-              _selectedDate = existingStartDate;
-              _dueDate = existingDueDate ?? _calculateDueDateFromLMP(existingStartDate);
-            } else if (existingDueDate != null) {
-              // User was in due date mode - restore the due date
-              _selectedDate = existingDueDate;
-              _dueDate = existingDueDate;
-            }
-          });
-        }
+        setState(() {
+          _dataLoaded = true;
+          if (existingDueDate != null) {
+            // Always default to due date mode when returning to this screen
+            _isDueDateMode = true;
+            // Show the existing due date in the picker
+            _selectedDate = existingDueDate;
+            _dueDate = existingDueDate;
+          }
+        });
       });
     });
   }
@@ -229,8 +224,9 @@ class _DueDateScreenState extends ConsumerState<DueDateScreen> {
     }
 
     // Use the current _selectedDate as the default (preserves state)
+    // Key includes _dataLoaded to force rebuild when saved data is loaded
     return CustomDatePicker(
-      key: ValueKey(_isDueDateMode), // Force rebuild when mode changes
+      key: ValueKey('${_isDueDateMode}_$_dataLoaded'),
       minDate: minDate,
       maxDate: maxDate,
       defaultDate: _selectedDate,
