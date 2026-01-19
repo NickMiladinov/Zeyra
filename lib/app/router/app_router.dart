@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../../main.dart' show logger;
+import '../../core/di/main_providers.dart';
 import '../../features/auth/ui/auth_screen.dart';
+import '../../features/baby/logic/pregnancy_data_provider.dart';
 import '../../features/dashboard/ui/screens/home_screen.dart';
 import '../../features/baby/ui/screens/pregnancy_data_screen.dart';
 import '../../features/tools/ui/screens/tools_screen.dart';
@@ -97,12 +99,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Logged in + onboarding complete + on onboarding route → go to main
       if (isLoggedIn && hasCompletedOnboarding && isOnboardingRoute) {
+        // Invalidate providers to ensure fresh data for the logged-in user
+        ref.invalidate(appDatabaseProvider);
+        ref.invalidate(pregnancyDataProvider);
+        
         logger.debug('Router redirect: Onboarding complete, redirecting to main');
         return MainRoutes.today;
       }
 
       // Logged in + onboarding complete + on auth route → go to main
       if (isLoggedIn && hasCompletedOnboarding && isAuthRoute) {
+        // CRITICAL: Invalidate database and pregnancy providers BEFORE redirecting.
+        // This ensures the correct user's database is opened when the main app loads.
+        // Previously, this was done in AuthScreen._handleAuthSuccess(), but that ran
+        // AFTER the router redirect, causing stale data from the previous user.
+        ref.invalidate(appDatabaseProvider);
+        ref.invalidate(pregnancyDataProvider);
+        
         logger.debug('Router redirect: Already authenticated, redirecting to main');
         return MainRoutes.today;
       }

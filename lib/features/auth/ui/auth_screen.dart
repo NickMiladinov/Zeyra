@@ -100,6 +100,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       await authNotifier.checkOnboardingStatus();
 
       if (authNotifier.hasCompletedOnboarding) {
+        // Invalidate database provider to ensure we get the correct user's database.
+        // This is critical when switching between accounts on the same device.
+        // Without this, the cached database from a previous user could persist.
+        ref.invalidate(appDatabaseProvider);
+        
         // Metadata says complete - verify local entities actually exist
         final hasLocalEntities = await _verifyLocalEntitiesExist();
         
@@ -153,6 +158,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       }
 
       // We have complete data - finalize it
+      
+      // Invalidate auth-dependent providers to force re-creation with authenticated user.
+      // The appDatabaseProvider checks currentUser and may have been cached as "no user"
+      // before the sign-in completed.
+      ref.invalidate(appDatabaseProvider);
+      ref.invalidate(onboardingServiceProvider);
+      
       final onboardingService = await ref.read(onboardingServiceProvider.future);
       final success = await onboardingService.finalizeOnboarding(data);
 

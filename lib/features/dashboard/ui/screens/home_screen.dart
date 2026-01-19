@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../baby/logic/pregnancy_data_provider.dart';
+import '../../../../core/di/di_graph.dart';
 
 /// Home screen (Today tab).
 ///
@@ -14,9 +14,11 @@ class HomeScreen extends ConsumerWidget {
 
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     try {
-      // Invalidate pregnancy provider to clear cached data on logout
-      // This ensures next user gets fresh data, not stale cached data
-      ref.invalidate(pregnancyDataProvider);
+      // Clear encryption keys from memory to prevent unauthorized access.
+      // Keys are still stored securely and will be retrieved on next login.
+      // Note: Provider invalidation happens on login (auth_screen.dart) to ensure
+      // the correct user's database is opened and data is refreshed.
+      DIGraph.clearEncryptionCache();
       
       await Supabase.instance.client.auth.signOut();
       // AuthNotifier will handle the redirect to auth screen
