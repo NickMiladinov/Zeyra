@@ -2,6 +2,9 @@
     <!-- Required for RevenueCat in-app purchases -->
     <uses-permission android:name="com.android.vending.BILLING" />
     
+    <!-- Required for notification permissions on Android 13+ (API level 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    
     <application
         android:label="zeyra"
         android:name="${applicationName}"

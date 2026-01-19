@@ -98,94 +98,99 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   }
 
   Widget _buildPaywall(BuildContext context, dynamic notifier) {
+    // Get the top padding to extend image behind status bar
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Hero image section
-                    _buildHeroSection(),
+      body: Column(
+        children: [
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Hero image section (extends behind status bar)
+                  _buildHeroSection(topPadding),
 
-                    // Content section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.screenPaddingHorizontal,
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: AppSpacing.gapXL),
-
-                          // Title
-                          Text(
-                            'Your Digital Midwife,\nin Your Pocket',
-                            style: AppTypography.displayMedium.copyWith(
-                              fontWeight: FontWeight.w600,
-                              height: 1.2,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: AppSpacing.gapMD),
-
-                          // Subtitle
-                          Text(
-                            'Never stress about "what\'s next." Get a personalized 9-month journey and NHS medical insights.',
-                            style: AppTypography.bodyLarge.copyWith(
-                              color: AppColors.textSecondary,
-                              height: 1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-
-                          const SizedBox(height: AppSpacing.gapXXL),
-
-                          // Subscription options
-                          if (_isLoadingOfferings)
-                            _buildLoadingPlans()
-                          else if (_errorMessage != null)
-                            _buildErrorPlans()
-                          else
-                            _buildSubscriptionPlans(),
-
-                          const SizedBox(height: AppSpacing.gapMD),
-
-                          // Show more plans toggle
-                          _buildShowMorePlans(),
-
-                          const SizedBox(height: AppSpacing.gapXL),
-                        ],
-                      ),
+                  // Content section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.screenPaddingHorizontal,
                     ),
-                  ],
-                ),
+                    child: Column(
+                      children: [
+                        // Title
+                        Text(
+                          'Your Digital Midwife,\nin Your Pocket',
+                          style: AppTypography.displayMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 34,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        const SizedBox(height: AppSpacing.gapXS),
+
+                        // Subtitle
+                        Text(
+                          'Never stress about "what\'s next." Get a personalized 9-month journey and NHS medical insights.',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+
+                        const SizedBox(height: AppSpacing.gapXXL),
+
+                        // Subscription options
+                        if (_isLoadingOfferings)
+                          _buildLoadingPlans()
+                        else if (_errorMessage != null)
+                          _buildErrorPlans()
+                        else
+                          _buildSubscriptionPlans(),
+
+                        const SizedBox(height: AppSpacing.gapMD),
+
+                        // Show more plans toggle
+                        _buildShowMorePlans(),
+
+                        const SizedBox(height: AppSpacing.gapXL),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            // Bottom action area (fixed)
-            _buildBottomActions(notifier),
-          ],
-        ),
+          // Bottom action area (fixed, with SafeArea for bottom)
+          SafeArea(
+            top: false,
+            child: _buildBottomActions(notifier),
+          ),
+        ],
       ),
     );
   }
 
   /// Build the hero image section with journey timeline.
-  Widget _buildHeroSection() {
+  ///
+  /// [topPadding] is the system status bar height to extend the image behind it.
+  Widget _buildHeroSection(double topPadding) {
     return SizedBox(
-      height: 340,
+      // Add top padding to the height so image extends behind status bar
+      height: 340 + topPadding,
       width: double.infinity,
       child: Stack(
         children: [
-          // Hero image
+          // Hero image (fills entire section including status bar area)
           Positioned.fill(
             child: Image.asset(
               'assets/images/OnboardingPaywall.jpg',
               fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
             ),
           ),
         ],
@@ -537,7 +542,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         AppSpacing.screenPaddingHorizontal,
         AppSpacing.paddingMD,
         AppSpacing.screenPaddingHorizontal,
-        AppSpacing.screenPaddingVertical,
+        AppSpacing.paddingXL,
       ),
       decoration: BoxDecoration(
         color: AppColors.white,

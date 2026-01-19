@@ -28,5 +28,8 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<!-- Notification Permission Description -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We'd like to send you helpful reminders for appointments, weekly baby updates, and daily checklists to support you throughout your pregnancy journey.</string>
 </dict>
 </plist>
