@@ -11,7 +11,7 @@
 .idea/
 devtools_options.yaml
 .claude/
-
+.vscode/
 
 # Flutter repo-specific
 /bin/cache/
