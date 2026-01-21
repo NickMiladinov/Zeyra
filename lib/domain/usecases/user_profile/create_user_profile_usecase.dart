@@ -74,10 +74,10 @@ class CreateUserProfileUseCase {
       );
     }
 
-    // Validate names
-    if (firstName.trim().isEmpty || lastName.trim().isEmpty) {
+    // Validate names - firstName is required, lastName is optional (collected later)
+    if (firstName.trim().isEmpty) {
       throw const UserProfileException(
-        'First name and last name cannot be empty.',
+        'First name cannot be empty.',
         UserProfileErrorType.invalidName,
       );
     }

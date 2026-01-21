@@ -17,6 +17,11 @@ presets:
     paths:
       - test/runners/bump_photo/bump_photo_all_test.dart
 
+  # Run all onboarding tests
+  onboarding:
+    paths:
+      - test/runners/onboarding/all_test.dart
+
   # Run only unit tests (fast, no integration/performance)
   unit:
     paths:
@@ -62,6 +67,9 @@ tags:
 
   routes:
     # Route constants tests
+
+  onboarding:
+    # Onboarding feature tests
 
   widgets:
     # Widget tests (UI component tests)

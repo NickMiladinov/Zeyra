@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 import '../../main.dart' show logger;
+import '../../core/di/main_providers.dart';
 import '../../features/auth/ui/auth_screen.dart';
+import '../../features/baby/logic/pregnancy_data_provider.dart';
 import '../../features/dashboard/ui/screens/home_screen.dart';
 import '../../features/baby/ui/screens/pregnancy_data_screen.dart';
 import '../../features/tools/ui/screens/tools_screen.dart';
@@ -19,6 +21,7 @@ import '../../features/contraction_timer/ui/screens/contraction_timer_info_scree
 import '../../features/contraction_timer/ui/screens/contraction_session_detail_screen.dart';
 import '../../domain/entities/contraction_timer/contraction_session.dart';
 import '../../features/developer/ui/screens/developer_menu_screen.dart';
+import '../../features/onboarding/ui/screens/onboarding_screens.dart';
 import '../../shared/widgets/main_shell.dart';
 import '../theme/app_effects.dart';
 import 'auth_notifier.dart';
@@ -50,21 +53,70 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     observers: [TalkerRouteObserver(logger.talker)],
     errorBuilder: (context, state) => ErrorPage(error: state.error),
     redirect: (context, state) {
-      final isLoggedIn = authNotifier.isAuthenticated;
-      final isAuthRoute = state.matchedLocation == AuthRoutes.auth;
-      final isOnboarding = state.matchedLocation == AuthRoutes.onboarding;
-
-      // Not logged in and not on auth page → redirect to auth
-      if (!isLoggedIn && !isAuthRoute) {
-        logger.debug('Router redirect: Not authenticated, redirecting to auth');
-        return AuthRoutes.auth;
+      // Wait for async SharedPreferences data to load before making routing decisions.
+      // The notifyListeners() calls in the async load methods will re-trigger
+      // redirect evaluation once the data is ready.
+      if (!authNotifier.onboardingStepLoaded || !authNotifier.deviceOnboardedLoaded) {
+        logger.debug('Router redirect: Waiting for async initialization to complete');
+        return null; // Defer redirect until data is loaded
       }
 
-      // Logged in on auth page → check onboarding, then main
-      if (isLoggedIn && isAuthRoute) {
-        logger.debug('Router redirect: Authenticated on auth, redirecting to main');
-        // TODO: Check if onboarding completed when implementing onboarding
-        // if (!authNotifier.hasCompletedOnboarding) return AuthRoutes.onboarding;
+      final isLoggedIn = authNotifier.isAuthenticated;
+      final hasCompletedOnboarding = authNotifier.hasCompletedOnboarding;
+      final deviceOnboarded = authNotifier.deviceOnboarded;
+      final savedStep = authNotifier.savedOnboardingStep;
+      final isAuthRoute = state.matchedLocation == AuthRoutes.auth;
+      final isOnboardingRoute = state.matchedLocation.startsWith(OnboardingRoutes.base);
+
+      // Helper to get the correct onboarding route based on saved progress
+      String getOnboardingRoute() {
+        if (savedStep > 0) {
+          final route = OnboardingRoutes.getRouteForStep(savedStep);
+          logger.debug('Router redirect: Resuming onboarding at step $savedStep ($route)');
+          return route;
+        }
+        return OnboardingRoutes.welcome;
+      }
+
+      // Not logged in - check if device has been onboarded before
+      if (!isLoggedIn && !isOnboardingRoute && !isAuthRoute) {
+        if (deviceOnboarded) {
+          // Device was onboarded before - go to auth screen
+          logger.debug('Router redirect: Not authenticated, device onboarded, redirecting to auth');
+          return AuthRoutes.auth;
+        } else {
+          // Fresh device - go to onboarding
+          logger.debug('Router redirect: Not authenticated, new device, redirecting to onboarding');
+          return getOnboardingRoute();
+        }
+      }
+
+      // Logged in but onboarding not complete → redirect to onboarding
+      if (isLoggedIn && !hasCompletedOnboarding && !isOnboardingRoute) {
+        logger.debug('Router redirect: Onboarding not complete, redirecting to onboarding');
+        return getOnboardingRoute();
+      }
+
+      // Logged in + onboarding complete + on onboarding route → go to main
+      if (isLoggedIn && hasCompletedOnboarding && isOnboardingRoute) {
+        // Invalidate providers to ensure fresh data for the logged-in user
+        ref.invalidate(appDatabaseProvider);
+        ref.invalidate(pregnancyDataProvider);
+        
+        logger.debug('Router redirect: Onboarding complete, redirecting to main');
+        return MainRoutes.today;
+      }
+
+      // Logged in + onboarding complete + on auth route → go to main
+      if (isLoggedIn && hasCompletedOnboarding && isAuthRoute) {
+        // CRITICAL: Invalidate database and pregnancy providers BEFORE redirecting.
+        // This ensures the correct user's database is opened when the main app loads.
+        // Previously, this was done in AuthScreen._handleAuthSuccess(), but that ran
+        // AFTER the router redirect, causing stale data from the previous user.
+        ref.invalidate(appDatabaseProvider);
+        ref.invalidate(pregnancyDataProvider);
+        
+        logger.debug('Router redirect: Already authenticated, redirecting to main');
         return MainRoutes.today;
       }
 
@@ -72,15 +124,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       // Auth route (OAuth only - Apple + Google)
+      // Used for "I already have an account" flow
       GoRoute(
         path: AuthRoutes.auth,
         builder: (context, state) => const AuthScreen(),
       ),
 
-      // Onboarding route (placeholder for future implementation)
+      // Onboarding routes (11 screens)
       GoRoute(
-        path: AuthRoutes.onboarding,
-        builder: (context, state) => const Placeholder(), // TODO: OnboardingScreen
+        path: OnboardingRoutes.welcome,
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.name,
+        builder: (context, state) => const NameInputScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.dueDate,
+        builder: (context, state) => const DueDateScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.congratulations,
+        builder: (context, state) => const CongratulationsScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.valueProp1,
+        builder: (context, state) => const ValueProp1Screen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.valueProp2,
+        builder: (context, state) => const ValueProp2Screen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.valueProp3,
+        builder: (context, state) => const ValueProp3Screen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.birthDate,
+        builder: (context, state) => const BirthDateScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.paywall,
+        builder: (context, state) => const PaywallScreen(),
+      ),
+      GoRoute(
+        path: OnboardingRoutes.auth,
+        builder: (context, state) => const AuthScreen(), // AuthScreen for final step
       ),
 
       // Full-screen active session routes (outside shell, no bottom nav)

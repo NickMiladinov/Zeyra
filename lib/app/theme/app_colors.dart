@@ -33,6 +33,7 @@ class AppColors {
   static const Color surfaceVariant = Color(0xFFF0F0F0); // For chips, inactive states
   static const Color backgroundGrey50 = Color(0xFFEEEEEE);
   static const Color backgroundGrey100 = Color(0xFFE0E0E0);
+  static const Color backgroundGrey200 = Color(0xFFCCCCCC);
   static const Color backgroundGrey400 = Color(0xFFBDBDBD);
   static const Color backgroundGrey500 = Color(0xFF8D8D8D);
   static const Color backgroundGrey600 = Color(0xFF7E7E7E);

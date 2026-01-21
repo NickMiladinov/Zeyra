@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
@@ -32,6 +33,8 @@ import '../../domain/usecases/user_profile/create_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/get_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/update_user_profile_usecase.dart';
 import '../services/database_encryption_service.dart';
+import '../services/notification_permission_service.dart';
+import '../services/payment_service.dart';
 import '../services/photo_file_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../monitoring/logging_service.dart';
@@ -88,6 +91,45 @@ final databaseEncryptionServiceProvider = Provider<DatabaseEncryptionService>((r
 /// Initialized in DIGraph.initialize() during app startup.
 final tooltipPreferencesServiceProvider = Provider<TooltipPreferencesService>((ref) {
   return DIGraph.tooltipPreferencesService;
+});
+
+/// Provider for the payment service.
+///
+/// Wraps RevenueCat SDK for subscription management.
+/// Initialized in DIGraph.initialize() during app startup.
+final paymentServiceProvider = Provider<PaymentService>((ref) {
+  return DIGraph.paymentService;
+});
+
+/// Provider for Zeyra entitlement status.
+///
+/// Returns true if user has an active Zeyra subscription.
+/// Use this for gating premium features.
+final hasZeyraEntitlementProvider = FutureProvider<bool>((ref) async {
+  final paymentService = ref.watch(paymentServiceProvider);
+  if (!paymentService.isInitialized) {
+    return false;
+  }
+  return await paymentService.hasZeyraEntitlement();
+});
+
+/// Provider for customer info stream.
+///
+/// Use this for reactive UI updates when subscription status changes.
+final customerInfoStreamProvider = StreamProvider<CustomerInfo?>((ref) {
+  final paymentService = ref.watch(paymentServiceProvider);
+  if (!paymentService.isInitialized) {
+    return const Stream.empty();
+  }
+  return paymentService.customerInfoStream;
+});
+
+/// Provider for the notification permission service.
+///
+/// Handles notification permission requests and status checks.
+final notificationPermissionServiceProvider = Provider<NotificationPermissionService>((ref) {
+  final logging = ref.watch(loggingServiceProvider);
+  return NotificationPermissionService(logging);
 });
 
 /// Provider for the app database.
@@ -226,6 +268,7 @@ final userProfileRepositoryProvider = FutureProvider<UserProfileRepository>((ref
 
   return UserProfileRepositoryImpl(
     dao: db.userProfileDao,
+    pregnancyDao: db.pregnancyDao,
     logger: logging,
   );
 });

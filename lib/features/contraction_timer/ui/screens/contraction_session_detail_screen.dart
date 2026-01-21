@@ -117,7 +117,7 @@ class _ContractionSessionDetailScreenState extends ConsumerState<ContractionSess
           await ref.read(contractionHistoryProvider.notifier).deleteSession(widget.session.id);
           
           // Navigate back to history screen
-          if (mounted) {
+          if (context.mounted) {
             context.pop();
           }
         }

@@ -47,6 +47,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Notification Permission Description -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>We'd like to send you helpful reminders for appointments, weekly baby updates, and daily checklists to support you throughout your pregnancy journey.</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UISupportsDocumentBrowser</key>

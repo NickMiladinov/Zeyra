@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/di/di_graph.dart';
+
 /// Home screen (Today tab).
 ///
 /// The bottom navigation bar is provided by [MainShell].
@@ -10,8 +12,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<void> _signOut(BuildContext context) async {
+  Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     try {
+      // Clear encryption keys from memory to prevent unauthorized access.
+      // Keys are still stored securely and will be retrieved on next login.
+      // Note: Provider invalidation happens on login (auth_screen.dart) to ensure
+      // the correct user's database is opened and data is refreshed.
+      DIGraph.clearEncryptionCache();
+      
       await Supabase.instance.client.auth.signOut();
       // AuthNotifier will handle the redirect to auth screen
     } on AuthException catch (e) {
@@ -35,7 +43,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
-            onPressed: () => _signOut(context),
+            onPressed: () => _signOut(context, ref),
           ),
         ],
       ),

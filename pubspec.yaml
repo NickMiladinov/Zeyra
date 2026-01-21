@@ -45,11 +45,17 @@ dependencies:
 
   
   # UI and theming
+  sign_in_button: ^3.2.0 # Pre-styled OAuth sign-in buttons (Apple, Google, etc.)
   google_fonts: ^6.2.1 # Google Fonts for custom typography
   material_symbols_icons: ^4.2785.1 # Material Symbols with fill, weight, grade support
   flutter_svg: ^2.0.10 # SVG rendering for custom icons
-  shared_preferences: ^2.5.3 # TODO: remove this dependency when user account db has been made
+  shared_preferences: ^2.5.3 # For onboarding data persistence before auth
   fl_chart: ^0.69.0 # Charts and graphs
+
+  # Payments and permissions
+  purchases_flutter: ^8.0.0 # RevenueCat SDK for in-app purchases
+  permission_handler: ^11.0.0 # For notification and other permissions
+  purchases_ui_flutter: ^8.11.0
 
 dev_dependencies:
   flutter_test:

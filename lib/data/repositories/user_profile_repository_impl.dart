@@ -2,18 +2,22 @@ import '../../core/monitoring/logging_service.dart';
 import '../../domain/entities/user_profile/user_profile.dart';
 import '../../domain/exceptions/user_profile_exception.dart';
 import '../../domain/repositories/user_profile_repository.dart';
+import '../local/daos/pregnancy_dao.dart';
 import '../local/daos/user_profile_dao.dart';
 import '../mappers/user_profile_mapper.dart';
 
 /// Implementation of UserProfileRepository using Drift.
 class UserProfileRepositoryImpl implements UserProfileRepository {
   final UserProfileDao _dao;
+  final PregnancyDao _pregnancyDao;
   final LoggingService _logger;
 
   UserProfileRepositoryImpl({
     required UserProfileDao dao,
+    required PregnancyDao pregnancyDao,
     required LoggingService logger,
   })  : _dao = dao,
+        _pregnancyDao = pregnancyDao,
         _logger = logger;
 
   @override
@@ -32,10 +36,30 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       // Check if profile already exists
       final existing = await _dao.getUserProfile();
       if (existing != null) {
-        throw const UserProfileException(
-          'User profile already exists.',
-          UserProfileErrorType.alreadyExists,
+        // Check if existing profile belongs to same user (authId match)
+        if (existing.authId == profile.authId) {
+          throw const UserProfileException(
+            'User profile already exists.',
+            UserProfileErrorType.alreadyExists,
+          );
+        }
+        
+        // Existing profile has different authId - this is stale data
+        // from a previously deleted user. Delete all their data first.
+        _logger.info(
+          'Found stale user profile with different authId, cleaning up stale data',
         );
+        
+        // Explicitly delete pregnancies first (cascade delete may not work reliably)
+        final deletedPregnancies = await _pregnancyDao.deletePregnanciesByUserId(existing.id);
+        _logger.debug('Deleted $deletedPregnancies stale pregnancies');
+        _logger.logDatabaseOperation('DELETE',
+            table: 'pregnancies', success: true);
+        
+        // Now delete the user profile
+        await _dao.deleteUserProfile(existing.id);
+        _logger.logDatabaseOperation('DELETE',
+            table: 'user_profiles', success: true);
       }
 
       final dto = UserProfileMapper.toDto(profile);

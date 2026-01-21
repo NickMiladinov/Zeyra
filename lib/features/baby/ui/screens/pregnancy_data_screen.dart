@@ -69,12 +69,7 @@ class PregnancyDataScreen extends ConsumerWidget {
             child: pregnancyAsync.when(
               data: (pregnancy) {
                 if (pregnancy == null) {
-                  return _EmptyState(
-                    onCreatePressed: () {
-                      // TEMPORARY: Create default pregnancy with today as start date
-                      ref.read(pregnancyDataProvider.notifier).createDefaultPregnancy();
-                    },
-                  );
+                  return const _EmptyState();
                 }
                 return _PregnancyContent(
                   pregnancy: pregnancy,
@@ -186,12 +181,12 @@ class PregnancyDataScreen extends ConsumerWidget {
   }
 }
 
-/// Empty state when no pregnancy exists
-/// TEMPORARY: Simplified to just create a default pregnancy
+/// Empty state when no pregnancy exists.
+///
+/// This indicates that onboarding finalization may have failed.
+/// The user should contact support or re-authenticate to trigger data creation.
 class _EmptyState extends ConsumerWidget {
-  final VoidCallback onCreatePressed;
-
-  const _EmptyState({required this.onCreatePressed});
+  const _EmptyState();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -202,45 +197,36 @@ class _EmptyState extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.child_care,
+              Icons.sync_problem_rounded,
               size: 80,
-              color: AppColors.primary.withValues(alpha: 0.3),
+              color: AppColors.warning.withValues(alpha: 0.7),
             ),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              'No Pregnancy Data',
+              'Pregnancy Data Missing',
               style: AppTypography.headlineMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'TEMPORARY: Creates default pregnancy with today as start date',
+              'Your pregnancy data could not be found. This may happen if setup was interrupted. '
+              'Please try signing out and back in to restore your data.',
               style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
+            // Retry button - triggers a refresh
             ElevatedButton.icon(
-              onPressed: onCreatePressed,
-              icon: const Icon(Icons.add),
-              label: const Text('Create Default Pregnancy'),
+              onPressed: () {
+                ref.read(pregnancyDataProvider.notifier).refresh();
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.paddingXL,
-                  vertical: AppSpacing.paddingMD,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            OutlinedButton.icon(
-              onPressed: () => _showDueDatePicker(context, ref),
-              icon: const Icon(Icons.calendar_today),
-              label: const Text('Set Custom Due Date'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.paddingXL,
                   vertical: AppSpacing.paddingMD,
@@ -251,33 +237,6 @@ class _EmptyState extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _showDueDatePicker(BuildContext context, WidgetRef ref) async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    // Allow selecting due dates from 20 weeks from now to 45 weeks from now
-    final firstDate = today.add(const Duration(days: 140)); // ~20 weeks
-    final lastDate = today.add(const Duration(days: 315)); // ~45 weeks
-
-    final selectedDate = await showDatePicker(
-      context: context,
-      initialDate: today.add(const Duration(days: 280)), // 40 weeks from today
-      firstDate: firstDate,
-      lastDate: lastDate,
-      helpText: 'Select Due Date',
-    );
-
-    if (selectedDate != null && context.mounted) {
-      // Calculate start date as 280 days (40 weeks) before due date
-      final startDate = selectedDate.subtract(const Duration(days: 280));
-
-      ref.read(pregnancyDataProvider.notifier).createPregnancy(
-        startDate: startDate,
-        dueDate: selectedDate,
-      );
-    }
   }
 }
 

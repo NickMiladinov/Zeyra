@@ -91,25 +91,69 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 
 ---
 
-### 3. Subscription
-| Field | Type | Description |
-|--------|------|-------------|
-| id | String | |
-| userId | String | |
-| plan | String | Free / Premium |
-| status | Enum | Active / Canceled / Trial / Expired |
-| platform | Enum | Google / Apple |
-| purchaseToken | String | |
-| renewalDate | DateTime | |
-| lastVerified | DateTime | |
-| createdAt | DateTime | |
+### 3. Subscription (Managed by RevenueCat)
 
-**Use Cases:**
-- Fetch subscription status  
-- Manage renewal and cancellation  
+**IMPORTANT**: Subscription status is NOT stored locally. RevenueCat SDK manages all subscription state.
+
+Use `PaymentService.hasZeyraEntitlement()` to check subscription status. Do not create local Subscription entities.
+
+**RevenueCat Configuration:**
+- Entitlement ID: `Zeyra`
+- Product IDs: `monthly`, `yearly`
+
+**RevenueCat CustomerInfo provides:**
+- Active entitlements (Zeyra access)
+- Expiration dates
+- Purchase history
+- Platform (iOS/Android)
+
+**Key Methods** (`PaymentService`):
+- `hasZeyraEntitlement()` → Check if user has active Zeyra entitlement
+- `purchase(Package)` → Initiate purchase flow
+- `restore()` → Restore purchases for returning users
+- `linkToAuthUser(authId)` → Link RevenueCat customer to Supabase user
+- `presentPaywall()` → Present RevenueCat paywall UI
+- `presentPaywallIfNeeded()` → Present paywall only if user lacks entitlement
+- `presentCustomerCenter()` → Present subscription management UI
 
 **Relationships:**
-- Belongs to `UserProfile`
+- Linked to `UserProfile` via RevenueCat's app user ID (set to Supabase authId)
+
+---
+
+### 3b. OnboardingData (Temporary - SharedPreferences)
+
+Temporary entity stored in SharedPreferences during onboarding. After successful authentication, data is migrated to `UserProfile` and `Pregnancy` entities, then cleared.
+
+| Field | Type | Description |
+|--------|------|-------------|
+| firstName | String? | User's first name |
+| dueDate | DateTime? | Expected due date (calculated if LMP provided) |
+| startDate | DateTime? | LMP date (calculated if dueDate provided) |
+| dateOfBirth | DateTime? | User's birth date |
+| notificationsEnabled | bool | Notification permission granted |
+| purchaseCompleted | bool | RevenueCat purchase successful |
+| currentStep | int | Current onboarding screen index (0-10) |
+
+**Computed Properties:**
+- `gestationalWeek`: Current week based on startDate
+- `gestationalDaysInWeek`: Days within current week (0-6)
+- `gestationalAgeFormatted`: Formatted string (e.g., "24w 3d")
+- `isComplete`: Whether all required data is present
+
+**Use Cases:**
+- Track onboarding progress across app restarts
+- Store user input before authentication
+- Calculate due date from LMP (or vice versa) using 280-day rule
+
+**Lifecycle:**
+1. Created when user starts onboarding
+2. Updated as user progresses through screens
+3. Persisted to SharedPreferences for durability
+4. Used to create `UserProfile` and `Pregnancy` after auth
+5. Cleared after successful finalization
+
+**Note:** Not a database entity - stored only in SharedPreferences.
 
 ---
 
@@ -536,7 +580,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 UserProfile ───< Pregnancy ───< (SymptomLog, Biomarker, Appointment, FileAttachment, BirthPlan, etc.)
 UserProfile ─── SessionState
 UserProfile ─── UserSettings
-UserProfile ─── Subscription
+UserProfile ─── RevenueCat CustomerInfo (via authId, not stored locally)
 UserProfile ───< Notification
 UserProfile ─── Database file (`zeyra_<authId>.db`)
 UserProfile ─── Encryption key (`zeyra_key_<authId>`)
@@ -545,6 +589,9 @@ UserProfile ───< Hospital
 KickSession ───< Kick
 KickSession ───< PauseEvent
 (Future: Pregnancy ───< KickSession)
+
+Onboarding Flow (temporary, pre-auth):
+OnboardingData (SharedPreferences) → UserProfile + Pregnancy (after auth)
 ```
 
 
