@@ -48,6 +48,9 @@ class UserProfile {
   /// Database schema version for migrations
   final int schemaVersion;
 
+  /// User's postcode for hospital search (optional)
+  final String? postcode;
+
   const UserProfile({
     required this.id,
     required this.authId,
@@ -63,6 +66,7 @@ class UserProfile {
     required this.encryptionKeyId,
     required this.lastAccessedAt,
     required this.schemaVersion,
+    this.postcode,
   });
 
   /// Calculate user's current age
@@ -98,6 +102,7 @@ class UserProfile {
     String? encryptionKeyId,
     DateTime? lastAccessedAt,
     int? schemaVersion,
+    String? postcode,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -114,6 +119,7 @@ class UserProfile {
       encryptionKeyId: encryptionKeyId ?? this.encryptionKeyId,
       lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
       schemaVersion: schemaVersion ?? this.schemaVersion,
+      postcode: postcode ?? this.postcode,
     );
   }
 

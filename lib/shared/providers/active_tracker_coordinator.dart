@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:zeyra/features/kick_counter/logic/kick_counter_state.dart';
 import 'package:zeyra/features/contraction_timer/logic/contraction_timer_state.dart';
 
@@ -14,6 +15,13 @@ enum ActiveTrackerType {
 /// Prevents simultaneous kick counting and contraction timing sessions,
 /// as they represent mutually exclusive tracking activities.
 final activeTrackerProvider = Provider<ActiveTrackerType>((ref) {
+  // Guard: These providers require authentication and database access.
+  // If no user is authenticated, return none to avoid triggering errors.
+  final user = Supabase.instance.client.auth.currentUser;
+  if (user == null) {
+    return ActiveTrackerType.none;
+  }
+
   // Watch both trackers - handle async loading gracefully
   try {
     final kickCounterState = ref.watch(kickCounterProvider);

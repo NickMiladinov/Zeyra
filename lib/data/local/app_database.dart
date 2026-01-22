@@ -9,16 +9,22 @@ import 'package:sqlite3/open.dart';
 
 import 'daos/bump_photo_dao.dart';
 import 'daos/contraction_timer_dao.dart';
+import 'daos/hospital_shortlist_dao.dart';
 import 'daos/kick_counter_dao.dart';
+import 'daos/maternity_unit_dao.dart';
 import 'daos/pregnancy_dao.dart';
+import 'daos/sync_metadata_dao.dart';
 import 'daos/user_profile_dao.dart';
 import 'models/bump_photo_table.dart';
 import 'models/contraction_session_table.dart';
 import 'models/contraction_table.dart';
+import 'models/hospital_shortlist_table.dart';
 import 'models/kick_session_table.dart';
 import 'models/kick_table.dart';
+import 'models/maternity_unit_table.dart';
 import 'models/pause_event_table.dart';
 import 'models/pregnancy_table.dart';
+import 'models/sync_metadata_table.dart';
 import 'models/user_profile_table.dart';
 
 part 'app_database.g.dart';
@@ -53,6 +59,11 @@ part 'app_database.g.dart';
 
     // Bump photo feature
     BumpPhotos,
+
+    // Hospital chooser feature
+    MaternityUnits,
+    HospitalShortlists,
+    SyncMetadatas,
   ],
   daos: [
     // User & Pregnancy DAOs
@@ -67,6 +78,11 @@ part 'app_database.g.dart';
 
     // Bump photo DAO
     BumpPhotoDao,
+
+    // Hospital chooser DAOs
+    MaternityUnitDao,
+    HospitalShortlistDao,
+    SyncMetadataDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {

@@ -57,6 +57,11 @@ dependencies:
   permission_handler: ^11.0.0 # For notification and other permissions
   purchases_ui_flutter: ^8.11.0
 
+  # Hospital chooser feature
+  google_maps_flutter: ^2.5.0 # Interactive maps
+  geolocator: ^14.0.0 # Device location
+  http: ^1.2.0 # HTTP client for postcodes.io API
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -84,6 +89,7 @@ flutter:
     - assets/fonts/
     - assets/audio/
     - assets/lottie/
+    - assets/data/
 
   # Custom fonts
   fonts:

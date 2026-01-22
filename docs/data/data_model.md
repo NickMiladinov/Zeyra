@@ -51,6 +51,7 @@ BiomarkerRepositoryImpl → BiomarkerDao ↔ BiomarkerTable ↔ Biomarker (Domai
 | encryptionKeyId | String | Secure storage key ID (`zeyra_key_<authId>`) |
 | lastAccessedAt | DateTime | Last session timestamp |
 | schemaVersion | int | Database schema version for migrations |
+| postcode | String? | User's postcode for hospital search |
 
 **Use Cases:**
 - Get current user profile
@@ -309,26 +310,108 @@ Temporary entity stored in SharedPreferences during onboarding. After successful
 
 ## 🏥 Hospital Entities
 
-### 10. Hospital
+### 10. MaternityUnit
+Represents a maternity unit from the CQC database, synced from Supabase.
+
 | Field | Type | Description |
 |--------|------|-------------|
-| id | String | |
-| name | String | |
-| address | String | |
-| cqcRating | String? | |
-| website | String? | |
-| contactNumber | String? | |
-| shortlisted | Boolean | |
-| createdAt | DateTime | |
+| id | String | UUID primary key |
+| cqcLocationId | String | CQC unique location identifier |
+| cqcProviderId | String? | CQC provider ID |
+| odsCode | String? | NHS ODS code |
+| name | String | Unit name |
+| providerName | String? | Provider/Trust name |
+| unitType | String | "nhs_hospital" or "independent_hospital" |
+| isNhs | Boolean | Whether this is NHS |
+| addressLine1 | String? | Address line 1 |
+| addressLine2 | String? | Address line 2 |
+| townCity | String? | Town/city |
+| county | String? | County |
+| postcode | String? | UK postcode |
+| region | String? | Region |
+| localAuthority | String? | Local authority |
+| latitude | Double? | Latitude coordinate |
+| longitude | Double? | Longitude coordinate |
+| phone | String? | Contact phone |
+| website | String? | Website URL |
+| overallRating | String? | CQC overall rating |
+| ratingSafe | String? | CQC Safe rating |
+| ratingEffective | String? | CQC Effective rating |
+| ratingCaring | String? | CQC Caring rating |
+| ratingResponsive | String? | CQC Responsive rating |
+| ratingWellLed | String? | CQC Well-led rating |
+| maternityRating | String? | Maternity-specific rating |
+| maternityRatingDate | String? | Date of maternity rating |
+| lastInspectionDate | String? | Last CQC inspection |
+| cqcReportUrl | String? | Link to CQC report |
+| registrationStatus | String? | Registration status |
+| birthingOptions | List<String>? | Manual: birthing options |
+| facilities | Map? | Manual: facility details |
+| birthStatistics | Map? | Manual: birth statistics |
+| notes | String? | Manual notes |
+| isActive | Boolean | Active status |
+| createdAt | DateTime | Record creation |
+| updatedAt | DateTime | Last update |
+| cqcSyncedAt | DateTime? | Last CQC sync |
+
+**Computed Properties:**
+- `isValid`: Active, registered, and has coordinates
+- `distanceFrom(lat, lng)`: Distance in miles using Haversine
 
 **Use Cases:**
-- Browse and search NHS hospitals  
-- Link to CQC data  
-- Display details in hospital chooser  
-- Save favorite hospitals for later selection  
+- Browse and search maternity units
+- Display on map with markers
+- Filter by distance, rating, NHS/independent
+- View detailed hospital information
 
 **Relationships:**
-- Referenced by `Pregnancy`
+- Referenced by `HospitalShortlist`
+- Referenced by `Pregnancy` (selectedHospitalId)
+
+---
+
+### 11. HospitalShortlist
+User's shortlisted hospitals for consideration.
+
+| Field | Type | Description |
+|--------|------|-------------|
+| id | String | UUID primary key |
+| maternityUnitId | String | FK to MaternityUnit |
+| addedAt | DateTime | When added to shortlist |
+| isSelected | Boolean | Final choice flag |
+| notes | String? | User notes |
+
+**Use Cases:**
+- Add/remove hospitals from shortlist
+- Select final hospital choice
+- Add personal notes about hospitals
+
+**Relationships:**
+- Belongs to `MaternityUnit`
+
+---
+
+### 12. SyncMetadata
+Tracks synchronization state for data from Supabase.
+
+| Field | Type | Description |
+|--------|------|-------------|
+| id | String | Sync target ID (e.g., "maternity_units") |
+| lastSyncAt | DateTime? | Last successful sync |
+| lastSyncStatus | Enum | never/preload_complete/success/failed/partial |
+| lastSyncCount | Int | Records processed in last sync |
+| lastError | String? | Error from last failed sync |
+| dataVersionCode | Int | Pre-packaged JSON version |
+| createdAt | DateTime | Record creation |
+| updatedAt | DateTime | Last update |
+
+**Use Cases:**
+- Track when data was last synced
+- Determine if initial load is needed
+- Store pre-packaged data version
+
+**Relationships:**
+- Standalone entity
 
 ---
 

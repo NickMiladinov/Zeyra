@@ -3,14 +3,19 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/local/app_database.dart';
+import '../../data/remote/maternity_unit_remote_source.dart';
 import '../../data/repositories/bump_photo_repository_impl.dart';
 import '../../data/repositories/contraction_timer_repository_impl.dart';
+import '../../data/repositories/hospital_shortlist_repository_impl.dart';
 import '../../data/repositories/kick_counter_repository_impl.dart';
+import '../../data/repositories/maternity_unit_repository_impl.dart';
 import '../../data/repositories/pregnancy_repository_impl.dart';
 import '../../data/repositories/user_profile_repository_impl.dart';
 import '../../domain/repositories/bump_photo_repository.dart';
 import '../../domain/repositories/contraction_timer_repository.dart';
+import '../../domain/repositories/hospital_shortlist_repository.dart';
 import '../../domain/repositories/kick_counter_repository.dart';
+import '../../domain/repositories/maternity_unit_repository.dart';
 import '../../domain/repositories/pregnancy_repository.dart';
 import '../../domain/repositories/user_profile_repository.dart';
 import '../../domain/usecases/bump_photo/delete_bump_photo.dart';
@@ -29,10 +34,17 @@ import '../../domain/usecases/pregnancy/get_all_pregnancies_usecase.dart';
 import '../../domain/usecases/pregnancy/update_pregnancy_due_date_usecase.dart';
 import '../../domain/usecases/pregnancy/update_pregnancy_start_date_usecase.dart';
 import '../../domain/usecases/pregnancy/update_pregnancy_usecase.dart';
+import '../../domain/usecases/hospital/filter_units_usecase.dart';
+import '../../domain/usecases/hospital/get_nearby_units_usecase.dart';
+import '../../domain/usecases/hospital/get_unit_detail_usecase.dart';
+import '../../domain/usecases/hospital/manage_shortlist_usecase.dart';
+import '../../domain/usecases/hospital/select_final_hospital_usecase.dart';
 import '../../domain/usecases/user_profile/create_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/get_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/update_user_profile_usecase.dart';
 import '../services/database_encryption_service.dart';
+import '../services/location_service.dart';
+import '../services/maternity_unit_sync_service.dart';
 import '../services/notification_permission_service.dart';
 import '../services/payment_service.dart';
 import '../services/photo_file_service.dart';
@@ -132,10 +144,19 @@ final notificationPermissionServiceProvider = Provider<NotificationPermissionSer
   return NotificationPermissionService(logging);
 });
 
+/// Cache for database instances by user ID.
+///
+/// Ensures only one database instance exists per user, preventing the
+/// "created database multiple times" warning from Drift.
+final Map<String, AppDatabase> _databaseCache = {};
+
 /// Provider for the app database.
 ///
 /// Returns an encrypted SQLCipher database for the current authenticated user.
 /// Database file: `zeyra_<userId>.db`
+///
+/// Uses a static cache to ensure only one database instance per user exists,
+/// even if the provider is rebuilt due to dependency changes.
 ///
 /// **Requires:** Authenticated Supabase user
 ///
@@ -158,6 +179,12 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
     );
   }
 
+  // Return cached instance if it exists for this user
+  if (_databaseCache.containsKey(user.id)) {
+    logger.debug('Returning cached database for user');
+    return _databaseCache[user.id]!;
+  }
+
   // Get encryption service and retrieve/create key for this user
   final dbEncryption = ref.watch(databaseEncryptionServiceProvider);
   final encryptionKey = await dbEncryption.getKeyForUser(user.id);
@@ -167,6 +194,9 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
     userId: user.id,
     encryptionKey: encryptionKey,
   );
+
+  // Cache the database instance
+  _databaseCache[user.id] = db;
 
   // Verify SQLCipher is active (optional - for debugging)
   final cipherVersion = await db.verifySqlCipherActive();
@@ -178,12 +208,25 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
 
   // Register cleanup when provider is disposed
   ref.onDispose(() async {
+    // Remove from cache and close
+    _databaseCache.remove(user.id);
     await db.close();
     logger.debug('Database closed for user');
   });
 
   return db;
 });
+
+/// Clears the database cache for a specific user or all users.
+///
+/// Call this on logout to ensure a fresh database instance on next login.
+void clearDatabaseCache([String? userId]) {
+  if (userId != null) {
+    _databaseCache.remove(userId);
+  } else {
+    _databaseCache.clear();
+  }
+}
 
 // ----------------------------------------------------------------------------
 // Kick Counter Feature
@@ -421,4 +464,95 @@ final updateBumpPhotoNoteUseCaseProvider = FutureProvider<UpdateBumpPhotoNote>((
 final deleteBumpPhotoUseCaseProvider = FutureProvider<DeleteBumpPhoto>((ref) async {
   final repository = await ref.watch(bumpPhotoRepositoryProvider.future);
   return DeleteBumpPhoto(repository);
+});
+
+// ----------------------------------------------------------------------------
+// Hospital Chooser Feature
+// ----------------------------------------------------------------------------
+
+/// Provider for the location service.
+///
+/// Handles device location and UK postcode lookup via postcodes.io.
+final locationServiceProvider = Provider<LocationService>((ref) {
+  final logging = ref.watch(loggingServiceProvider);
+  return LocationService(logger: logging);
+});
+
+/// Provider for the maternity unit remote source.
+///
+/// Fetches maternity units from Supabase.
+final maternityUnitRemoteSourceProvider = Provider<MaternityUnitRemoteSource>((ref) {
+  return MaternityUnitRemoteSource();
+});
+
+/// Provider for the maternity unit repository.
+///
+/// Handles maternity unit data operations with local caching and remote sync.
+final maternityUnitRepositoryProvider = FutureProvider<MaternityUnitRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+  final remoteSource = ref.watch(maternityUnitRemoteSourceProvider);
+
+  return MaternityUnitRepositoryImpl(
+    dao: db.maternityUnitDao,
+    syncMetadataDao: db.syncMetadataDao,
+    remoteSource: remoteSource,
+    logger: logging,
+  );
+});
+
+/// Provider for the hospital shortlist repository.
+///
+/// Manages user's shortlisted hospitals.
+final hospitalShortlistRepositoryProvider = FutureProvider<HospitalShortlistRepository>((ref) async {
+  final db = await ref.watch(appDatabaseProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+
+  return HospitalShortlistRepositoryImpl(
+    dao: db.hospitalShortlistDao,
+    logger: logging,
+  );
+});
+
+/// Provider for the maternity unit sync service.
+///
+/// Handles initial data loading and incremental sync.
+final maternityUnitSyncServiceProvider = FutureProvider<MaternityUnitSyncService>((ref) async {
+  final repository = await ref.watch(maternityUnitRepositoryProvider.future);
+  final logging = ref.watch(loggingServiceProvider);
+
+  return MaternityUnitSyncService(
+    repository: repository,
+    logger: logging,
+  );
+});
+
+/// Provider for the get nearby units use case.
+final getNearbyUnitsUseCaseProvider = FutureProvider<GetNearbyUnitsUseCase>((ref) async {
+  final repository = await ref.watch(maternityUnitRepositoryProvider.future);
+  return GetNearbyUnitsUseCase(repository: repository);
+});
+
+/// Provider for the filter units use case.
+final filterUnitsUseCaseProvider = FutureProvider<FilterUnitsUseCase>((ref) async {
+  final repository = await ref.watch(maternityUnitRepositoryProvider.future);
+  return FilterUnitsUseCase(repository: repository);
+});
+
+/// Provider for the get unit detail use case.
+final getUnitDetailUseCaseProvider = FutureProvider<GetUnitDetailUseCase>((ref) async {
+  final repository = await ref.watch(maternityUnitRepositoryProvider.future);
+  return GetUnitDetailUseCase(repository: repository);
+});
+
+/// Provider for the manage shortlist use case.
+final manageShortlistUseCaseProvider = FutureProvider<ManageShortlistUseCase>((ref) async {
+  final repository = await ref.watch(hospitalShortlistRepositoryProvider.future);
+  return ManageShortlistUseCase(repository: repository);
+});
+
+/// Provider for the select final hospital use case.
+final selectFinalHospitalUseCaseProvider = FutureProvider<SelectFinalHospitalUseCase>((ref) async {
+  final repository = await ref.watch(hospitalShortlistRepositoryProvider.future);
+  return SelectFinalHospitalUseCase(repository: repository);
 });

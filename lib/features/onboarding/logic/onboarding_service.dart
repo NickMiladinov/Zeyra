@@ -10,6 +10,11 @@ import '../../../domain/entities/user_profile/user_profile.dart';
 import '../../../domain/usecases/pregnancy/create_pregnancy_usecase.dart';
 import '../../../domain/usecases/user_profile/create_user_profile_usecase.dart';
 
+/// Callback for triggering background tasks after onboarding completes.
+///
+/// Used to pre-load data (e.g., maternity units) without blocking the user.
+typedef OnOnboardingComplete = Future<void> Function();
+
 /// Service for finalizing onboarding after successful authentication.
 ///
 /// Creates UserProfile and Pregnancy entities from onboarding data,
@@ -20,6 +25,7 @@ class OnboardingService {
   final PaymentService _paymentService;
   final AuthNotifier _authNotifier;
   final LoggingService _logger;
+  final OnOnboardingComplete? _onComplete;
 
   OnboardingService({
     required CreateUserProfileUseCase createUserProfile,
@@ -27,11 +33,13 @@ class OnboardingService {
     required PaymentService paymentService,
     required AuthNotifier authNotifier,
     required LoggingService logger,
+    OnOnboardingComplete? onComplete,
   })  : _createUserProfile = createUserProfile,
         _createPregnancy = createPregnancy,
         _paymentService = paymentService,
         _authNotifier = authNotifier,
-        _logger = logger;
+        _logger = logger,
+        _onComplete = onComplete;
 
   /// Finalize onboarding by creating user entities and marking complete.
   ///
@@ -77,6 +85,11 @@ class OnboardingService {
       await _authNotifier.markDeviceOnboarded();
       _logger.info('Device marked as onboarded');
 
+      // 6. Fire-and-forget: Trigger background data pre-loading
+      // This runs async while the user transitions to the home screen,
+      // so data is ready when they need it (e.g., Hospital Chooser).
+      _triggerBackgroundTasks();
+
       return true;
     } catch (e, stackTrace) {
       _logger.error(
@@ -86,6 +99,31 @@ class OnboardingService {
       );
       return false;
     }
+  }
+
+  /// Trigger background tasks after successful onboarding.
+  ///
+  /// Runs async without blocking the user flow. Errors are logged
+  /// but don't affect the user experience - data can be loaded later.
+  void _triggerBackgroundTasks() {
+    final onComplete = _onComplete;
+    if (onComplete == null) return;
+
+    // Fire and forget - don't await, don't block user
+    Future(() async {
+      try {
+        _logger.info('Starting background data pre-loading');
+        await onComplete();
+        _logger.info('Background data pre-loading completed');
+      } catch (e, stackTrace) {
+        // Log but don't rethrow - this is non-critical background work
+        _logger.warning(
+          'Background data pre-loading failed (will retry later)',
+          error: e,
+          stackTrace: stackTrace,
+        );
+      }
+    });
   }
 
   /// Validate that all required data is present.
