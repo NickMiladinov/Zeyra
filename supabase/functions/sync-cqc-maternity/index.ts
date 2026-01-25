@@ -97,7 +97,6 @@ interface BatchSyncResult {
 const CQC_BASE_URL = "https://api.service.cqc.org.uk/public/v1";
 const MATERNITY_ACTIVITY = "Maternity and midwifery services";
 const DELAY_BETWEEN_REQUESTS_MS = 100; // Be nice to the CQC API
-const SYNC_METADATA_ID = "cqc_maternity_sync";
 
 // ============================================
 // HELPER FUNCTIONS
@@ -334,18 +333,21 @@ async function syncIncremental(
   try {
     console.log("Starting incremental sync...");
 
-    // Step 1: Get last sync timestamp from metadata table
+    // Step 1: Get last SUCCESSFUL sync timestamp from metadata table
+    // We query for the most recent successful run to get the starting timestamp
     const { data: metaData, error: metaError } = await supabase
       .from("sync_metadata")
       .select("last_sync_at")
-      .eq("id", SYNC_METADATA_ID)
-      .single();
+      .eq("last_sync_status", "success")
+      .order("last_sync_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (metaError) {
       throw new Error(`Failed to get sync metadata: ${metaError.message}`);
     }
 
-    // Default to 24 hours ago if never synced
+    // Default to 24 hours ago if no successful sync found
     const lastSyncAt = metaData?.last_sync_at
       ? new Date(metaData.last_sync_at)
       : new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -497,48 +499,49 @@ async function syncIncremental(
   return result;
 }
 
-// Helper to update sync_metadata table on SUCCESS (updates last_sync_at)
+// Helper to insert sync_metadata entry on SUCCESS (records the sync timestamp)
 async function updateSyncMetadataSuccess(
   supabase: ReturnType<typeof createClient>,
   syncTime: Date,
   status: string,
   count: number
 ): Promise<void> {
-  const { error: updateError } = await supabase
+  // Insert a new row for each sync run
+  const { error: insertError } = await supabase
     .from("sync_metadata")
-    .upsert({
-      id: SYNC_METADATA_ID,
-      last_sync_at: syncTime.toISOString(), // Only update timestamp on success
+    .insert({
+      last_sync_at: syncTime.toISOString(), // Record the sync timestamp on success
       last_sync_status: status,
       last_sync_count: count,
       last_error: null,
       updated_at: new Date().toISOString(),
     });
 
-  if (updateError) {
-    console.error(`Failed to update sync metadata: ${updateError.message}`);
+  if (insertError) {
+    console.error(`Failed to insert sync metadata: ${insertError.message}`);
   }
 }
 
-// Helper to update sync_metadata table on FAILURE (does NOT update last_sync_at)
+// Helper to insert sync_metadata entry on FAILURE (does NOT set last_sync_at)
 async function updateSyncMetadataFailure(
   supabase: ReturnType<typeof createClient>,
   status: string,
   errorMsg: string
 ): Promise<void> {
-  // Only update status and error, NOT the last_sync_at timestamp
-  // This ensures the next run will retry the same time window
-  const { error: updateError } = await supabase
+  // Insert a new row with null last_sync_at to indicate failure
+  // This ensures the next run will use the last successful run's timestamp
+  const { error: insertError } = await supabase
     .from("sync_metadata")
-    .update({
+    .insert({
+      last_sync_at: null, // No timestamp update on failure
       last_sync_status: status,
+      last_sync_count: 0,
       last_error: errorMsg,
       updated_at: new Date().toISOString(),
-    })
-    .eq("id", SYNC_METADATA_ID);
+    });
 
-  if (updateError) {
-    console.error(`Failed to update sync metadata: ${updateError.message}`);
+  if (insertError) {
+    console.error(`Failed to insert sync metadata: ${insertError.message}`);
   }
 }
 
