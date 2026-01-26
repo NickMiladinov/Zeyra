@@ -41,14 +41,27 @@ class HospitalLocationState {
   /// Whether we have a valid location to search from.
   bool get hasLocation => userLocation != null;
 
-  /// Whether location permission was denied.
+  /// Whether location permission was permanently denied (cannot request again).
+  /// 
+  /// Note: [LocationPermissionStatus.denied] means "not granted yet" and we can
+  /// still request permission. Only [deniedForever] means the user explicitly
+  /// denied and we cannot request again.
+  bool get wasPermissionPermanentlyDenied =>
+      permissionStatus == LocationPermissionStatus.deniedForever;
+  
+  /// Whether the user has denied permission (but can potentially request again).
   bool get wasPermissionDenied =>
       permissionStatus == LocationPermissionStatus.denied ||
       permissionStatus == LocationPermissionStatus.deniedForever;
+  
+  /// Whether we can request location permission.
+  /// True if permission hasn't been permanently denied.
+  bool get canRequestPermission =>
+      permissionStatus != LocationPermissionStatus.deniedForever;
 
   /// Whether user must manually enter postcode.
   bool get requiresManualPostcode =>
-      wasPermissionDenied && userPostcode == null;
+      wasPermissionPermanentlyDenied && userPostcode == null;
 
   HospitalLocationState copyWith({
     LocationPermissionStatus? permissionStatus,
@@ -81,9 +94,10 @@ class HospitalLocationState {
 /// - Getting coordinates from device or postcode
 /// - Saving postcode to user profile
 class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
-  final LocationService _locationService;
-  final GetUserProfileUseCase _getUserProfile;
-  final UpdateUserProfileUseCase _updateUserProfile;
+  final LocationService? _locationService;
+  final GetUserProfileUseCase? _getUserProfile;
+  final UpdateUserProfileUseCase? _updateUserProfile;
+  final bool _isLoading;
 
   HospitalLocationNotifier({
     required LocationService locationService,
@@ -92,22 +106,38 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
   })  : _locationService = locationService,
         _getUserProfile = getUserProfile,
         _updateUserProfile = updateUserProfile,
+        _isLoading = false,
         super(const HospitalLocationState()) {
     _initialize();
   }
+
+  /// Creates a loading-only notifier used while dependencies are initializing.
+  HospitalLocationNotifier._loading()
+      : _locationService = null,
+        _getUserProfile = null,
+        _updateUserProfile = null,
+        _isLoading = true,
+        super(const HospitalLocationState(isLoading: true));
 
   /// Initialize location state.
   ///
   /// Checks for saved postcode first, then falls back to device location.
   Future<void> _initialize() async {
+    // Skip initialization if we're in loading-only mode
+    if (_isLoading) return;
+    
     state = state.copyWith(isLoading: true);
 
+    // Capture non-null dependencies for null promotion
+    final locationService = _locationService!;
+    final getUserProfile = _getUserProfile!;
+    
     try {
       // Check for saved postcode in user profile
-      final profile = await _getUserProfile.execute();
+      final profile = await getUserProfile.execute();
       if (profile?.postcode != null && profile!.postcode!.isNotEmpty) {
         // Have saved postcode - get coordinates
-        final coords = await _locationService.getCoordinatesFromPostcode(
+        final coords = await locationService.getCoordinatesFromPostcode(
           profile.postcode!,
         );
 
@@ -123,7 +153,32 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
       }
 
       // No saved postcode - check permission status
-      final permissionStatus = await _locationService.getPermissionStatus();
+      final permissionStatus = await locationService.getPermissionStatus();
+
+      // If permission is already granted, auto-fetch device location
+      if (permissionStatus == LocationPermissionStatus.granted) {
+        final location = await locationService.getCurrentLocation();
+        if (location != null) {
+          final postcode = await locationService.getPostcodeFromCoordinates(
+            location.latitude,
+            location.longitude,
+          );
+
+          state = state.copyWith(
+            permissionStatus: permissionStatus,
+            userLocation: location,
+            userPostcode: postcode,
+            isLoading: false,
+            isInitialized: true,
+          );
+
+          // Save postcode if available
+          if (postcode != null) {
+            await _savePostcode(postcode);
+          }
+          return;
+        }
+      }
 
       state = state.copyWith(
         permissionStatus: permissionStatus,
@@ -143,18 +198,21 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
   ///
   /// If granted, gets current location and reverse geocodes to postcode.
   Future<bool> requestPermission() async {
+    final locationService = _locationService;
+    if (_isLoading || locationService == null) return false;
+    
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final status = await _locationService.requestPermission();
+      final status = await locationService.requestPermission();
       state = state.copyWith(permissionStatus: status);
 
       if (status == LocationPermissionStatus.granted) {
         // Get device location
-        final location = await _locationService.getCurrentLocation();
+        final location = await locationService.getCurrentLocation();
         if (location != null) {
           // Reverse geocode to get postcode
-          final postcode = await _locationService.getPostcodeFromCoordinates(
+          final postcode = await locationService.getPostcodeFromCoordinates(
             location.latitude,
             location.longitude,
           );
@@ -189,11 +247,14 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
   ///
   /// Validates and looks up coordinates for the postcode.
   Future<bool> setPostcode(String postcode) async {
+    final locationService = _locationService;
+    if (_isLoading || locationService == null) return false;
+    
     state = state.copyWith(isLoading: true, error: null);
 
     try {
       // Validate postcode
-      final isValid = await _locationService.isValidPostcode(postcode);
+      final isValid = await locationService.isValidPostcode(postcode);
       if (!isValid) {
         state = state.copyWith(
           isLoading: false,
@@ -203,7 +264,7 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
       }
 
       // Get coordinates
-      final coords = await _locationService.getCoordinatesFromPostcode(postcode);
+      final coords = await locationService.getCoordinatesFromPostcode(postcode);
       if (coords == null) {
         state = state.copyWith(
           isLoading: false,
@@ -233,6 +294,8 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
 
   /// Refresh device location.
   Future<void> refreshLocation() async {
+    final locationService = _locationService;
+    if (_isLoading || locationService == null) return;
     if (state.permissionStatus != LocationPermissionStatus.granted) {
       return;
     }
@@ -240,9 +303,9 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final location = await _locationService.getCurrentLocation();
+      final location = await locationService.getCurrentLocation();
       if (location != null) {
-        final postcode = await _locationService.getPostcodeFromCoordinates(
+        final postcode = await locationService.getPostcodeFromCoordinates(
           location.latitude,
           location.longitude,
         );
@@ -272,10 +335,14 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
 
   /// Save postcode to user profile.
   Future<void> _savePostcode(String postcode) async {
+    final getUserProfile = _getUserProfile;
+    final updateUserProfile = _updateUserProfile;
+    if (getUserProfile == null || updateUserProfile == null) return;
+    
     try {
-      final profile = await _getUserProfile.execute();
+      final profile = await getUserProfile.execute();
       if (profile != null) {
-        await _updateUserProfile.execute(
+        await updateUserProfile.execute(
           profile.copyWith(postcode: postcode),
         );
       }
@@ -286,7 +353,9 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
 
   /// Open app settings for location permission.
   Future<void> openAppSettings() async {
-    await _locationService.openAppSettings();
+    final locationService = _locationService;
+    if (locationService == null) return;
+    await locationService.openAppSettings();
   }
 
   /// Clear error state.
@@ -299,18 +368,26 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
 // Provider
 // ----------------------------------------------------------------------------
 
+/// Provider that indicates whether hospital location dependencies are ready.
+final hospitalLocationReadyProvider = Provider<bool>((ref) {
+  final getUserProfileAsync = ref.watch(getUserProfileUseCaseProvider);
+  final updateUserProfileAsync = ref.watch(updateUserProfileUseCaseProvider);
+  return getUserProfileAsync.hasValue && updateUserProfileAsync.hasValue;
+});
+
 /// Provider for hospital location state.
+///
+/// IMPORTANT: Only access this provider when [hospitalLocationReadyProvider] is true.
 final hospitalLocationProvider =
     StateNotifierProvider<HospitalLocationNotifier, HospitalLocationState>((ref) {
   final locationServiceAsync = ref.watch(locationServiceProvider);
   final getUserProfileAsync = ref.watch(getUserProfileUseCaseProvider);
   final updateUserProfileAsync = ref.watch(updateUserProfileUseCaseProvider);
 
-  // Wait for async dependencies
+  // If dependencies aren't ready, return a notifier with loading state
+  // This prevents throwing during initial widget build
   if (!getUserProfileAsync.hasValue || !updateUserProfileAsync.hasValue) {
-    throw StateError(
-      'hospitalLocationProvider accessed before dependencies are ready.',
-    );
+    return HospitalLocationNotifier._loading();
   }
 
   return HospitalLocationNotifier(

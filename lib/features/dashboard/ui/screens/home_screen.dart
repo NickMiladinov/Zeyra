@@ -72,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DIGraph.clearEncryptionCache();
 
       // Clear database cache to ensure fresh instance on next login
-      clearDatabaseCache();
+      await clearDatabaseCache();
 
       await Supabase.instance.client.auth.signOut();
       // AuthNotifier will handle the redirect to auth screen

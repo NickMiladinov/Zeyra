@@ -1,0 +1,379 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
+import '../../../../domain/entities/hospital/maternity_unit.dart';
+
+/// Bottom sheet for filtering hospital results.
+///
+/// Allows users to filter by CQC rating and optionally distance.
+class HospitalFiltersBottomSheet extends StatefulWidget {
+  /// Current filter criteria.
+  final HospitalFilterCriteria currentFilters;
+
+  /// Callback when filters are applied.
+  final void Function(HospitalFilterCriteria filters) onApply;
+  
+  /// Whether to show the distance filter (only for list view).
+  final bool showDistanceFilter;
+
+  const HospitalFiltersBottomSheet({
+    super.key,
+    required this.currentFilters,
+    required this.onApply,
+    this.showDistanceFilter = false,
+  });
+
+  @override
+  State<HospitalFiltersBottomSheet> createState() =>
+      _HospitalFiltersBottomSheetState();
+}
+
+class _HospitalFiltersBottomSheetState
+    extends State<HospitalFiltersBottomSheet> {
+  late Set<CqcRating> _selectedRatings;
+  late double _maxDistance;
+
+  /// Min/max distance in miles for exponential slider.
+  static const double _minDistance = 0.1;
+  static const double _maxDistanceLimit = 50.0;
+  
+  /// Logarithmic min/max for exponential scaling.
+  static final double _logMin = _log(_minDistance);
+  static final double _logMax = _log(_maxDistanceLimit);
+  
+  /// Natural log helper.
+  static double _log(double x) => x > 0 ? math.log(x) : 0;
+  
+  /// Exponential helper.
+  static double _exp(double x) => math.exp(x);
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with current filters - use a copy of the set
+    _selectedRatings = Set.from(widget.currentFilters.allowedRatings);
+    _maxDistance = widget.currentFilters.maxDistanceMiles.clamp(_minDistance, _maxDistanceLimit);
+  }
+
+  /// Toggle a rating selection.
+  void _toggleRating(CqcRating rating) {
+    setState(() {
+      if (_selectedRatings.contains(rating)) {
+        // Don't allow deselecting all
+        if (_selectedRatings.length > 1) {
+          _selectedRatings.remove(rating);
+        }
+      } else {
+        _selectedRatings.add(rating);
+      }
+    });
+  }
+
+  /// Reset filters to defaults.
+  void _resetFilters() {
+    setState(() {
+      _selectedRatings = Set.from(HospitalFilterCriteria.allRatings);
+      _maxDistance = 15.0; // Default distance
+    });
+  }
+
+  /// Apply the filters and close the sheet.
+  void _applyFilters() {
+    final newFilters = widget.currentFilters.copyWith(
+      allowedRatings: Set.from(_selectedRatings),
+      maxDistanceMiles: _maxDistance,
+    );
+    widget.onApply(newFilters);
+    Navigator.pop(context);
+  }
+  
+  /// Convert distance value to slider position (0-1) using log scale.
+  double _distanceToSlider(double distance) {
+    final logValue = _log(distance.clamp(_minDistance, _maxDistanceLimit));
+    return (logValue - _logMin) / (_logMax - _logMin);
+  }
+  
+  /// Convert slider position (0-1) to distance using exponential scale.
+  double _sliderToDistance(double sliderValue) {
+    final logValue = _logMin + sliderValue * (_logMax - _logMin);
+    return _exp(logValue);
+  }
+  
+  /// Format distance for display (shows decimal for values < 1).
+  String _formatDistance(double distance) {
+    if (distance < 1) {
+      return distance.toStringAsFixed(1);
+    }
+    return distance.round().toString();
+  }
+  
+  /// Round distance to sensible values based on magnitude.
+  double _roundDistance(double distance) {
+    if (distance < 1) {
+      // Round to 0.1 increments
+      return (distance * 10).round() / 10;
+    } else if (distance < 5) {
+      // Round to 0.5 increments
+      return (distance * 2).round() / 2;
+    } else {
+      // Round to whole numbers
+      return distance.roundToDouble();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.paddingLG),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.backgroundGrey200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gapLG),
+
+          // Header with reset button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Filters',
+                style: AppTypography.headlineSmall.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              TextButton(
+                onPressed: _resetFilters,
+                child: Text(
+                  'Reset all',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.gapXL),
+
+          // CQC Rating section
+          Text(
+            'CQC Rating',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.gapMD),
+
+          // Rating chips grid
+          _buildRatingGrid(),
+          
+          // Distance section (only shown in list view)
+          if (widget.showDistanceFilter) ...[
+            const SizedBox(height: AppSpacing.gapXL),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Distance',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  'Up to ${_formatDistance(_maxDistance)}mi',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.gapSM),
+            
+            // Distance slider - exponential scale from 0.1 to 50 miles
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.primary,
+                inactiveTrackColor: AppColors.backgroundGrey200,
+                thumbColor: Colors.white,
+                overlayColor: AppColors.primary.withOpacity(0.2),
+                trackHeight: 4,
+                thumbShape: const RoundSliderThumbShape(
+                  enabledThumbRadius: 12,
+                  elevation: 2,
+                ),
+              ),
+              child: Slider(
+                value: _distanceToSlider(_maxDistance),
+                min: 0.0,
+                max: 1.0,
+                onChanged: (value) {
+                  setState(() {
+                    final rawDistance = _sliderToDistance(value);
+                    _maxDistance = _roundDistance(rawDistance);
+                  });
+                },
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.gapXL),
+
+          // Apply button
+          ElevatedButton(
+            onPressed: _applyFilters,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.paddingMD),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Show Hospitals'),
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingGrid() {
+    return Column(
+      children: [
+        // First row: Outstanding and Good
+        Row(
+          children: [
+            Expanded(
+              child: _RatingChip(
+                rating: CqcRating.outstanding,
+                isSelected: _selectedRatings.contains(CqcRating.outstanding),
+                onTap: () => _toggleRating(CqcRating.outstanding),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.gapMD),
+            Expanded(
+              child: _RatingChip(
+                rating: CqcRating.good,
+                isSelected: _selectedRatings.contains(CqcRating.good),
+                onTap: () => _toggleRating(CqcRating.good),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.gapMD),
+        // Second row: Requires Improvement and Inadequate
+        Row(
+          children: [
+            Expanded(
+              child: _RatingChip(
+                rating: CqcRating.requiresImprovement,
+                isSelected:
+                    _selectedRatings.contains(CqcRating.requiresImprovement),
+                onTap: () => _toggleRating(CqcRating.requiresImprovement),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.gapMD),
+            Expanded(
+              child: _RatingChip(
+                rating: CqcRating.inadequate,
+                isSelected: _selectedRatings.contains(CqcRating.inadequate),
+                onTap: () => _toggleRating(CqcRating.inadequate),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A selectable chip for CQC rating.
+class _RatingChip extends StatelessWidget {
+  final CqcRating rating;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _RatingChip({
+    required this.rating,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  IconData _getIcon() {
+    switch (rating) {
+      case CqcRating.outstanding:
+        return Icons.star;
+      case CqcRating.good:
+        return Icons.check;
+      case CqcRating.requiresImprovement:
+        return Icons.info_outline;
+      case CqcRating.inadequate:
+        return Icons.warning_outlined;
+      case CqcRating.notRated:
+        return Icons.help_outline;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.paddingMD,
+          horizontal: AppSpacing.paddingSM,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.backgroundGrey200,
+            width: 1.5,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              _getIcon(),
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              size: 24,
+            ),
+            const SizedBox(height: AppSpacing.gapXS),
+            Text(
+              rating.displayName,
+              style: AppTypography.labelSmall.copyWith(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -49,16 +49,22 @@ void main() {
     });
 
     test('should compute requiresManualPostcode correctly', () {
-      // Denied and no postcode - needs manual entry
+      // Permanently denied and no postcode - needs manual entry
       const needsManual = HospitalLocationState(
-        permissionStatus: LocationPermissionStatus.denied,
+        permissionStatus: LocationPermissionStatus.deniedForever,
         userPostcode: null,
       );
 
-      // Denied but has postcode - doesn't need manual entry
+      // Permanently denied but has postcode - doesn't need manual entry
       const hasPostcode = HospitalLocationState(
-        permissionStatus: LocationPermissionStatus.denied,
+        permissionStatus: LocationPermissionStatus.deniedForever,
         userPostcode: 'SW1A 1AA',
+      );
+
+      // Just denied (can still request) - doesn't need manual entry yet
+      const justDenied = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.denied,
+        userPostcode: null,
       );
 
       // Granted - doesn't need manual entry
@@ -68,7 +74,44 @@ void main() {
 
       expect(needsManual.requiresManualPostcode, true);
       expect(hasPostcode.requiresManualPostcode, false);
+      expect(justDenied.requiresManualPostcode, false);
       expect(granted.requiresManualPostcode, false);
+    });
+
+    test('should compute canRequestPermission correctly', () {
+      const denied = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.denied,
+      );
+      const deniedForever = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.deniedForever,
+      );
+      const granted = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.granted,
+      );
+      const unknown = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.unknown,
+      );
+
+      expect(denied.canRequestPermission, true);
+      expect(deniedForever.canRequestPermission, false);
+      expect(granted.canRequestPermission, true);
+      expect(unknown.canRequestPermission, true);
+    });
+
+    test('should compute wasPermissionPermanentlyDenied correctly', () {
+      const denied = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.denied,
+      );
+      const deniedForever = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.deniedForever,
+      );
+      const granted = HospitalLocationState(
+        permissionStatus: LocationPermissionStatus.granted,
+      );
+
+      expect(denied.wasPermissionPermanentlyDenied, false);
+      expect(deniedForever.wasPermissionPermanentlyDenied, true);
+      expect(granted.wasPermissionPermanentlyDenied, false);
     });
 
     test('should copyWith update fields correctly', () {

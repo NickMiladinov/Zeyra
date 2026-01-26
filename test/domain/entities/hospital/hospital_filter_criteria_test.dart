@@ -8,33 +8,45 @@ import 'package:zeyra/domain/entities/hospital/maternity_unit.dart';
 import '../../../mocks/fake_data/hospital_chooser_fakes.dart';
 
 void main() {
-  group('[HospitalChooser] MinRatingFilter Enum', () {
-    test('should allow any rating with MinRatingFilter.any', () {
-      expect(MinRatingFilter.any.meetsMinimum(CqcRating.outstanding), isTrue);
-      expect(MinRatingFilter.any.meetsMinimum(CqcRating.good), isTrue);
-      expect(MinRatingFilter.any.meetsMinimum(CqcRating.requiresImprovement), isTrue);
-      expect(MinRatingFilter.any.meetsMinimum(CqcRating.inadequate), isTrue);
-      expect(MinRatingFilter.any.meetsMinimum(CqcRating.notRated), isTrue);
+  group('[HospitalChooser] Rating Filter', () {
+    test('should allow any rating with allRatings', () {
+      const criteria = HospitalFilterCriteria(
+        allowedRatings: HospitalFilterCriteria.allRatings,
+      );
+      expect(criteria.hasRatingFilter, isFalse);
     });
 
-    test('should filter good and outstanding with MinRatingFilter.good', () {
-      expect(MinRatingFilter.good.meetsMinimum(CqcRating.outstanding), isTrue);
-      expect(MinRatingFilter.good.meetsMinimum(CqcRating.good), isTrue);
-      expect(MinRatingFilter.good.meetsMinimum(CqcRating.requiresImprovement), isFalse);
-      expect(MinRatingFilter.good.meetsMinimum(CqcRating.inadequate), isFalse);
-      expect(MinRatingFilter.good.meetsMinimum(CqcRating.notRated), isFalse);
+    test('should filter by specific ratings', () {
+      const criteria = HospitalFilterCriteria(
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
+      );
+      expect(criteria.hasRatingFilter, isTrue);
+      expect(criteria.allowedRatings.contains(CqcRating.outstanding), isTrue);
+      expect(criteria.allowedRatings.contains(CqcRating.good), isTrue);
+      expect(criteria.allowedRatings.contains(CqcRating.inadequate), isFalse);
     });
 
-    test('should filter outstanding only with MinRatingFilter.outstanding', () {
-      expect(MinRatingFilter.outstanding.meetsMinimum(CqcRating.outstanding), isTrue);
-      expect(MinRatingFilter.outstanding.meetsMinimum(CqcRating.good), isFalse);
-      expect(MinRatingFilter.outstanding.meetsMinimum(CqcRating.requiresImprovement), isFalse);
+    test('should filter outstanding only', () {
+      const criteria = HospitalFilterCriteria(
+        allowedRatings: {CqcRating.outstanding},
+      );
+      expect(criteria.hasRatingFilter, isTrue);
+      expect(criteria.allowedRatings.length, 1);
     });
 
-    test('should have correct displayName for each filter', () {
-      expect(MinRatingFilter.any.displayName, 'Any Rating');
-      expect(MinRatingFilter.good.displayName, 'Good or better');
-      expect(MinRatingFilter.outstanding.displayName, 'Outstanding only');
+    test('should have correct ratingFilterDisplayName', () {
+      const anyRating = HospitalFilterCriteria.defaults;
+      expect(anyRating.ratingFilterDisplayName, 'Any Rating');
+      
+      const goodOrBetter = HospitalFilterCriteria(
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
+      );
+      expect(goodOrBetter.ratingFilterDisplayName, 'Good or better');
+      
+      const outstandingOnly = HospitalFilterCriteria(
+        allowedRatings: {CqcRating.outstanding},
+      );
+      expect(outstandingOnly.ratingFilterDisplayName, 'Outstanding');
     });
   });
 
@@ -43,7 +55,7 @@ void main() {
       const criteria = HospitalFilterCriteria();
 
       expect(criteria.maxDistanceMiles, 15.0);
-      expect(criteria.minRating, MinRatingFilter.any);
+      expect(criteria.allowedRatings, HospitalFilterCriteria.allRatings);
       expect(criteria.includeNhs, isTrue);
       expect(criteria.includeIndependent, isTrue);
       expect(criteria.sortBy, HospitalSortBy.distance);
@@ -52,14 +64,14 @@ void main() {
     test('should create with custom values', () {
       const criteria = HospitalFilterCriteria(
         maxDistanceMiles: 25.0,
-        minRating: MinRatingFilter.good,
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
         includeNhs: true,
         includeIndependent: false,
         sortBy: HospitalSortBy.rating,
       );
 
       expect(criteria.maxDistanceMiles, 25.0);
-      expect(criteria.minRating, MinRatingFilter.good);
+      expect(criteria.hasRatingFilter, isTrue);
       expect(criteria.includeIndependent, isFalse);
       expect(criteria.sortBy, HospitalSortBy.rating);
     });
@@ -132,7 +144,7 @@ void main() {
       expect(result.every((u) => u.isNhs), isTrue);
     });
 
-    test('should filter by minimum rating', () {
+    test('should filter by allowed ratings', () {
       final units = [
         FakeMaternityUnit.withRating(rating: 'Outstanding', id: 'outstanding'),
         FakeMaternityUnit.withRating(rating: 'Good', id: 'good'),
@@ -140,7 +152,7 @@ void main() {
       ];
 
       const criteria = HospitalFilterCriteria(
-        minRating: MinRatingFilter.good,
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
         maxDistanceMiles: 1000,
       );
 
@@ -165,7 +177,7 @@ void main() {
       ];
 
       const criteria = HospitalFilterCriteria(
-        minRating: MinRatingFilter.good,
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
         includeIndependent: false,
         maxDistanceMiles: 1000,
       );

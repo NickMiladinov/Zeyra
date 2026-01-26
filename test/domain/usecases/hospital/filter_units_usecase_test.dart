@@ -4,6 +4,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:zeyra/domain/entities/hospital/hospital_filter_criteria.dart';
+import 'package:zeyra/domain/entities/hospital/maternity_unit.dart';
 import 'package:zeyra/domain/usecases/hospital/filter_units_usecase.dart';
 
 import '../../../mocks/fake_data/hospital_chooser_fakes.dart';
@@ -69,7 +70,7 @@ void main() {
       // Arrange
       const criteria = HospitalFilterCriteria(
         maxDistanceMiles: 1.0, // Very small radius
-        minRating: MinRatingFilter.outstanding,
+        allowedRatings: {CqcRating.outstanding},
       );
 
       when(() => mockRepository.getFilteredUnits(any(), any(), any()))
@@ -131,7 +132,7 @@ void main() {
     test('should work with rating filter', () async {
       // Arrange
       const criteria = HospitalFilterCriteria(
-        minRating: MinRatingFilter.good,
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
       );
       final goodUnits = [
         FakeMaternityUnit.withRating(rating: 'Good', id: 'good-1'),

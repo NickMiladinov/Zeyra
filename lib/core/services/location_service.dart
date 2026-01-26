@@ -45,11 +45,25 @@ class LocationService {
   /// Base URL for postcodes.io API.
   static const String _postcodeBaseUrl = 'https://api.postcodes.io';
 
+  /// Whether the HTTP client was created internally (vs injected).
+  final bool _ownsHttpClient;
+
   LocationService({
     required LoggingService logger,
     http.Client? httpClient,
   })  : _logger = logger,
-        _httpClient = httpClient ?? http.Client();
+        _httpClient = httpClient ?? http.Client(),
+        _ownsHttpClient = httpClient == null;
+
+  /// Close the HTTP client to release network resources.
+  ///
+  /// Only closes the client if it was created internally (not injected).
+  /// Should be called when the service is no longer needed.
+  void close() {
+    if (_ownsHttpClient) {
+      _httpClient.close();
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Device Location (geolocator)
@@ -289,15 +303,23 @@ class LocationService {
         final result = data['result'] as Map<String, dynamic>?;
 
         if (result != null) {
-          return PostcodeDetails(
-            postcode: result['postcode'] as String,
-            latitude: (result['latitude'] as num).toDouble(),
-            longitude: (result['longitude'] as num).toDouble(),
-            region: result['region'] as String?,
-            country: result['country'] as String?,
-            adminDistrict: result['admin_district'] as String?,
-            parish: result['parish'] as String?,
-          );
+          // Defensive null-checking for required fields (consistent with
+          // getCoordinatesFromPostcode pattern)
+          final postcodeValue = result['postcode'] as String?;
+          final lat = result['latitude'] as num?;
+          final lng = result['longitude'] as num?;
+
+          if (postcodeValue != null && lat != null && lng != null) {
+            return PostcodeDetails(
+              postcode: postcodeValue,
+              latitude: lat.toDouble(),
+              longitude: lng.toDouble(),
+              region: result['region'] as String?,
+              country: result['country'] as String?,
+              adminDistrict: result['admin_district'] as String?,
+              parish: result['parish'] as String?,
+            );
+          }
         }
       }
 

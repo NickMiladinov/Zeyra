@@ -5,8 +5,6 @@ import '../../../core/services/location_service.dart';
 import '../../../domain/entities/hospital/hospital_filter_criteria.dart';
 import '../../../domain/entities/hospital/maternity_unit.dart';
 import '../../../domain/usecases/hospital/filter_units_usecase.dart';
-import '../../../domain/usecases/hospital/get_nearby_units_usecase.dart';
-import 'hospital_location_state.dart';
 
 // ----------------------------------------------------------------------------
 // State Classes
@@ -84,18 +82,26 @@ class HospitalMapState {
 
 /// Notifier for managing hospital map state.
 class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
-  final GetNearbyUnitsUseCase _getNearbyUnits;
-  final FilterUnitsUseCase _filterUnits;
+  final FilterUnitsUseCase? _filterUnits;
+  final bool _isLoading;
 
   HospitalMapNotifier({
-    required GetNearbyUnitsUseCase getNearbyUnits,
     required FilterUnitsUseCase filterUnits,
-  })  : _getNearbyUnits = getNearbyUnits,
-        _filterUnits = filterUnits,
+  })  : _filterUnits = filterUnits,
+        _isLoading = false,
         super(const HospitalMapState());
+
+  /// Creates a loading-only notifier used while dependencies are initializing.
+  HospitalMapNotifier._loading()
+      : _filterUnits = null,
+        _isLoading = true,
+        super(const HospitalMapState(isLoading: true));
 
   /// Load nearby units for the given location.
   Future<void> loadNearbyUnits(LatLng location) async {
+    final filterUnits = _filterUnits;
+    if (_isLoading || filterUnits == null) return;
+    
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -104,7 +110,7 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
 
     try {
       // Use filter criteria for the search
-      final units = await _filterUnits.execute(
+      final units = await filterUnits.execute(
         criteria: state.filters,
         userLat: location.latitude,
         userLng: location.longitude,
@@ -122,9 +128,59 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
     }
   }
 
+  /// Load nearby units with a specific radius.
+  ///
+  /// Used for auto-expanding radius when not enough units are found.
+  Future<void> loadNearbyUnitsWithRadius(
+    LatLng location, {
+    required double radiusMiles,
+  }) async {
+    final filterUnits = _filterUnits;
+    if (_isLoading || filterUnits == null) return;
+    
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      mapCenter: location,
+    );
+
+    try {
+      // Create filter criteria with the specified radius
+      final criteria = state.filters.copyWith(maxDistanceMiles: radiusMiles);
+      
+      final units = await filterUnits.execute(
+        criteria: criteria,
+        userLat: location.latitude,
+        userLng: location.longitude,
+      );
+
+      state = state.copyWith(
+        nearbyUnits: units,
+        filters: criteria, // Update filters to reflect current radius
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
   /// Apply new filter criteria.
-  Future<void> applyFilters(HospitalFilterCriteria newFilters) async {
+  /// 
+  /// [sortLocation] - Optional location to use for distance sorting.
+  /// If not provided, uses the current map center.
+  Future<void> applyFilters(
+    HospitalFilterCriteria newFilters, {
+    LatLng? sortLocation,
+  }) async {
+    final filterUnits = _filterUnits;
+    if (_isLoading || filterUnits == null) return;
     if (state.mapCenter == null) return;
+
+    // Use provided location for sorting, or fall back to map center
+    final locationForSort = sortLocation ?? state.mapCenter!;
 
     state = state.copyWith(
       filters: newFilters,
@@ -133,10 +189,10 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
     );
 
     try {
-      final units = await _filterUnits.execute(
+      final units = await filterUnits.execute(
         criteria: newFilters,
-        userLat: state.mapCenter!.latitude,
-        userLng: state.mapCenter!.longitude,
+        userLat: locationForSort.latitude,
+        userLng: locationForSort.longitude,
       );
 
       state = state.copyWith(
@@ -153,16 +209,19 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
 
   /// Select a unit (when marker is tapped or list item selected).
   void selectUnit(MaternityUnit unit) {
+    if (_isLoading) return;
     state = state.copyWith(selectedUnit: unit);
   }
 
   /// Clear the current selection.
   void clearSelection() {
+    if (_isLoading) return;
     state = state.clearSelection();
   }
 
   /// Refresh the current data.
   Future<void> refresh() async {
+    if (_isLoading) return;
     if (state.mapCenter != null) {
       await loadNearbyUnits(state.mapCenter!);
     }
@@ -173,20 +232,25 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
 // Provider
 // ----------------------------------------------------------------------------
 
+/// Provider that indicates whether hospital map dependencies are ready.
+final hospitalMapReadyProvider = Provider<bool>((ref) {
+  final filterUnitsAsync = ref.watch(filterUnitsUseCaseProvider);
+  return filterUnitsAsync.hasValue;
+});
+
 /// Provider for hospital map state.
+///
+/// IMPORTANT: Only access this provider when [hospitalMapReadyProvider] is true.
 final hospitalMapProvider =
     StateNotifierProvider<HospitalMapNotifier, HospitalMapState>((ref) {
-  final getNearbyUnitsAsync = ref.watch(getNearbyUnitsUseCaseProvider);
   final filterUnitsAsync = ref.watch(filterUnitsUseCaseProvider);
 
-  if (!getNearbyUnitsAsync.hasValue || !filterUnitsAsync.hasValue) {
-    throw StateError(
-      'hospitalMapProvider accessed before dependencies are ready.',
-    );
+  // If dependencies aren't ready, return a notifier with loading state
+  if (!filterUnitsAsync.hasValue) {
+    return HospitalMapNotifier._loading();
   }
 
   return HospitalMapNotifier(
-    getNearbyUnits: getNearbyUnitsAsync.requireValue,
     filterUnits: filterUnitsAsync.requireValue,
   );
 });

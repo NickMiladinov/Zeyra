@@ -179,7 +179,10 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
     );
   }
 
-  // Return cached instance if it exists for this user
+  // Return cached instance if it exists for this user.
+  // Note: We don't register onDispose here because the cache is the owner of
+  // the database lifecycle. Database cleanup happens in clearDatabaseCache()
+  // which is called during logout.
   if (_databaseCache.containsKey(user.id)) {
     logger.debug('Returning cached database for user');
     return _databaseCache[user.id]!;
@@ -206,25 +209,39 @@ final appDatabaseProvider = FutureProvider<AppDatabase>((ref) async {
     logger.warning('SQLCipher verification failed - database may not be encrypted');
   }
 
-  // Register cleanup when provider is disposed
-  ref.onDispose(() async {
-    // Remove from cache and close
-    _databaseCache.remove(user.id);
-    await db.close();
-    logger.debug('Database closed for user');
-  });
+  // Note: We intentionally do NOT register ref.onDispose() here.
+  // Problem: When the provider hits the cache (early return above), onDispose
+  // is never registered for that execution. If the provider is later invalidated,
+  // the previous execution's onDispose would close the database while consumers
+  // from the cached execution are still using it, causing crashes.
+  // Solution: Database cleanup is handled by clearDatabaseCache() which is called
+  // explicitly during logout. This ensures consistent cleanup regardless of
+  // provider caching behavior.
 
   return db;
 });
 
 /// Clears the database cache for a specific user or all users.
 ///
+/// Closes any open database connections before removing from cache.
 /// Call this on logout to ensure a fresh database instance on next login.
-void clearDatabaseCache([String? userId]) {
+///
+/// This is the proper cleanup point for database connections since the
+/// provider's onDispose cannot be used reliably with caching.
+Future<void> clearDatabaseCache([String? userId]) async {
   if (userId != null) {
-    _databaseCache.remove(userId);
+    final db = _databaseCache.remove(userId);
+    if (db != null) {
+      await db.close();
+      logger.debug('Database closed and cache cleared for user');
+    }
   } else {
+    // Close all databases before clearing
+    for (final db in _databaseCache.values) {
+      await db.close();
+    }
     _databaseCache.clear();
+    logger.debug('All databases closed and cache cleared');
   }
 }
 
@@ -473,9 +490,17 @@ final deleteBumpPhotoUseCaseProvider = FutureProvider<DeleteBumpPhoto>((ref) asy
 /// Provider for the location service.
 ///
 /// Handles device location and UK postcode lookup via postcodes.io.
+/// Properly disposes the HTTP client when the provider is disposed.
 final locationServiceProvider = Provider<LocationService>((ref) {
   final logging = ref.watch(loggingServiceProvider);
-  return LocationService(logger: logging);
+  final service = LocationService(logger: logging);
+
+  // Clean up HTTP client when provider is disposed
+  ref.onDispose(() {
+    service.close();
+  });
+
+  return service;
 });
 
 /// Provider for the maternity unit remote source.

@@ -18,43 +18,14 @@ enum HospitalSortBy {
   }
 }
 
-/// Minimum rating filter options.
-enum MinRatingFilter {
-  any,
-  good,
-  outstanding;
-
-  String get displayName {
-    switch (this) {
-      case MinRatingFilter.any:
-        return 'Any Rating';
-      case MinRatingFilter.good:
-        return 'Good or better';
-      case MinRatingFilter.outstanding:
-        return 'Outstanding only';
-    }
-  }
-
-  /// Check if a rating meets this minimum.
-  bool meetsMinimum(CqcRating rating) {
-    switch (this) {
-      case MinRatingFilter.any:
-        return true;
-      case MinRatingFilter.good:
-        return rating == CqcRating.good || rating == CqcRating.outstanding;
-      case MinRatingFilter.outstanding:
-        return rating == CqcRating.outstanding;
-    }
-  }
-}
-
 /// Filter criteria for searching hospitals.
 class HospitalFilterCriteria {
   /// Maximum distance in miles from user's location.
   final double maxDistanceMiles;
 
-  /// Minimum rating filter.
-  final MinRatingFilter minRating;
+  /// Set of allowed CQC ratings.
+  /// If empty or contains all ratings, no rating filter is applied.
+  final Set<CqcRating> allowedRatings;
 
   /// Include NHS hospitals.
   final bool includeNhs;
@@ -65,9 +36,17 @@ class HospitalFilterCriteria {
   /// Sort order.
   final HospitalSortBy sortBy;
 
+  /// All CQC ratings that can be filtered.
+  static const Set<CqcRating> allRatings = {
+    CqcRating.outstanding,
+    CqcRating.good,
+    CqcRating.requiresImprovement,
+    CqcRating.inadequate,
+  };
+
   const HospitalFilterCriteria({
     this.maxDistanceMiles = 15.0,
-    this.minRating = MinRatingFilter.any,
+    this.allowedRatings = allRatings,
     this.includeNhs = true,
     this.includeIndependent = true,
     this.sortBy = HospitalSortBy.distance,
@@ -76,12 +55,38 @@ class HospitalFilterCriteria {
   /// Default filter criteria.
   static const HospitalFilterCriteria defaults = HospitalFilterCriteria();
 
+  /// Check if any rating filters are active.
+  bool get hasRatingFilter => 
+      allowedRatings.isNotEmpty && 
+      !_setEquals(allowedRatings, allRatings);
+
   /// Check if any filters are active (non-default).
   bool get hasActiveFilters =>
       maxDistanceMiles != 15.0 ||
-      minRating != MinRatingFilter.any ||
+      hasRatingFilter ||
       !includeNhs ||
       !includeIndependent;
+  
+  /// Get display name for the active rating filter.
+  String get ratingFilterDisplayName {
+    if (!hasRatingFilter) return 'Any Rating';
+    if (allowedRatings.length == 1) {
+      return allowedRatings.first.displayName;
+    }
+    // Show the "best" rating in the selection
+    if (allowedRatings.contains(CqcRating.outstanding) && 
+        allowedRatings.contains(CqcRating.good) &&
+        allowedRatings.length == 2) {
+      return 'Good or better';
+    }
+    return '${allowedRatings.length} ratings';
+  }
+  
+  /// Helper to compare sets for equality.
+  static bool _setEquals<T>(Set<T> a, Set<T> b) {
+    if (a.length != b.length) return false;
+    return a.every((element) => b.contains(element));
+  }
 
   /// Apply filters to a list of units with distances.
   List<MaternityUnit> apply(
@@ -101,8 +106,10 @@ class HospitalFilterCriteria {
       final distance = unit.distanceFrom(userLat, userLng);
       if (distance == null || distance > maxDistanceMiles) return false;
 
-      // Check rating
-      if (!minRating.meetsMinimum(unit.bestAvailableRating)) return false;
+      // Check rating filter
+      if (hasRatingFilter && !allowedRatings.contains(unit.bestAvailableRating)) {
+        return false;
+      }
 
       return true;
     }).toList();
@@ -139,14 +146,14 @@ class HospitalFilterCriteria {
 
   HospitalFilterCriteria copyWith({
     double? maxDistanceMiles,
-    MinRatingFilter? minRating,
+    Set<CqcRating>? allowedRatings,
     bool? includeNhs,
     bool? includeIndependent,
     HospitalSortBy? sortBy,
   }) {
     return HospitalFilterCriteria(
       maxDistanceMiles: maxDistanceMiles ?? this.maxDistanceMiles,
-      minRating: minRating ?? this.minRating,
+      allowedRatings: allowedRatings ?? this.allowedRatings,
       includeNhs: includeNhs ?? this.includeNhs,
       includeIndependent: includeIndependent ?? this.includeIndependent,
       sortBy: sortBy ?? this.sortBy,
@@ -159,7 +166,7 @@ class HospitalFilterCriteria {
       other is HospitalFilterCriteria &&
           runtimeType == other.runtimeType &&
           maxDistanceMiles == other.maxDistanceMiles &&
-          minRating == other.minRating &&
+          _setEquals(allowedRatings, other.allowedRatings) &&
           includeNhs == other.includeNhs &&
           includeIndependent == other.includeIndependent &&
           sortBy == other.sortBy;
@@ -167,13 +174,13 @@ class HospitalFilterCriteria {
   @override
   int get hashCode =>
       maxDistanceMiles.hashCode ^
-      minRating.hashCode ^
+      Object.hashAll(allowedRatings) ^
       includeNhs.hashCode ^
       includeIndependent.hashCode ^
       sortBy.hashCode;
 
   @override
   String toString() =>
-      'HospitalFilterCriteria(maxDistance: $maxDistanceMiles mi, minRating: $minRating, '
+      'HospitalFilterCriteria(maxDistance: $maxDistanceMiles mi, ratings: $allowedRatings, '
       'nhs: $includeNhs, independent: $includeIndependent, sortBy: $sortBy)';
 }

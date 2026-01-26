@@ -21,6 +21,7 @@ import '../../features/contraction_timer/ui/screens/contraction_timer_info_scree
 import '../../features/contraction_timer/ui/screens/contraction_session_detail_screen.dart';
 import '../../domain/entities/contraction_timer/contraction_session.dart';
 import '../../features/developer/ui/screens/developer_menu_screen.dart';
+import '../../features/hospital_chooser/ui/screens/hospital_chooser_screen.dart';
 import '../../features/onboarding/ui/screens/onboarding_screens.dart';
 import '../../shared/widgets/main_shell.dart';
 import '../theme/app_effects.dart';
@@ -295,6 +296,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         },
                       ),
                     ],
+                  ),
+
+                  // Hospital Chooser route (full screen, no bottom nav)
+                  GoRoute(
+                    path: 'hospital-chooser',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const HospitalChooserScreen(),
                   ),
                 ],
               ),

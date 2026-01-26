@@ -102,6 +102,7 @@ class ToolsScreen extends ConsumerWidget {
       subtitle: 'Find Your Birth Place',
       icon: AppIcons.hospital,
       color: const Color(0xFFB8D8D8),
+      route: ToolRoutes.hospitalChooser,
     ),
     _ToolData(
       title: 'AI Assistant',

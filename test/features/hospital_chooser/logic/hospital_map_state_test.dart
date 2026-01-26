@@ -4,6 +4,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zeyra/core/services/location_service.dart';
 import 'package:zeyra/domain/entities/hospital/hospital_filter_criteria.dart';
+import 'package:zeyra/domain/entities/hospital/maternity_unit.dart';
 import 'package:zeyra/features/hospital_chooser/logic/hospital_map_state.dart';
 
 import '../../../mocks/fake_data/hospital_chooser_fakes.dart';
@@ -121,7 +122,7 @@ void main() {
       expect(state.filters.maxDistanceMiles, 15.0);
       expect(state.filters.includeNhs, true);
       expect(state.filters.includeIndependent, true);
-      expect(state.filters.minRating, MinRatingFilter.any);
+      expect(state.filters.hasRatingFilter, false);
     });
 
     test('should update filters with copyWith', () {
@@ -130,14 +131,14 @@ void main() {
         maxDistanceMiles: 5.0,
         includeNhs: true,
         includeIndependent: false,
-        minRating: MinRatingFilter.good,
+        allowedRatings: {CqcRating.outstanding, CqcRating.good},
       );
       final updated = original.copyWith(filters: newFilters);
 
       expect(updated.filters.maxDistanceMiles, 5.0);
       expect(updated.filters.includeNhs, true);
       expect(updated.filters.includeIndependent, false);
-      expect(updated.filters.minRating, MinRatingFilter.good);
+      expect(updated.filters.hasRatingFilter, true);
     });
   });
 

@@ -146,6 +146,10 @@ abstract class ToolRoutes {
   /// Generate the contraction session detail path for a specific session.
   static String contractionSessionDetailPath(String id) =>
       '/main/tools/contraction-timer/session/$id';
+
+  // Hospital Chooser
+  /// Hospital chooser main screen (map view).
+  static const String hospitalChooser = '/main/tools/hospital-chooser';
 }
 
 /// Route paths for the "More" tab screens.
