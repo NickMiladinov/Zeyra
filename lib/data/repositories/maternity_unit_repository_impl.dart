@@ -318,6 +318,17 @@ class MaternityUnitRepositoryImpl implements MaternityUnitRepository {
     final createdAt = _parseTimestamp(json['created_at'] ?? json['createdAt']);
     final updatedAt = _parseTimestamp(json['updated_at'] ?? json['updatedAt']);
     final cqcSyncedAt = _parseTimestamp(json['cqc_synced_at'] ?? json['cqcSyncedAt']);
+    final placeSyncedAt = _parseTimestamp(json['place_synced_at'] ?? json['placeSyncedAt']);
+
+    // Parse PLACE ratings (stored as DECIMAL/double in JSON, null if unavailable)
+    final placeCleanliness = _parseDouble(json['place_cleanliness'] ?? json['placeCleanliness']);
+    final placeFood = _parseDouble(json['place_food'] ?? json['placeFood']);
+    final placePrivacyDignityWellbeing = _parseDouble(
+      json['place_privacy_dignity_wellbeing'] ?? json['placePrivacyDignityWellbeing'],
+    );
+    final placeConditionAppearance = _parseDouble(
+      json['place_condition_appearance'] ?? json['placeConditionAppearance'],
+    );
 
     return MaternityUnitDto(
       id: json['id'] as String,
@@ -358,6 +369,11 @@ class MaternityUnitRepositoryImpl implements MaternityUnitRepository {
       createdAtMillis: createdAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       updatedAtMillis: updatedAt?.millisecondsSinceEpoch ?? DateTime.now().millisecondsSinceEpoch,
       cqcSyncedAtMillis: cqcSyncedAt?.millisecondsSinceEpoch,
+      placeCleanliness: placeCleanliness,
+      placeFood: placeFood,
+      placePrivacyDignityWellbeing: placePrivacyDignityWellbeing,
+      placeConditionAppearance: placeConditionAppearance,
+      placeSyncedAtMillis: placeSyncedAt?.millisecondsSinceEpoch,
     );
   }
 
@@ -370,6 +386,15 @@ class MaternityUnitRepositoryImpl implements MaternityUnitRepository {
         return null;
       }
     }
+    return null;
+  }
+
+  /// Parse a value to double, handling both String and numeric types.
+  double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
     return null;
   }
 }

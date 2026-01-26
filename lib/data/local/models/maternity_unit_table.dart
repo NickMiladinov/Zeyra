@@ -62,6 +62,14 @@ class MaternityUnits extends Table {
   TextColumn get cqcReportUrl => text().nullable()();
   TextColumn get registrationStatus => text().nullable()();
 
+  // PLACE Ratings (Patient-Led Assessments of the Care Environment)
+  // Values are percentages (0-100), null if no PLACE data available
+  RealColumn get placeCleanliness => real().nullable()();
+  RealColumn get placeFood => real().nullable()();
+  RealColumn get placePrivacyDignityWellbeing => real().nullable()();
+  RealColumn get placeConditionAppearance => real().nullable()();
+  IntColumn get placeSyncedAtMillis => integer().nullable()();
+
   // Manual curation fields (stored as JSON strings)
   TextColumn get birthingOptions => text().nullable()(); // JSON array
   TextColumn get facilities => text().nullable()(); // JSON object

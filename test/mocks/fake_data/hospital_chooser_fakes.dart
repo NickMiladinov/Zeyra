@@ -92,6 +92,10 @@ class FakeMaternityUnit {
     bool isNhs = true,
     bool isActive = true,
     String registrationStatus = 'Registered',
+    double? placeCleanliness,
+    double? placeFood,
+    double? placePrivacyDignityWellbeing,
+    double? placeConditionAppearance,
   }) {
     final now = DateTime.now();
     return MaternityUnit(
@@ -107,8 +111,31 @@ class FakeMaternityUnit {
       overallRating: overallRating ?? 'Good',
       registrationStatus: registrationStatus,
       isActive: isActive,
+      placeCleanliness: placeCleanliness,
+      placeFood: placeFood,
+      placePrivacyDignityWellbeing: placePrivacyDignityWellbeing,
+      placeConditionAppearance: placeConditionAppearance,
       createdAt: now,
       updatedAt: now,
+    );
+  }
+
+  /// Creates a maternity unit with PLACE ratings.
+  static MaternityUnit withPlaceRatings({
+    String? id,
+    String? name,
+    double cleanliness = 95.0,
+    double food = 90.0,
+    double privacyDignityWellbeing = 85.0,
+    double conditionAppearance = 92.0,
+  }) {
+    return simple(
+      id: id,
+      name: name ?? 'Hospital with PLACE ratings',
+      placeCleanliness: cleanliness,
+      placeFood: food,
+      placePrivacyDignityWellbeing: privacyDignityWellbeing,
+      placeConditionAppearance: conditionAppearance,
     );
   }
 
@@ -462,7 +489,7 @@ class FakeFilterCriteria {
   /// Filter for outstanding rating only.
   static HospitalFilterCriteria outstandingOnly() {
     return const HospitalFilterCriteria(
-      minRating: MinRatingFilter.outstanding,
+      allowedRatings: {CqcRating.outstanding},
     );
   }
 

@@ -5263,6 +5263,60 @@ class $MaternityUnitsTable extends MaternityUnits
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _placeCleanlinessMeta = const VerificationMeta(
+    'placeCleanliness',
+  );
+  @override
+  late final GeneratedColumn<double> placeCleanliness = GeneratedColumn<double>(
+    'place_cleanliness',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _placeFoodMeta = const VerificationMeta(
+    'placeFood',
+  );
+  @override
+  late final GeneratedColumn<double> placeFood = GeneratedColumn<double>(
+    'place_food',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _placePrivacyDignityWellbeingMeta =
+      const VerificationMeta('placePrivacyDignityWellbeing');
+  @override
+  late final GeneratedColumn<double> placePrivacyDignityWellbeing =
+      GeneratedColumn<double>(
+        'place_privacy_dignity_wellbeing',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _placeConditionAppearanceMeta =
+      const VerificationMeta('placeConditionAppearance');
+  @override
+  late final GeneratedColumn<double> placeConditionAppearance =
+      GeneratedColumn<double>(
+        'place_condition_appearance',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _placeSyncedAtMillisMeta =
+      const VerificationMeta('placeSyncedAtMillis');
+  @override
+  late final GeneratedColumn<int> placeSyncedAtMillis = GeneratedColumn<int>(
+    'place_synced_at_millis',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _birthingOptionsMeta = const VerificationMeta(
     'birthingOptions',
   );
@@ -5385,6 +5439,11 @@ class $MaternityUnitsTable extends MaternityUnits
     lastInspectionDate,
     cqcReportUrl,
     registrationStatus,
+    placeCleanliness,
+    placeFood,
+    placePrivacyDignityWellbeing,
+    placeConditionAppearance,
+    placeSyncedAtMillis,
     birthingOptions,
     facilities,
     birthStatistics,
@@ -5639,6 +5698,48 @@ class $MaternityUnitsTable extends MaternityUnits
         ),
       );
     }
+    if (data.containsKey('place_cleanliness')) {
+      context.handle(
+        _placeCleanlinessMeta,
+        placeCleanliness.isAcceptableOrUnknown(
+          data['place_cleanliness']!,
+          _placeCleanlinessMeta,
+        ),
+      );
+    }
+    if (data.containsKey('place_food')) {
+      context.handle(
+        _placeFoodMeta,
+        placeFood.isAcceptableOrUnknown(data['place_food']!, _placeFoodMeta),
+      );
+    }
+    if (data.containsKey('place_privacy_dignity_wellbeing')) {
+      context.handle(
+        _placePrivacyDignityWellbeingMeta,
+        placePrivacyDignityWellbeing.isAcceptableOrUnknown(
+          data['place_privacy_dignity_wellbeing']!,
+          _placePrivacyDignityWellbeingMeta,
+        ),
+      );
+    }
+    if (data.containsKey('place_condition_appearance')) {
+      context.handle(
+        _placeConditionAppearanceMeta,
+        placeConditionAppearance.isAcceptableOrUnknown(
+          data['place_condition_appearance']!,
+          _placeConditionAppearanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('place_synced_at_millis')) {
+      context.handle(
+        _placeSyncedAtMillisMeta,
+        placeSyncedAtMillis.isAcceptableOrUnknown(
+          data['place_synced_at_millis']!,
+          _placeSyncedAtMillisMeta,
+        ),
+      );
+    }
     if (data.containsKey('birthing_options')) {
       context.handle(
         _birthingOptionsMeta,
@@ -5835,6 +5936,26 @@ class $MaternityUnitsTable extends MaternityUnits
         DriftSqlType.string,
         data['${effectivePrefix}registration_status'],
       ),
+      placeCleanliness: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}place_cleanliness'],
+      ),
+      placeFood: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}place_food'],
+      ),
+      placePrivacyDignityWellbeing: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}place_privacy_dignity_wellbeing'],
+      ),
+      placeConditionAppearance: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}place_condition_appearance'],
+      ),
+      placeSyncedAtMillis: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}place_synced_at_millis'],
+      ),
       birthingOptions: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}birthing_options'],
@@ -5923,6 +6044,11 @@ class MaternityUnitDto extends DataClass
   final String? lastInspectionDate;
   final String? cqcReportUrl;
   final String? registrationStatus;
+  final double? placeCleanliness;
+  final double? placeFood;
+  final double? placePrivacyDignityWellbeing;
+  final double? placeConditionAppearance;
+  final int? placeSyncedAtMillis;
   final String? birthingOptions;
   final String? facilities;
   final String? birthStatistics;
@@ -5962,6 +6088,11 @@ class MaternityUnitDto extends DataClass
     this.lastInspectionDate,
     this.cqcReportUrl,
     this.registrationStatus,
+    this.placeCleanliness,
+    this.placeFood,
+    this.placePrivacyDignityWellbeing,
+    this.placeConditionAppearance,
+    this.placeSyncedAtMillis,
     this.birthingOptions,
     this.facilities,
     this.birthStatistics,
@@ -6053,6 +6184,25 @@ class MaternityUnitDto extends DataClass
     }
     if (!nullToAbsent || registrationStatus != null) {
       map['registration_status'] = Variable<String>(registrationStatus);
+    }
+    if (!nullToAbsent || placeCleanliness != null) {
+      map['place_cleanliness'] = Variable<double>(placeCleanliness);
+    }
+    if (!nullToAbsent || placeFood != null) {
+      map['place_food'] = Variable<double>(placeFood);
+    }
+    if (!nullToAbsent || placePrivacyDignityWellbeing != null) {
+      map['place_privacy_dignity_wellbeing'] = Variable<double>(
+        placePrivacyDignityWellbeing,
+      );
+    }
+    if (!nullToAbsent || placeConditionAppearance != null) {
+      map['place_condition_appearance'] = Variable<double>(
+        placeConditionAppearance,
+      );
+    }
+    if (!nullToAbsent || placeSyncedAtMillis != null) {
+      map['place_synced_at_millis'] = Variable<int>(placeSyncedAtMillis);
     }
     if (!nullToAbsent || birthingOptions != null) {
       map['birthing_options'] = Variable<String>(birthingOptions);
@@ -6157,6 +6307,22 @@ class MaternityUnitDto extends DataClass
       registrationStatus: registrationStatus == null && nullToAbsent
           ? const Value.absent()
           : Value(registrationStatus),
+      placeCleanliness: placeCleanliness == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placeCleanliness),
+      placeFood: placeFood == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placeFood),
+      placePrivacyDignityWellbeing:
+          placePrivacyDignityWellbeing == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placePrivacyDignityWellbeing),
+      placeConditionAppearance: placeConditionAppearance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placeConditionAppearance),
+      placeSyncedAtMillis: placeSyncedAtMillis == null && nullToAbsent
+          ? const Value.absent()
+          : Value(placeSyncedAtMillis),
       birthingOptions: birthingOptions == null && nullToAbsent
           ? const Value.absent()
           : Value(birthingOptions),
@@ -6220,6 +6386,17 @@ class MaternityUnitDto extends DataClass
       registrationStatus: serializer.fromJson<String?>(
         json['registrationStatus'],
       ),
+      placeCleanliness: serializer.fromJson<double?>(json['placeCleanliness']),
+      placeFood: serializer.fromJson<double?>(json['placeFood']),
+      placePrivacyDignityWellbeing: serializer.fromJson<double?>(
+        json['placePrivacyDignityWellbeing'],
+      ),
+      placeConditionAppearance: serializer.fromJson<double?>(
+        json['placeConditionAppearance'],
+      ),
+      placeSyncedAtMillis: serializer.fromJson<int?>(
+        json['placeSyncedAtMillis'],
+      ),
       birthingOptions: serializer.fromJson<String?>(json['birthingOptions']),
       facilities: serializer.fromJson<String?>(json['facilities']),
       birthStatistics: serializer.fromJson<String?>(json['birthStatistics']),
@@ -6264,6 +6441,15 @@ class MaternityUnitDto extends DataClass
       'lastInspectionDate': serializer.toJson<String?>(lastInspectionDate),
       'cqcReportUrl': serializer.toJson<String?>(cqcReportUrl),
       'registrationStatus': serializer.toJson<String?>(registrationStatus),
+      'placeCleanliness': serializer.toJson<double?>(placeCleanliness),
+      'placeFood': serializer.toJson<double?>(placeFood),
+      'placePrivacyDignityWellbeing': serializer.toJson<double?>(
+        placePrivacyDignityWellbeing,
+      ),
+      'placeConditionAppearance': serializer.toJson<double?>(
+        placeConditionAppearance,
+      ),
+      'placeSyncedAtMillis': serializer.toJson<int?>(placeSyncedAtMillis),
       'birthingOptions': serializer.toJson<String?>(birthingOptions),
       'facilities': serializer.toJson<String?>(facilities),
       'birthStatistics': serializer.toJson<String?>(birthStatistics),
@@ -6306,6 +6492,11 @@ class MaternityUnitDto extends DataClass
     Value<String?> lastInspectionDate = const Value.absent(),
     Value<String?> cqcReportUrl = const Value.absent(),
     Value<String?> registrationStatus = const Value.absent(),
+    Value<double?> placeCleanliness = const Value.absent(),
+    Value<double?> placeFood = const Value.absent(),
+    Value<double?> placePrivacyDignityWellbeing = const Value.absent(),
+    Value<double?> placeConditionAppearance = const Value.absent(),
+    Value<int?> placeSyncedAtMillis = const Value.absent(),
     Value<String?> birthingOptions = const Value.absent(),
     Value<String?> facilities = const Value.absent(),
     Value<String?> birthStatistics = const Value.absent(),
@@ -6365,6 +6556,19 @@ class MaternityUnitDto extends DataClass
     registrationStatus: registrationStatus.present
         ? registrationStatus.value
         : this.registrationStatus,
+    placeCleanliness: placeCleanliness.present
+        ? placeCleanliness.value
+        : this.placeCleanliness,
+    placeFood: placeFood.present ? placeFood.value : this.placeFood,
+    placePrivacyDignityWellbeing: placePrivacyDignityWellbeing.present
+        ? placePrivacyDignityWellbeing.value
+        : this.placePrivacyDignityWellbeing,
+    placeConditionAppearance: placeConditionAppearance.present
+        ? placeConditionAppearance.value
+        : this.placeConditionAppearance,
+    placeSyncedAtMillis: placeSyncedAtMillis.present
+        ? placeSyncedAtMillis.value
+        : this.placeSyncedAtMillis,
     birthingOptions: birthingOptions.present
         ? birthingOptions.value
         : this.birthingOptions,
@@ -6446,6 +6650,19 @@ class MaternityUnitDto extends DataClass
       registrationStatus: data.registrationStatus.present
           ? data.registrationStatus.value
           : this.registrationStatus,
+      placeCleanliness: data.placeCleanliness.present
+          ? data.placeCleanliness.value
+          : this.placeCleanliness,
+      placeFood: data.placeFood.present ? data.placeFood.value : this.placeFood,
+      placePrivacyDignityWellbeing: data.placePrivacyDignityWellbeing.present
+          ? data.placePrivacyDignityWellbeing.value
+          : this.placePrivacyDignityWellbeing,
+      placeConditionAppearance: data.placeConditionAppearance.present
+          ? data.placeConditionAppearance.value
+          : this.placeConditionAppearance,
+      placeSyncedAtMillis: data.placeSyncedAtMillis.present
+          ? data.placeSyncedAtMillis.value
+          : this.placeSyncedAtMillis,
       birthingOptions: data.birthingOptions.present
           ? data.birthingOptions.value
           : this.birthingOptions,
@@ -6502,6 +6719,13 @@ class MaternityUnitDto extends DataClass
           ..write('lastInspectionDate: $lastInspectionDate, ')
           ..write('cqcReportUrl: $cqcReportUrl, ')
           ..write('registrationStatus: $registrationStatus, ')
+          ..write('placeCleanliness: $placeCleanliness, ')
+          ..write('placeFood: $placeFood, ')
+          ..write(
+            'placePrivacyDignityWellbeing: $placePrivacyDignityWellbeing, ',
+          )
+          ..write('placeConditionAppearance: $placeConditionAppearance, ')
+          ..write('placeSyncedAtMillis: $placeSyncedAtMillis, ')
           ..write('birthingOptions: $birthingOptions, ')
           ..write('facilities: $facilities, ')
           ..write('birthStatistics: $birthStatistics, ')
@@ -6546,6 +6770,11 @@ class MaternityUnitDto extends DataClass
     lastInspectionDate,
     cqcReportUrl,
     registrationStatus,
+    placeCleanliness,
+    placeFood,
+    placePrivacyDignityWellbeing,
+    placeConditionAppearance,
+    placeSyncedAtMillis,
     birthingOptions,
     facilities,
     birthStatistics,
@@ -6589,6 +6818,12 @@ class MaternityUnitDto extends DataClass
           other.lastInspectionDate == this.lastInspectionDate &&
           other.cqcReportUrl == this.cqcReportUrl &&
           other.registrationStatus == this.registrationStatus &&
+          other.placeCleanliness == this.placeCleanliness &&
+          other.placeFood == this.placeFood &&
+          other.placePrivacyDignityWellbeing ==
+              this.placePrivacyDignityWellbeing &&
+          other.placeConditionAppearance == this.placeConditionAppearance &&
+          other.placeSyncedAtMillis == this.placeSyncedAtMillis &&
           other.birthingOptions == this.birthingOptions &&
           other.facilities == this.facilities &&
           other.birthStatistics == this.birthStatistics &&
@@ -6630,6 +6865,11 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
   final Value<String?> lastInspectionDate;
   final Value<String?> cqcReportUrl;
   final Value<String?> registrationStatus;
+  final Value<double?> placeCleanliness;
+  final Value<double?> placeFood;
+  final Value<double?> placePrivacyDignityWellbeing;
+  final Value<double?> placeConditionAppearance;
+  final Value<int?> placeSyncedAtMillis;
   final Value<String?> birthingOptions;
   final Value<String?> facilities;
   final Value<String?> birthStatistics;
@@ -6670,6 +6910,11 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
     this.lastInspectionDate = const Value.absent(),
     this.cqcReportUrl = const Value.absent(),
     this.registrationStatus = const Value.absent(),
+    this.placeCleanliness = const Value.absent(),
+    this.placeFood = const Value.absent(),
+    this.placePrivacyDignityWellbeing = const Value.absent(),
+    this.placeConditionAppearance = const Value.absent(),
+    this.placeSyncedAtMillis = const Value.absent(),
     this.birthingOptions = const Value.absent(),
     this.facilities = const Value.absent(),
     this.birthStatistics = const Value.absent(),
@@ -6711,6 +6956,11 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
     this.lastInspectionDate = const Value.absent(),
     this.cqcReportUrl = const Value.absent(),
     this.registrationStatus = const Value.absent(),
+    this.placeCleanliness = const Value.absent(),
+    this.placeFood = const Value.absent(),
+    this.placePrivacyDignityWellbeing = const Value.absent(),
+    this.placeConditionAppearance = const Value.absent(),
+    this.placeSyncedAtMillis = const Value.absent(),
     this.birthingOptions = const Value.absent(),
     this.facilities = const Value.absent(),
     this.birthStatistics = const Value.absent(),
@@ -6757,6 +7007,11 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
     Expression<String>? lastInspectionDate,
     Expression<String>? cqcReportUrl,
     Expression<String>? registrationStatus,
+    Expression<double>? placeCleanliness,
+    Expression<double>? placeFood,
+    Expression<double>? placePrivacyDignityWellbeing,
+    Expression<double>? placeConditionAppearance,
+    Expression<int>? placeSyncedAtMillis,
     Expression<String>? birthingOptions,
     Expression<String>? facilities,
     Expression<String>? birthStatistics,
@@ -6800,6 +7055,14 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
         'last_inspection_date': lastInspectionDate,
       if (cqcReportUrl != null) 'cqc_report_url': cqcReportUrl,
       if (registrationStatus != null) 'registration_status': registrationStatus,
+      if (placeCleanliness != null) 'place_cleanliness': placeCleanliness,
+      if (placeFood != null) 'place_food': placeFood,
+      if (placePrivacyDignityWellbeing != null)
+        'place_privacy_dignity_wellbeing': placePrivacyDignityWellbeing,
+      if (placeConditionAppearance != null)
+        'place_condition_appearance': placeConditionAppearance,
+      if (placeSyncedAtMillis != null)
+        'place_synced_at_millis': placeSyncedAtMillis,
       if (birthingOptions != null) 'birthing_options': birthingOptions,
       if (facilities != null) 'facilities': facilities,
       if (birthStatistics != null) 'birth_statistics': birthStatistics,
@@ -6843,6 +7106,11 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
     Value<String?>? lastInspectionDate,
     Value<String?>? cqcReportUrl,
     Value<String?>? registrationStatus,
+    Value<double?>? placeCleanliness,
+    Value<double?>? placeFood,
+    Value<double?>? placePrivacyDignityWellbeing,
+    Value<double?>? placeConditionAppearance,
+    Value<int?>? placeSyncedAtMillis,
     Value<String?>? birthingOptions,
     Value<String?>? facilities,
     Value<String?>? birthStatistics,
@@ -6884,6 +7152,13 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
       lastInspectionDate: lastInspectionDate ?? this.lastInspectionDate,
       cqcReportUrl: cqcReportUrl ?? this.cqcReportUrl,
       registrationStatus: registrationStatus ?? this.registrationStatus,
+      placeCleanliness: placeCleanliness ?? this.placeCleanliness,
+      placeFood: placeFood ?? this.placeFood,
+      placePrivacyDignityWellbeing:
+          placePrivacyDignityWellbeing ?? this.placePrivacyDignityWellbeing,
+      placeConditionAppearance:
+          placeConditionAppearance ?? this.placeConditionAppearance,
+      placeSyncedAtMillis: placeSyncedAtMillis ?? this.placeSyncedAtMillis,
       birthingOptions: birthingOptions ?? this.birthingOptions,
       facilities: facilities ?? this.facilities,
       birthStatistics: birthStatistics ?? this.birthStatistics,
@@ -6991,6 +7266,25 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
     if (registrationStatus.present) {
       map['registration_status'] = Variable<String>(registrationStatus.value);
     }
+    if (placeCleanliness.present) {
+      map['place_cleanliness'] = Variable<double>(placeCleanliness.value);
+    }
+    if (placeFood.present) {
+      map['place_food'] = Variable<double>(placeFood.value);
+    }
+    if (placePrivacyDignityWellbeing.present) {
+      map['place_privacy_dignity_wellbeing'] = Variable<double>(
+        placePrivacyDignityWellbeing.value,
+      );
+    }
+    if (placeConditionAppearance.present) {
+      map['place_condition_appearance'] = Variable<double>(
+        placeConditionAppearance.value,
+      );
+    }
+    if (placeSyncedAtMillis.present) {
+      map['place_synced_at_millis'] = Variable<int>(placeSyncedAtMillis.value);
+    }
     if (birthingOptions.present) {
       map['birthing_options'] = Variable<String>(birthingOptions.value);
     }
@@ -7054,6 +7348,13 @@ class MaternityUnitsCompanion extends UpdateCompanion<MaternityUnitDto> {
           ..write('lastInspectionDate: $lastInspectionDate, ')
           ..write('cqcReportUrl: $cqcReportUrl, ')
           ..write('registrationStatus: $registrationStatus, ')
+          ..write('placeCleanliness: $placeCleanliness, ')
+          ..write('placeFood: $placeFood, ')
+          ..write(
+            'placePrivacyDignityWellbeing: $placePrivacyDignityWellbeing, ',
+          )
+          ..write('placeConditionAppearance: $placeConditionAppearance, ')
+          ..write('placeSyncedAtMillis: $placeSyncedAtMillis, ')
           ..write('birthingOptions: $birthingOptions, ')
           ..write('facilities: $facilities, ')
           ..write('birthStatistics: $birthStatistics, ')
@@ -11099,6 +11400,11 @@ typedef $$MaternityUnitsTableCreateCompanionBuilder =
       Value<String?> lastInspectionDate,
       Value<String?> cqcReportUrl,
       Value<String?> registrationStatus,
+      Value<double?> placeCleanliness,
+      Value<double?> placeFood,
+      Value<double?> placePrivacyDignityWellbeing,
+      Value<double?> placeConditionAppearance,
+      Value<int?> placeSyncedAtMillis,
       Value<String?> birthingOptions,
       Value<String?> facilities,
       Value<String?> birthStatistics,
@@ -11141,6 +11447,11 @@ typedef $$MaternityUnitsTableUpdateCompanionBuilder =
       Value<String?> lastInspectionDate,
       Value<String?> cqcReportUrl,
       Value<String?> registrationStatus,
+      Value<double?> placeCleanliness,
+      Value<double?> placeFood,
+      Value<double?> placePrivacyDignityWellbeing,
+      Value<double?> placeConditionAppearance,
+      Value<int?> placeSyncedAtMillis,
       Value<String?> birthingOptions,
       Value<String?> facilities,
       Value<String?> birthStatistics,
@@ -11348,6 +11659,31 @@ class $$MaternityUnitsTableFilterComposer
 
   ColumnFilters<String> get registrationStatus => $composableBuilder(
     column: $table.registrationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get placeCleanliness => $composableBuilder(
+    column: $table.placeCleanliness,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get placeFood => $composableBuilder(
+    column: $table.placeFood,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get placePrivacyDignityWellbeing => $composableBuilder(
+    column: $table.placePrivacyDignityWellbeing,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get placeConditionAppearance => $composableBuilder(
+    column: $table.placeConditionAppearance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get placeSyncedAtMillis => $composableBuilder(
+    column: $table.placeSyncedAtMillis,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11576,6 +11912,32 @@ class $$MaternityUnitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get placeCleanliness => $composableBuilder(
+    column: $table.placeCleanliness,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get placeFood => $composableBuilder(
+    column: $table.placeFood,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get placePrivacyDignityWellbeing =>
+      $composableBuilder(
+        column: $table.placePrivacyDignityWellbeing,
+        builder: (column) => ColumnOrderings(column),
+      );
+
+  ColumnOrderings<double> get placeConditionAppearance => $composableBuilder(
+    column: $table.placeConditionAppearance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get placeSyncedAtMillis => $composableBuilder(
+    column: $table.placeSyncedAtMillis,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get birthingOptions => $composableBuilder(
     column: $table.birthingOptions,
     builder: (column) => ColumnOrderings(column),
@@ -11750,6 +12112,30 @@ class $$MaternityUnitsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get placeCleanliness => $composableBuilder(
+    column: $table.placeCleanliness,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get placeFood =>
+      $composableBuilder(column: $table.placeFood, builder: (column) => column);
+
+  GeneratedColumn<double> get placePrivacyDignityWellbeing =>
+      $composableBuilder(
+        column: $table.placePrivacyDignityWellbeing,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<double> get placeConditionAppearance => $composableBuilder(
+    column: $table.placeConditionAppearance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get placeSyncedAtMillis => $composableBuilder(
+    column: $table.placeSyncedAtMillis,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get birthingOptions => $composableBuilder(
     column: $table.birthingOptions,
     builder: (column) => column,
@@ -11873,6 +12259,12 @@ class $$MaternityUnitsTableTableManager
                 Value<String?> lastInspectionDate = const Value.absent(),
                 Value<String?> cqcReportUrl = const Value.absent(),
                 Value<String?> registrationStatus = const Value.absent(),
+                Value<double?> placeCleanliness = const Value.absent(),
+                Value<double?> placeFood = const Value.absent(),
+                Value<double?> placePrivacyDignityWellbeing =
+                    const Value.absent(),
+                Value<double?> placeConditionAppearance = const Value.absent(),
+                Value<int?> placeSyncedAtMillis = const Value.absent(),
                 Value<String?> birthingOptions = const Value.absent(),
                 Value<String?> facilities = const Value.absent(),
                 Value<String?> birthStatistics = const Value.absent(),
@@ -11913,6 +12305,11 @@ class $$MaternityUnitsTableTableManager
                 lastInspectionDate: lastInspectionDate,
                 cqcReportUrl: cqcReportUrl,
                 registrationStatus: registrationStatus,
+                placeCleanliness: placeCleanliness,
+                placeFood: placeFood,
+                placePrivacyDignityWellbeing: placePrivacyDignityWellbeing,
+                placeConditionAppearance: placeConditionAppearance,
+                placeSyncedAtMillis: placeSyncedAtMillis,
                 birthingOptions: birthingOptions,
                 facilities: facilities,
                 birthStatistics: birthStatistics,
@@ -11955,6 +12352,12 @@ class $$MaternityUnitsTableTableManager
                 Value<String?> lastInspectionDate = const Value.absent(),
                 Value<String?> cqcReportUrl = const Value.absent(),
                 Value<String?> registrationStatus = const Value.absent(),
+                Value<double?> placeCleanliness = const Value.absent(),
+                Value<double?> placeFood = const Value.absent(),
+                Value<double?> placePrivacyDignityWellbeing =
+                    const Value.absent(),
+                Value<double?> placeConditionAppearance = const Value.absent(),
+                Value<int?> placeSyncedAtMillis = const Value.absent(),
                 Value<String?> birthingOptions = const Value.absent(),
                 Value<String?> facilities = const Value.absent(),
                 Value<String?> birthStatistics = const Value.absent(),
@@ -11995,6 +12398,11 @@ class $$MaternityUnitsTableTableManager
                 lastInspectionDate: lastInspectionDate,
                 cqcReportUrl: cqcReportUrl,
                 registrationStatus: registrationStatus,
+                placeCleanliness: placeCleanliness,
+                placeFood: placeFood,
+                placePrivacyDignityWellbeing: placePrivacyDignityWellbeing,
+                placeConditionAppearance: placeConditionAppearance,
+                placeSyncedAtMillis: placeSyncedAtMillis,
                 birthingOptions: birthingOptions,
                 facilities: facilities,
                 birthStatistics: birthStatistics,

@@ -119,6 +119,14 @@ class MaternityUnit {
   final String? cqcReportUrl;
   final String? registrationStatus;
 
+  // PLACE Ratings (Patient-Led Assessments of the Care Environment)
+  // Values are percentages (0-100), null if no PLACE data available
+  final double? placeCleanliness;
+  final double? placeFood;
+  final double? placePrivacyDignityWellbeing;
+  final double? placeConditionAppearance;
+  final DateTime? placeSyncedAt;
+
   // Manual curation fields (empty for now)
   final List<String>? birthingOptions;
   final Map<String, dynamic>? facilities;
@@ -162,6 +170,11 @@ class MaternityUnit {
     this.lastInspectionDate,
     this.cqcReportUrl,
     this.registrationStatus,
+    this.placeCleanliness,
+    this.placeFood,
+    this.placePrivacyDignityWellbeing,
+    this.placeConditionAppearance,
+    this.placeSyncedAt,
     this.birthingOptions,
     this.facilities,
     this.birthStatistics,
@@ -199,6 +212,13 @@ class MaternityUnit {
     }
     return overallRatingEnum;
   }
+
+  /// Whether this unit has PLACE assessment data.
+  bool get hasPlaceData =>
+      placeCleanliness != null ||
+      placeFood != null ||
+      placePrivacyDignityWellbeing != null ||
+      placeConditionAppearance != null;
 
   /// Format address as a single line.
   String get formattedAddress {
@@ -297,6 +317,11 @@ class MaternityUnit {
     String? lastInspectionDate,
     String? cqcReportUrl,
     String? registrationStatus,
+    double? placeCleanliness,
+    double? placeFood,
+    double? placePrivacyDignityWellbeing,
+    double? placeConditionAppearance,
+    DateTime? placeSyncedAt,
     List<String>? birthingOptions,
     Map<String, dynamic>? facilities,
     Map<String, dynamic>? birthStatistics,
@@ -337,6 +362,13 @@ class MaternityUnit {
       lastInspectionDate: lastInspectionDate ?? this.lastInspectionDate,
       cqcReportUrl: cqcReportUrl ?? this.cqcReportUrl,
       registrationStatus: registrationStatus ?? this.registrationStatus,
+      placeCleanliness: placeCleanliness ?? this.placeCleanliness,
+      placeFood: placeFood ?? this.placeFood,
+      placePrivacyDignityWellbeing:
+          placePrivacyDignityWellbeing ?? this.placePrivacyDignityWellbeing,
+      placeConditionAppearance:
+          placeConditionAppearance ?? this.placeConditionAppearance,
+      placeSyncedAt: placeSyncedAt ?? this.placeSyncedAt,
       birthingOptions: birthingOptions ?? this.birthingOptions,
       facilities: facilities ?? this.facilities,
       birthStatistics: birthStatistics ?? this.birthStatistics,

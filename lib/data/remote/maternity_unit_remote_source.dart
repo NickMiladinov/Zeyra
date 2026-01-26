@@ -77,6 +77,15 @@ class MaternityUnitRemoteSource {
     final createdAt = _parseTimestamp(row['created_at'] as String?);
     final updatedAt = _parseTimestamp(row['updated_at'] as String?);
     final cqcSyncedAt = _parseTimestamp(row['cqc_synced_at'] as String?);
+    final placeSyncedAt = _parseTimestamp(row['place_synced_at'] as String?);
+
+    // Parse PLACE ratings (stored as DECIMAL in Supabase)
+    final placeCleanliness = _parseDouble(row['place_cleanliness']);
+    final placeFood = _parseDouble(row['place_food']);
+    final placePrivacyDignityWellbeing =
+        _parseDouble(row['place_privacy_dignity_wellbeing']);
+    final placeConditionAppearance =
+        _parseDouble(row['place_condition_appearance']);
 
     // Parse facilities and birth_statistics (stored as JSONB in Supabase)
     String? facilitiesJson;
@@ -147,6 +156,11 @@ class MaternityUnitRemoteSource {
       updatedAtMillis: updatedAt?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
       cqcSyncedAtMillis: cqcSyncedAt?.millisecondsSinceEpoch,
+      placeCleanliness: placeCleanliness,
+      placeFood: placeFood,
+      placePrivacyDignityWellbeing: placePrivacyDignityWellbeing,
+      placeConditionAppearance: placeConditionAppearance,
+      placeSyncedAtMillis: placeSyncedAt?.millisecondsSinceEpoch,
     );
   }
 
