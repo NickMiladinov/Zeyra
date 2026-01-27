@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
@@ -38,19 +36,25 @@ class _HospitalFiltersBottomSheetState
   late Set<CqcRating> _selectedRatings;
   late double _maxDistance;
 
-  /// Min/max distance in miles for exponential slider.
+  /// Min/max distance in miles for the slider.
   static const double _minDistance = 0.1;
   static const double _maxDistanceLimit = 50.0;
   
-  /// Logarithmic min/max for exponential scaling.
-  static final double _logMin = _log(_minDistance);
-  static final double _logMax = _log(_maxDistanceLimit);
-  
-  /// Natural log helper.
-  static double _log(double x) => x > 0 ? math.log(x) : 0;
-  
-  /// Exponential helper.
-  static double _exp(double x) => math.exp(x);
+  /// Distance milestones for custom slider scale.
+  /// These define the key points and their positions on the slider (0-1).
+  /// This puts commonly used distances (1-5mi) in the first ~50% of the slider.
+  static const List<(double distance, double position)> _milestones = [
+    (0.1, 0.0),   // Min
+    (0.5, 0.10),  // Half mile
+    (1.0, 0.20),  // 1 mile
+    (2.0, 0.30),  // 2 miles at 30%
+    (3.0, 0.38),  // 3 miles
+    (5.0, 0.50),  // 5 miles at 50%
+    (10.0, 0.65), // 10 miles
+    (15.0, 0.75), // 15 miles (default)
+    (25.0, 0.85), // 25 miles
+    (50.0, 1.0),  // Max
+  ];
 
   @override
   void initState() {
@@ -92,21 +96,47 @@ class _HospitalFiltersBottomSheetState
     Navigator.pop(context);
   }
   
-  /// Convert distance value to slider position (0-1) using log scale.
+  /// Convert distance value to slider position (0-1) using milestone interpolation.
   double _distanceToSlider(double distance) {
-    final logValue = _log(distance.clamp(_minDistance, _maxDistanceLimit));
-    return (logValue - _logMin) / (_logMax - _logMin);
+    final clampedDistance = distance.clamp(_minDistance, _maxDistanceLimit);
+    
+    // Find the two milestones we're between
+    for (int i = 0; i < _milestones.length - 1; i++) {
+      final (d1, p1) = _milestones[i];
+      final (d2, p2) = _milestones[i + 1];
+      
+      if (clampedDistance >= d1 && clampedDistance <= d2) {
+        // Linear interpolation between the two milestones
+        final t = (clampedDistance - d1) / (d2 - d1);
+        return p1 + t * (p2 - p1);
+      }
+    }
+    
+    return 1.0; // Fallback to max
   }
   
-  /// Convert slider position (0-1) to distance using exponential scale.
+  /// Convert slider position (0-1) to distance using milestone interpolation.
   double _sliderToDistance(double sliderValue) {
-    final logValue = _logMin + sliderValue * (_logMax - _logMin);
-    return _exp(logValue);
+    final clampedValue = sliderValue.clamp(0.0, 1.0);
+    
+    // Find the two milestones we're between
+    for (int i = 0; i < _milestones.length - 1; i++) {
+      final (d1, p1) = _milestones[i];
+      final (d2, p2) = _milestones[i + 1];
+      
+      if (clampedValue >= p1 && clampedValue <= p2) {
+        // Linear interpolation between the two milestones
+        final t = (clampedValue - p1) / (p2 - p1);
+        return d1 + t * (d2 - d1);
+      }
+    }
+    
+    return _maxDistanceLimit; // Fallback to max
   }
   
-  /// Format distance for display (shows decimal for values < 1).
+  /// Format distance for display (shows decimal for values < 5).
   String _formatDistance(double distance) {
-    if (distance < 1) {
+    if (distance < 5) {
       return distance.toStringAsFixed(1);
     }
     return distance.round().toString();

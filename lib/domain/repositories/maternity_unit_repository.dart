@@ -53,6 +53,17 @@ abstract class MaternityUnitRepository {
   /// Get the total count of maternity units in the local database.
   Future<int> getUnitCount();
 
+  /// Search maternity units by name.
+  ///
+  /// Performs a case-insensitive search across all units in the database.
+  /// Used for global search (Tier 2) in the hospital chooser.
+  ///
+  /// [query] - Search string to match against unit names
+  /// [limit] - Maximum number of results to return (default: 20)
+  ///
+  /// Returns matching units ordered by name.
+  Future<List<MaternityUnit>> searchByName(String query, {int limit = 20});
+
   // ---------------------------------------------------------------------------
   // Sync Operations
   // ---------------------------------------------------------------------------

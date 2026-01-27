@@ -43,6 +43,7 @@ import '../../domain/usecases/user_profile/create_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/get_user_profile_usecase.dart';
 import '../../domain/usecases/user_profile/update_user_profile_usecase.dart';
 import '../services/database_encryption_service.dart';
+import '../services/drive_time_service.dart';
 import '../services/location_service.dart';
 import '../services/maternity_unit_sync_service.dart';
 import '../services/notification_permission_service.dart';
@@ -494,6 +495,22 @@ final deleteBumpPhotoUseCaseProvider = FutureProvider<DeleteBumpPhoto>((ref) asy
 final locationServiceProvider = Provider<LocationService>((ref) {
   final logging = ref.watch(loggingServiceProvider);
   final service = LocationService(logger: logging);
+
+  // Clean up HTTP client when provider is disposed
+  ref.onDispose(() {
+    service.close();
+  });
+
+  return service;
+});
+
+/// Provider for the drive time service.
+///
+/// Calculates drive times using Google Distance Matrix API.
+/// Uses the same API key as Google Maps (requires Distance Matrix API enabled).
+final driveTimeServiceProvider = Provider<DriveTimeService>((ref) {
+  final logging = ref.watch(loggingServiceProvider);
+  final service = DriveTimeService(logger: logging);
 
   // Clean up HTTP client when provider is disposed
   ref.onDispose(() {

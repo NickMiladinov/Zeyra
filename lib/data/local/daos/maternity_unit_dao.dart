@@ -99,6 +99,33 @@ class MaternityUnitDao extends DatabaseAccessor<AppDatabase>
     return result?.read(maternityUnits.updatedAtMillis.max());
   }
 
+  /// Search units by name using case-insensitive LIKE query.
+  ///
+  /// Returns matching units ordered by name, limited to [limit] results.
+  /// Only returns active, registered units.
+  ///
+  /// [query] - Search string to match against unit names
+  /// [limit] - Maximum number of results to return (default: 20)
+  Future<List<MaternityUnitDto>> searchByName(
+    String query, {
+    int limit = 20,
+  }) {
+    final normalizedQuery = query.toLowerCase().trim();
+    if (normalizedQuery.isEmpty) return Future.value([]);
+
+    // Use LIKE with wildcards for substring matching
+    // Drift's .like() is case-insensitive on SQLite by default
+    final searchPattern = '%$normalizedQuery%';
+
+    return (select(maternityUnits)
+          ..where((u) => u.name.lower().like(searchPattern))
+          ..where((u) => u.isActive.equals(true))
+          ..where((u) => u.registrationStatus.equals('Registered'))
+          ..orderBy([(u) => OrderingTerm.asc(u.name)])
+          ..limit(limit))
+        .get();
+  }
+
   // ---------------------------------------------------------------------------
   // Mutation Operations
   // ---------------------------------------------------------------------------

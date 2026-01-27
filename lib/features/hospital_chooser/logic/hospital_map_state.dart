@@ -226,6 +226,61 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
       await loadNearbyUnits(state.mapCenter!);
     }
   }
+  
+  /// Auto-expand distance filter to find at least [minResults] units.
+  /// 
+  /// Uses distance progression: 1mi → 2mi → 3mi → 5mi → 10mi → 15mi
+  /// Returns the final distance used.
+  Future<double> autoExpandDistance({
+    required LatLng location,
+    int minResults = 10,
+  }) async {
+    final filterUnits = _filterUnits;
+    if (_isLoading || filterUnits == null) return state.filters.maxDistanceMiles;
+    
+    const distanceProgression = [1.0, 2.0, 3.0, 5.0, 10.0, 15.0];
+    
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      mapCenter: location,
+    );
+    
+    try {
+      List<MaternityUnit> units = [];
+      double finalDistance = distanceProgression.first;
+      
+      for (final distance in distanceProgression) {
+        final criteria = state.filters.copyWith(maxDistanceMiles: distance);
+        
+        units = await filterUnits.execute(
+          criteria: criteria,
+          userLat: location.latitude,
+          userLng: location.longitude,
+        );
+        
+        finalDistance = distance;
+        
+        if (units.length >= minResults) {
+          break;
+        }
+      }
+      
+      state = state.copyWith(
+        nearbyUnits: units,
+        filters: state.filters.copyWith(maxDistanceMiles: finalDistance),
+        isLoading: false,
+      );
+      
+      return finalDistance;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return state.filters.maxDistanceMiles;
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------

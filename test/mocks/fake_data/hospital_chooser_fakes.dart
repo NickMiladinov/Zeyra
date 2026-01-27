@@ -169,6 +169,31 @@ class FakeMaternityUnit {
     );
   }
 
+  /// Creates a maternity unit with a specific name.
+  static MaternityUnit withName(String name, {String? id}) {
+    return simple(
+      id: id ?? 'unit-${name.hashCode}',
+      name: name,
+    );
+  }
+
+  /// Creates a maternity unit with specific location and name.
+  static MaternityUnit withLocation({
+    required String name,
+    required double latitude,
+    required double longitude,
+    String? id,
+    String? postcode,
+  }) {
+    return simple(
+      id: id ?? 'unit-${name.hashCode}',
+      name: name,
+      latitude: latitude,
+      longitude: longitude,
+      postcode: postcode,
+    );
+  }
+
   /// Creates an NHS hospital.
   static MaternityUnit nhsHospital({
     String? id,

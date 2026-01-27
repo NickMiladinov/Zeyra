@@ -15,9 +15,12 @@ import '../../../../domain/entities/hospital/maternity_unit.dart';
 import '../../../../main.dart' show logger;
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
+import '../../logic/hospital_search_state.dart';
 import '../widgets/custom_map_marker.dart';
 import '../widgets/hospital_filters_bottom_sheet.dart';
 import '../widgets/hospital_list_view.dart';
+import '../widgets/hospital_preview_sheet.dart';
+import '../widgets/hospital_search_results.dart';
 import '../widgets/postcode_bottom_sheet.dart';
 
 /// Hospital Chooser screen with map view of nearby maternity units.
@@ -49,12 +52,18 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   /// Debounce timer for camera movement
   Timer? _cameraIdleTimer;
   
+  /// Debounce timer for search input
+  Timer? _searchDebounceTimer;
+  
   /// Custom marker icons
   BitmapDescriptor? _defaultMarkerIcon;
   BitmapDescriptor? _selectedMarkerIcon;
   
   /// Search text controller
   final _searchController = TextEditingController();
+  
+  /// Focus node for search bar
+  final _searchFocusNode = FocusNode();
   
   /// Last known camera position (preserved when switching views).
   CameraPosition? _lastCameraPosition;
@@ -113,11 +122,69 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   void initState() {
     super.initState();
     _loadCustomMarkers();
+    _setupSearchListener();
     
     // Check permission status after first frame to handle initial state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkInitialPermissionState();
     });
+  }
+  
+  /// Set up listener for search text changes with debouncing.
+  void _setupSearchListener() {
+    _searchController.addListener(_onSearchChanged);
+    _searchFocusNode.addListener(_onSearchFocusChanged);
+  }
+  
+  /// Handle search text changes with debouncing.
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    
+    // If query becomes empty, clear search immediately
+    if (query.isEmpty) {
+      _searchDebounceTimer?.cancel();
+      ref.read(hospitalSearchProvider.notifier).clearSearch();
+      return;
+    }
+    
+    // Set active immediately when typing
+    ref.read(hospitalSearchProvider.notifier).setActive(true);
+    
+    // Debounce the actual search
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      
+      final locationState = ref.read(hospitalLocationProvider);
+      final mapState = ref.read(hospitalMapProvider);
+      
+      // Need location to perform search
+      if (!locationState.hasLocation || locationState.userLocation == null) {
+        return;
+      }
+      
+      // Trigger search
+      ref.read(hospitalSearchProvider.notifier).search(
+        query: query,
+        nearbyUnits: mapState.nearbyUnits,
+        userLocation: locationState.userLocation!,
+      );
+    });
+  }
+  
+  /// Handle search focus changes.
+  void _onSearchFocusChanged() {
+    if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
+      // Activate search overlay when focused and has text
+      ref.read(hospitalSearchProvider.notifier).setActive(true);
+    } else if (!_searchFocusNode.hasFocus) {
+      // Deactivate when focus is lost (with slight delay to allow tap on results)
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted && !_searchFocusNode.hasFocus) {
+          ref.read(hospitalSearchProvider.notifier).setActive(false);
+        }
+      });
+    }
   }
   
   /// Check if we should request permission on initial load.
@@ -155,9 +222,46 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   @override
   void dispose() {
     _cameraIdleTimer?.cancel();
+    _searchDebounceTimer?.cancel();
     _mapController?.dispose();
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _searchFocusNode.removeListener(_onSearchFocusChanged);
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+  
+  /// Clear search and hide overlay.
+  void _clearSearch() {
+    _searchController.clear();
+    _searchFocusNode.unfocus();
+    ref.read(hospitalSearchProvider.notifier).clearSearch();
+  }
+  
+  /// Dismiss the search overlay without clearing the text.
+  /// User can tap the search bar again to see results.
+  void _dismissSearchOverlay() {
+    _searchFocusNode.unfocus();
+    ref.read(hospitalSearchProvider.notifier).setActive(false);
+  }
+  
+  /// Handle when a search result is selected.
+  void _onSearchResultSelected(MaternityUnit unit) {
+    // Clear search
+    _clearSearch();
+    
+    // Select the unit
+    ref.read(hospitalMapProvider.notifier).selectUnit(unit);
+    
+    // If in map view, animate to the unit
+    if (!_isListView && _mapController != null && unit.latitude != null && unit.longitude != null) {
+      _mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(
+          LatLng(unit.latitude!, unit.longitude!),
+          14.0,
+        ),
+      );
+    }
   }
   
   /// Show the filters bottom sheet.
@@ -183,6 +287,28 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         },
       ),
     );
+  }
+  
+  /// Switch to list view with auto-expanding distance to show at least 10 results.
+  /// 
+  /// Uses distance progression: 1mi → 2mi → 3mi → 5mi → 10mi → 15mi
+  Future<void> _switchToListView() async {
+    final locationState = ref.read(hospitalLocationProvider);
+    if (!locationState.hasLocation || locationState.userLocation == null) {
+      setState(() => _isListView = true);
+      return;
+    }
+    
+    // Auto-expand distance to find at least 10 results
+    await ref.read(hospitalMapProvider.notifier).autoExpandDistance(
+      location: loc.LatLng(
+        locationState.userLocation!.latitude,
+        locationState.userLocation!.longitude,
+      ),
+      minResults: 10,
+    );
+    
+    setState(() => _isListView = true);
   }
 
   /// Handle location state changes and load units when ready.
@@ -673,75 +799,162 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Build the list view for hospitals.
   Widget _buildListView(HospitalLocationState locationState, HospitalMapState mapState) {
-    return Column(
+    final searchState = ref.watch(hospitalSearchProvider);
+    
+    // Calculate the height of the search bar area for positioning the overlay
+    const searchBarHeight = 56.0; // Approximate height of search bar + padding
+    
+    return Stack(
       children: [
-        // Search bar and filter button
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.paddingMD,
-            vertical: AppSpacing.paddingSM,
-          ),
-          child: _SearchBarWithFilter(
-            controller: _searchController,
-            filters: mapState.filters,
-            onFilterTap: () => _showFiltersSheet(
-              showDistanceFilter: true,
-              sortLocation: locationState.userLocation,
+        // Main list content (always visible)
+        Column(
+          children: [
+            // Search bar and filter button
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.paddingMD,
+                vertical: AppSpacing.paddingSM,
+              ),
+              child: _SearchBarWithFilter(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                filters: mapState.filters,
+                onFilterTap: () => _showFiltersSheet(
+                  showDistanceFilter: true,
+                  sortLocation: locationState.userLocation,
+                ),
+                onClear: _clearSearch,
+              ),
             ),
-          ),
+            
+            // Active filter chips (show distance filter in list view)
+            if (mapState.filters.hasActiveFilters)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.paddingMD),
+                child: _ActiveFilterChips(
+                  filters: mapState.filters,
+                  showDistanceFilter: true,
+                  onRemoveFilter: (newFilters) {
+                    // Use user's location for sorting in list view
+                    ref.read(hospitalMapProvider.notifier).applyFilters(
+                      newFilters,
+                      sortLocation: locationState.userLocation,
+                    );
+                  },
+                ),
+              ),
+            
+            // Hospital list (always visible behind overlay)
+            Expanded(
+              child: HospitalListView(
+                units: mapState.nearbyUnits,
+                userLocation: locationState.userLocation,
+                filters: mapState.filters,
+                isLoading: _isLoadingUnits || mapState.isLoading,
+                favoriteIds: _favoriteIds,
+                onHospitalTap: (unit) {
+                  // TODO: Navigate to hospital detail
+                  ref.read(hospitalMapProvider.notifier).selectUnit(unit);
+                },
+                onFavoriteTap: (unit) {
+                  setState(() {
+                    if (_favoriteIds.contains(unit.id)) {
+                      _favoriteIds.remove(unit.id);
+                    } else {
+                      _favoriteIds.add(unit.id);
+                    }
+                  });
+                },
+                onSortChanged: (sort) {
+                  final newFilters = mapState.filters.copyWith(sortBy: sort);
+                  // Use user's location for sorting so distances match displayed values
+                  ref.read(hospitalMapProvider.notifier).applyFilters(
+                    newFilters,
+                    sortLocation: locationState.userLocation,
+                  );
+                },
+                onMapViewTap: () {
+                  setState(() => _isListView = false);
+                },
+              ),
+            ),
+          ],
         ),
         
-        // Active filter chips (show distance filter in list view)
-        if (mapState.filters.hasActiveFilters)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.paddingMD),
-            child: _ActiveFilterChips(
-              filters: mapState.filters,
-              showDistanceFilter: true,
-              onRemoveFilter: (newFilters) {
-                // Use user's location for sorting in list view
-                ref.read(hospitalMapProvider.notifier).applyFilters(
-                  newFilters,
-                  sortLocation: locationState.userLocation,
-                );
+        // Dismiss layer - captures taps outside search overlay (below search bar)
+        if (searchState.isActive && searchState.query.isNotEmpty)
+          Positioned(
+            top: searchBarHeight, // Start below search bar
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: _dismissSearchOverlay,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        
+        // Search results overlay (positioned below search bar)
+        if (searchState.isActive && searchState.query.isNotEmpty)
+          Positioned(
+            top: searchBarHeight + AppSpacing.paddingSM, // Below search bar with small gap
+            left: AppSpacing.paddingMD,
+            right: AppSpacing.paddingMD,
+            child: GestureDetector(
+              onTap: () {}, // Prevent tap from propagating to dismiss layer
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: HospitalSearchResults(
+                    searchState: searchState,
+                    onResultTap: _onSearchResultSelected,
+                    onClose: _clearSearch,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        
+        // Hospital preview sheet (when a hospital is selected in list view)
+        if (mapState.selectedUnit != null)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: HospitalPreviewSheet(
+              unit: mapState.selectedUnit!,
+              distanceMiles: locationState.userLocation != null
+                  ? mapState.selectedUnit!.distanceFrom(
+                      locationState.userLocation!.latitude,
+                      locationState.userLocation!.longitude,
+                    )
+                  : null,
+              userLat: locationState.userLocation?.latitude,
+              userLng: locationState.userLocation?.longitude,
+              onShowDetails: () {
+                // TODO: Navigate to hospital detail screen
+                logger.debug('Show details for ${mapState.selectedUnit!.name}');
+              },
+              onDismiss: () {
+                ref.read(hospitalMapProvider.notifier).clearSelection();
               },
             ),
           ),
-        
-        // Hospital list
-        Expanded(
-          child: HospitalListView(
-            units: mapState.nearbyUnits,
-            userLocation: locationState.userLocation,
-            filters: mapState.filters,
-            isLoading: _isLoadingUnits || mapState.isLoading,
-            favoriteIds: _favoriteIds,
-            onHospitalTap: (unit) {
-              // TODO: Navigate to hospital detail
-              ref.read(hospitalMapProvider.notifier).selectUnit(unit);
-            },
-            onFavoriteTap: (unit) {
-              setState(() {
-                if (_favoriteIds.contains(unit.id)) {
-                  _favoriteIds.remove(unit.id);
-                } else {
-                  _favoriteIds.add(unit.id);
-                }
-              });
-            },
-            onSortChanged: (sort) {
-              final newFilters = mapState.filters.copyWith(sortBy: sort);
-              // Use user's location for sorting so distances match displayed values
-              ref.read(hospitalMapProvider.notifier).applyFilters(
-                newFilters,
-                sortLocation: locationState.userLocation,
-              );
-            },
-            onMapViewTap: () {
-              setState(() => _isListView = false);
-            },
-          ),
-        ),
       ],
     );
   }
@@ -753,6 +966,8 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
     bool showPermissionPrompt,
     bool isWaitingForLocation,
   ) {
+    final searchState = ref.watch(hospitalSearchProvider);
+    
     // Determine initial camera position
     // Use saved position if available (when returning from list view)
     // Otherwise use user location or default
@@ -793,6 +1008,10 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
           compassEnabled: true,
           onTap: (_) {
             ref.read(hospitalMapProvider.notifier).clearSelection();
+            // Also dismiss search if active
+            if (ref.read(hospitalSearchProvider).isActive) {
+              _clearSearch();
+            }
           },
         ),
         
@@ -804,13 +1023,64 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
             right: AppSpacing.paddingMD,
             child: _SearchBarWithFilter(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               filters: mapState.filters,
               onFilterTap: _showFiltersSheet,
+              onClear: _clearSearch,
+            ),
+          ),
+        
+        // Dismiss layer for map view - captures taps outside search overlay (below search bar)
+        if (locationState.hasLocation && searchState.isActive && searchState.query.isNotEmpty)
+          Positioned(
+            top: 56 + AppSpacing.paddingSM, // Start below search bar
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: _dismissSearchOverlay,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        
+        // Search results overlay for map view
+        if (locationState.hasLocation && searchState.isActive && searchState.query.isNotEmpty)
+          Positioned(
+            top: 56 + AppSpacing.paddingSM, // Below search bar
+            left: AppSpacing.paddingMD,
+            right: AppSpacing.paddingMD,
+            child: GestureDetector(
+              onTap: () {}, // Prevent tap from propagating to dismiss layer
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.4,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: HospitalSearchResults(
+                    searchState: searchState,
+                    onResultTap: _onSearchResultSelected,
+                    onClose: _clearSearch,
+                  ),
+                ),
+              ),
             ),
           ),
         
         // Active filter chips
-        if (locationState.hasLocation && mapState.filters.hasActiveFilters)
+        if (locationState.hasLocation && mapState.filters.hasActiveFilters && !searchState.isActive)
           Positioned(
             top: 70,
             left: AppSpacing.paddingMD,
@@ -929,8 +1199,8 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
             ),
           ),
         
-        // List view button (bottom center)
-        if (locationState.hasLocation && !_isLoadingUnits && mapState.hasUnits)
+        // List view button (bottom center) - hide when preview sheet is visible
+        if (locationState.hasLocation && !_isLoadingUnits && mapState.hasUnits && mapState.selectedUnit == null)
           Positioned(
             bottom: AppSpacing.paddingXL,
             left: 0,
@@ -951,9 +1221,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () {
-                      setState(() => _isListView = true);
-                    },
+                    onTap: _switchToListView,
                     borderRadius: BorderRadius.circular(24),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -984,6 +1252,32 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
             ),
           ),
         
+        // Hospital preview sheet (when a hospital is selected)
+        if (mapState.selectedUnit != null)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: HospitalPreviewSheet(
+              unit: mapState.selectedUnit!,
+              distanceMiles: locationState.userLocation != null
+                  ? mapState.selectedUnit!.distanceFrom(
+                      locationState.userLocation!.latitude,
+                      locationState.userLocation!.longitude,
+                    )
+                  : null,
+              userLat: locationState.userLocation?.latitude,
+              userLng: locationState.userLocation?.longitude,
+              onShowDetails: () {
+                // TODO: Navigate to hospital detail screen
+                logger.debug('Show details for ${mapState.selectedUnit!.name}');
+              },
+              onDismiss: () {
+                ref.read(hospitalMapProvider.notifier).clearSelection();
+              },
+            ),
+          ),
+        
         // Error message
         if (mapState.error != null)
           Positioned(
@@ -1010,16 +1304,47 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 }
 
 /// Search bar with filter button.
-class _SearchBarWithFilter extends StatelessWidget {
+class _SearchBarWithFilter extends StatefulWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final HospitalFilterCriteria filters;
   final VoidCallback onFilterTap;
+  final VoidCallback? onClear;
 
   const _SearchBarWithFilter({
     required this.controller,
+    this.focusNode,
     required this.filters,
     required this.onFilterTap,
+    this.onClear,
   });
+
+  @override
+  State<_SearchBarWithFilter> createState() => _SearchBarWithFilterState();
+}
+
+class _SearchBarWithFilterState extends State<_SearchBarWithFilter> {
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasText = widget.controller.text.isNotEmpty;
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final hasText = widget.controller.text.isNotEmpty;
+    if (hasText != _hasText) {
+      setState(() => _hasText = hasText);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1040,7 +1365,12 @@ class _SearchBarWithFilter extends StatelessWidget {
               ],
             ),
             child: TextField(
-              controller: controller,
+              controller: widget.controller,
+              focusNode: widget.focusNode,
+              textInputAction: TextInputAction.search,
+              keyboardType: TextInputType.text,
+              autocorrect: false,
+              enableSuggestions: true,
               decoration: InputDecoration(
                 hintText: 'Search by hospital name...',
                 hintStyle: AppTypography.bodyMedium.copyWith(
@@ -1051,6 +1381,17 @@ class _SearchBarWithFilter extends StatelessWidget {
                   color: AppColors.textSecondary,
                   size: 20,
                 ),
+                // Show clear button when there's text
+                suffixIcon: _hasText
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.clear,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                        onPressed: widget.onClear,
+                      )
+                    : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.paddingMD,
@@ -1077,13 +1418,13 @@ class _SearchBarWithFilter extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: onFilterTap,
+              onTap: widget.onFilterTap,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.paddingMD),
                 child: Icon(
                   Icons.tune,
-                  color: filters.hasActiveFilters 
+                  color: widget.filters.hasActiveFilters 
                       ? AppColors.primary 
                       : AppColors.textSecondary,
                   size: 24,
@@ -1117,7 +1458,7 @@ class _ActiveFilterChips extends StatelessWidget {
     
     // Add distance filter chip if non-default (only in list view)
     if (showDistanceFilter && filters.maxDistanceMiles != 15.0) {
-      final distanceLabel = filters.maxDistanceMiles < 1 
+      final distanceLabel = filters.maxDistanceMiles < 5 
           ? 'Within ${filters.maxDistanceMiles.toStringAsFixed(1)}mi'
           : 'Within ${filters.maxDistanceMiles.toInt()}mi';
       chips.add(_FilterChip(

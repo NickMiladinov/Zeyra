@@ -151,6 +151,25 @@ class MaternityUnitRepositoryImpl implements MaternityUnitRepository {
     return _dao.getCount();
   }
 
+  @override
+  Future<List<MaternityUnit>> searchByName(String query, {int limit = 20}) async {
+    _logger.debug('Searching units by name', data: {
+      'query': query,
+      'limit': limit,
+    });
+
+    try {
+      final dtos = await _dao.searchByName(query, limit: limit);
+      final units = MaternityUnitMapper.toDomainList(dtos);
+
+      _logger.debug('Found ${units.length} units matching "$query"');
+      return units;
+    } catch (e, stackTrace) {
+      _logger.error('Error searching units by name', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Sync Operations
   // ---------------------------------------------------------------------------
