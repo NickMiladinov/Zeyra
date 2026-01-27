@@ -247,7 +247,7 @@ class _HospitalFiltersBottomSheetState
                 activeTrackColor: AppColors.primary,
                 inactiveTrackColor: AppColors.backgroundGrey200,
                 thumbColor: Colors.white,
-                overlayColor: AppColors.primary.withOpacity(0.2),
+                overlayColor: AppColors.primary.withValues(alpha: 0.2),
                 trackHeight: 4,
                 thumbShape: const RoundSliderThumbShape(
                   enabledThumbRadius: 12,

@@ -4,7 +4,6 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:zeyra/data/local/app_database.dart';
 import 'package:zeyra/data/mappers/maternity_unit_mapper.dart';
-import 'package:zeyra/domain/entities/hospital/maternity_unit.dart';
 
 import '../../mocks/fake_data/hospital_chooser_fakes.dart';
 

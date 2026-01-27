@@ -56,7 +56,7 @@ class CustomMapMarker {
 
     // Draw drop shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withValues(alpha: 0.2)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
     // Shadow path (slightly offset)
@@ -150,7 +150,7 @@ class CustomMapMarker {
     
     // Draw shadow
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withValues(alpha: 0.2)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
     canvas.drawCircle(
       const Offset(size / 2 + 1, size / 2 + 1),

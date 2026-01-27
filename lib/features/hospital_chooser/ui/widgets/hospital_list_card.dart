@@ -112,7 +112,7 @@ class _RatingBadge extends StatelessWidget {
       case CqcRating.outstanding:
         return AppColors.primary;
       case CqcRating.good:
-        return AppColors.primary.withOpacity(0.8);
+        return AppColors.primary.withValues(alpha: 0.8);
       case CqcRating.requiresImprovement:
         return AppColors.warning;
       case CqcRating.inadequate:

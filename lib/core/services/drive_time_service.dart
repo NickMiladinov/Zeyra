@@ -125,9 +125,7 @@ class DriveTimeService {
     required double destLat,
     required double destLng,
   }) async {
-    // #region agent log
-    _logger.debug('getDriveTime called: origin=($originLat,$originLng) dest=($destLat,$destLng) keyLen=${_apiKey.length}');
-    // #endregion
+    _logger.debug('getDriveTime called: origin=($originLat,$originLng) dest=($destLat,$destLng)');
     
     // Check cache first
     final key = _cacheKey(originLat, originLng, destLat, destLng);

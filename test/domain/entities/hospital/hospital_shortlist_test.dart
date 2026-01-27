@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:zeyra/domain/entities/hospital/hospital_shortlist.dart';
 
 import '../../../mocks/fake_data/hospital_chooser_fakes.dart';
 

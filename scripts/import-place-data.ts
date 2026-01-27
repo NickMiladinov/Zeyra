@@ -1,3 +1,6 @@
+/// <reference types="https://deno.land/x/deno/cli/tsc/dts/lib.deno.d.ts" />
+// @ts-nocheck - This is a Deno script; run with: deno run --allow-read --allow-net --allow-env
+
 /**
  * Standalone script to import PLACE NHS data directly to Supabase
  * 
@@ -15,7 +18,7 @@
  *   deno run --allow-read --allow-net --allow-env scripts/import-place-data.ts "C:\Users\nikol\Downloads\PLACE-2024-Site-Scores(PLACE-2024-Site-Scores).csv"
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { createClient } from "@supabase/supabase-js";
 
 // ============================================
 // TYPES
