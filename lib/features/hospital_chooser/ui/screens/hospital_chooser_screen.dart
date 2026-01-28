@@ -15,6 +15,7 @@ import '../../../../main.dart' show logger;
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
 import '../../logic/hospital_search_state.dart';
+import '../widgets/hospital_detail_overlay.dart';
 import '../widgets/hospital_filters_bottom_sheet.dart';
 import '../widgets/hospital_list_content.dart';
 import '../widgets/hospital_location_bar.dart';
@@ -533,7 +534,22 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         onDismissSearch: _dismissSearchOverlay,
         onSearchResultSelected: _onSearchResultSelected,
         onHospitalTap: (unit) {
-          ref.read(hospitalMapProvider.notifier).selectUnit(unit);
+          // Calculate distance for the unit
+          final distanceMiles = locationState.userLocation != null
+              ? unit.distanceFrom(
+                  locationState.userLocation!.latitude,
+                  locationState.userLocation!.longitude,
+                )
+              : null;
+
+          // Show the detail overlay directly
+          showHospitalDetailOverlay(
+            context: context,
+            unit: unit,
+            distanceMiles: distanceMiles,
+            userLat: locationState.userLocation?.latitude,
+            userLng: locationState.userLocation?.longitude,
+          );
         },
         onFavoriteTap: (unit) {
           setState(() {

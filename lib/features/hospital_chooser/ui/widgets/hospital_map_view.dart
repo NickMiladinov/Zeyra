@@ -7,14 +7,13 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/services/location_service.dart' as loc;
 import '../../../../domain/entities/hospital/maternity_unit.dart';
-import '../../../../main.dart' show logger;
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
 import '../../logic/hospital_search_state.dart';
+import 'hospital_detail_overlay.dart';
 import 'hospital_filter_chips.dart';
 import 'hospital_marker_cluster.dart';
 import 'hospital_permission_prompt.dart';
-import 'hospital_preview_sheet.dart';
 import 'hospital_search_bar.dart';
 import 'hospital_search_results.dart';
 import 'hospital_view_toggle_button.dart';
@@ -136,9 +135,24 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
     if (mounted) setState(() {});
   }
 
-  /// Handle unit marker tap.
+  /// Handle unit marker tap - show detail overlay directly.
   void _onUnitTap(MaternityUnit unit) {
-    ref.read(hospitalMapProvider.notifier).selectUnit(unit);
+    // Calculate distance for the unit
+    final distanceMiles = widget.locationState.userLocation != null
+        ? unit.distanceFrom(
+            widget.locationState.userLocation!.latitude,
+            widget.locationState.userLocation!.longitude,
+          )
+        : null;
+
+    // Show the detail overlay directly
+    showHospitalDetailOverlay(
+      context: context,
+      unit: unit,
+      distanceMiles: distanceMiles,
+      userLat: widget.locationState.userLocation?.latitude,
+      userLng: widget.locationState.userLocation?.longitude,
+    );
   }
 
   /// Handle cluster tap (zoom in).
@@ -322,11 +336,10 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
             child: const Center(child: _LoadingUnitsIndicator()),
           ),
 
-        // List view toggle button (hide when preview sheet is visible)
+        // List view toggle button
         if (widget.locationState.hasLocation &&
             !widget.isLoadingUnits &&
-            widget.mapState.hasUnits &&
-            widget.mapState.selectedUnit == null)
+            widget.mapState.hasUnits)
           Positioned(
             bottom: AppSpacing.paddingXL,
             left: 0,
@@ -336,32 +349,6 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
                 targetView: HospitalViewType.list,
                 onTap: widget.onListViewTap,
               ),
-            ),
-          ),
-
-        // Hospital preview sheet
-        if (widget.mapState.selectedUnit != null)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: HospitalPreviewSheet(
-              unit: widget.mapState.selectedUnit!,
-              distanceMiles: widget.locationState.userLocation != null
-                  ? widget.mapState.selectedUnit!.distanceFrom(
-                      widget.locationState.userLocation!.latitude,
-                      widget.locationState.userLocation!.longitude,
-                    )
-                  : null,
-              userLat: widget.locationState.userLocation?.latitude,
-              userLng: widget.locationState.userLocation?.longitude,
-              onShowDetails: () {
-                logger
-                    .debug('Show details for ${widget.mapState.selectedUnit!.name}');
-              },
-              onDismiss: () {
-                ref.read(hospitalMapProvider.notifier).clearSelection();
-              },
             ),
           ),
 

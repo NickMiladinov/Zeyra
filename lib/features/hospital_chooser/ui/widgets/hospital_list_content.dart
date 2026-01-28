@@ -4,13 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
-import '../../../../main.dart' show logger;
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
 import '../../logic/hospital_search_state.dart';
 import 'hospital_filter_chips.dart';
 import 'hospital_list_view.dart';
-import 'hospital_preview_sheet.dart';
 import 'hospital_search_bar.dart';
 import 'hospital_search_results.dart';
 
@@ -192,30 +190,6 @@ class HospitalListContent extends ConsumerWidget {
             ),
           ),
 
-        // Hospital preview sheet (when a hospital is selected)
-        if (mapState.selectedUnit != null)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: HospitalPreviewSheet(
-              unit: mapState.selectedUnit!,
-              distanceMiles: locationState.userLocation != null
-                  ? mapState.selectedUnit!.distanceFrom(
-                      locationState.userLocation!.latitude,
-                      locationState.userLocation!.longitude,
-                    )
-                  : null,
-              userLat: locationState.userLocation?.latitude,
-              userLng: locationState.userLocation?.longitude,
-              onShowDetails: () {
-                logger.debug('Show details for ${mapState.selectedUnit!.name}');
-              },
-              onDismiss: () {
-                ref.read(hospitalMapProvider.notifier).clearSelection();
-              },
-            ),
-          ),
       ],
     );
   }
