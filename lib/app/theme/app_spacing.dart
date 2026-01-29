@@ -126,6 +126,9 @@ class AppSpacing {
   /// Tab bar height
   static const double tabBarHeight = 56.0;
   
+  /// Search bar height
+  static const double searchBarHeight = 56.0;
+  
   /// FAB (Floating Action Button) size
   static const double fabSize = 56.0;
   static const double fabSizeMini = 48.0;

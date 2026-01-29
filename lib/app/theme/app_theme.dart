@@ -49,6 +49,15 @@ class AppTheme {
       ),
 
       // ----------------------------------------------------------------------------
+      // TEXT SELECTION (Cursor, Selection Highlight, Handles)
+      // ----------------------------------------------------------------------------
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: AppColors.secondaryDark,
+        selectionColor: AppColors.primaryDark.withValues(alpha: 0.3),  // Text highlight
+        selectionHandleColor: AppColors.primaryDark,  // Selection handles
+      ),
+
+      // ----------------------------------------------------------------------------
       // SCAFFOLD
       // ----------------------------------------------------------------------------
       scaffoldBackgroundColor: AppColors.background,
@@ -59,6 +68,7 @@ class AppTheme {
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
+        surfaceTintColor: Colors.transparent,
         elevation: AppSpacing.elevationSM,
         centerTitle: true,
         titleTextStyle: AppTypography.headlineLarge.copyWith(
@@ -178,11 +188,11 @@ class AppTheme {
           vertical: AppSpacing.paddingMD,
         ),
         border: OutlineInputBorder(
-          borderRadius: AppEffects.roundedLG,
+          borderRadius: AppEffects.roundedMD,
           borderSide: AppEffects.borderSideDefault,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppEffects.roundedLG,
+          borderRadius: AppEffects.roundedMD,
           borderSide: AppEffects.borderSideDefault,
         ),
         focusedBorder: OutlineInputBorder(

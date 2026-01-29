@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
@@ -98,16 +98,13 @@ class QuestionsToAskSection extends StatelessWidget {
         // Section header
         Text(
           'Questions to Ask on Your Tour',
-          style: AppTypography.headlineExtraSmall.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.headlineSmall,
         ),
-        const SizedBox(height: AppSpacing.gapMD),
+        const SizedBox(height: AppSpacing.gapLG),
 
         // Question list
         ...questions.map((question) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.gapSM),
+              padding: const EdgeInsets.only(bottom: AppSpacing.gapMD),
               child: _QuestionRow(question: question),
             )),
       ],
@@ -125,47 +122,25 @@ class _QuestionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.paddingMD,
-        vertical: AppSpacing.paddingSM,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Question mark icon in a circle
-          Container(
-            width: AppSpacing.iconSM,
-            height: AppSpacing.iconSM,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Icon(
-                Icons.help_outline,
-                size: AppSpacing.iconXXS,
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.gapMD),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Question mark icon
+        Icon(
+          AppIcons.help,
+          size: AppSpacing.iconSM,
+          color: AppColors.primary,
+        ),
+        const SizedBox(width: AppSpacing.gapMD),
 
-          // Question text
-          Expanded(
-            child: Text(
-              question,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
+        // Question text
+        Expanded(
+          child: Text(
+            question,
+            style: AppTypography.bodyMedium,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

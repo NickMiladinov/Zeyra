@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_icons.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
 
@@ -35,12 +37,12 @@ class HospitalListCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.paddingMD,
+        horizontal: AppSpacing.paddingLG,
         vertical: AppSpacing.paddingXS,
       ),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
         side: BorderSide(
           color: AppColors.backgroundGrey200,
           width: 1,
@@ -48,9 +50,12 @@ class HospitalListCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.paddingMD),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.paddingLG, 
+            vertical: AppSpacing.paddingLG
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -61,10 +66,7 @@ class HospitalListCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       unit.name,
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTypography.headlineExtraSmall,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.gapSM),
@@ -72,27 +74,32 @@ class HospitalListCard extends StatelessWidget {
                   GestureDetector(
                     onTap: onFavoriteTap,
                     child: Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: isFavorite ? AppColors.primary : AppColors.textSecondary,
-                      size: 24,
+                      AppIcons.favorite,
+                      color: isFavorite ? AppColors.primary : AppColors.iconDefault,
+                      size: AppSpacing.iconSM,
+                      fill: isFavorite ? 1.0 : 0.0,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.gapXS),
-
-              // Distance
-              if (distanceMiles != null)
-                Text(
-                  '${distanceMiles!.toStringAsFixed(1)} miles away',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
               const SizedBox(height: AppSpacing.gapSM),
 
-              // Rating badge
-              _RatingBadge(rating: unit.bestAvailableRating),
+              // Distance and rating badge row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Distance
+                  if (distanceMiles != null)
+                    Text(
+                      '${distanceMiles!.toStringAsFixed(1)} miles away',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  // Rating badge
+                  _RatingBadge(rating: unit.bestAvailableRating),
+                ],
+              ),
             ],
           ),
         ),
@@ -110,9 +117,9 @@ class _RatingBadge extends StatelessWidget {
   Color _getBackgroundColor() {
     switch (rating) {
       case CqcRating.outstanding:
-        return AppColors.primary;
+        return AppColors.secondary;
       case CqcRating.good:
-        return AppColors.primary.withValues(alpha: 0.8);
+        return AppColors.success;
       case CqcRating.requiresImprovement:
         return AppColors.warning;
       case CqcRating.inadequate:
@@ -131,7 +138,7 @@ class _RatingBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: _getBackgroundColor(),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
       ),
       child: Text(
         rating.displayName,

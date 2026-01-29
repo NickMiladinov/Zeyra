@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/services/location_service.dart';
@@ -8,6 +9,7 @@ import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
 import 'hospital_list_card.dart';
 import 'hospital_sort_bottom_sheet.dart';
+import 'hospital_view_toggle_button.dart';
 
 /// List view for displaying hospitals.
 class HospitalListView extends StatelessWidget {
@@ -72,8 +74,8 @@ class HospitalListView extends StatelessWidget {
             // Results count and sort bar
             Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.paddingMD,
-                vertical: AppSpacing.paddingSM,
+                horizontal: AppSpacing.paddingLG,
+                vertical: AppSpacing.paddingMD,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -93,14 +95,14 @@ class HospitalListView extends StatelessWidget {
                         Text(
                           'Sort by: ${filters.sortBy.displayName}',
                           style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
+                            color: AppColors.primaryDark,
                           ),
                         ),
                         const SizedBox(width: 4),
                         Icon(
-                          Icons.unfold_more,
-                          color: AppColors.primary,
-                          size: 18,
+                          AppIcons.unfoldMore,
+                          color: AppColors.primaryDark,
+                          size: AppSpacing.iconXS,
                         ),
                       ],
                     ),
@@ -145,11 +147,14 @@ class HospitalListView extends StatelessWidget {
 
         // Map View floating button
         Positioned(
-          bottom: AppSpacing.paddingXL,
+          bottom: AppSpacing.paddingXXXL,
           left: 0,
           right: 0,
           child: Center(
-            child: _MapViewButton(onTap: onMapViewTap),
+            child: HospitalViewToggleButton(
+              targetView: HospitalViewType.map,
+              onTap: onMapViewTap,
+            ),
           ),
         ),
       ],
@@ -164,9 +169,9 @@ class HospitalListView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.local_hospital_outlined,
-              size: 64,
-              color: AppColors.textSecondary,
+              AppIcons.hospital,
+              size: AppSpacing.buttonHeightXXXL,
+              color: AppColors.iconDefault,
             ),
             const SizedBox(height: AppSpacing.gapLG),
             Text(
@@ -191,56 +196,3 @@ class HospitalListView extends StatelessWidget {
   }
 }
 
-/// Floating button to switch to map view.
-class _MapViewButton extends StatelessWidget {
-  final VoidCallback onTap;
-
-  const _MapViewButton({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.textPrimary,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.paddingLG,
-              vertical: AppSpacing.paddingSM,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.map_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: AppSpacing.gapSM),
-                Text(
-                  'Map View',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

@@ -17,7 +17,7 @@ class CustomMapMarker {
   /// Get the default hospital marker (coral with white plus).
   static Future<BitmapDescriptor> getDefaultMarker() async {
     _defaultMarker ??= await _createMarker(
-      backgroundColor: AppColors.secondary, // Coral/peach color
+      backgroundColor: AppColors.primary, // Coral/peach color
       iconColor: Colors.white,
       isSelected: false,
     );
@@ -160,7 +160,7 @@ class CustomMapMarker {
     
     // Draw circle background
     final paint = Paint()
-      ..color = AppColors.secondary
+      ..color = AppColors.primary
       ..style = PaintingStyle.fill;
     canvas.drawCircle(
       const Offset(size / 2, size / 2),

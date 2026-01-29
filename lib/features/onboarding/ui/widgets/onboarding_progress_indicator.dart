@@ -7,7 +7,6 @@ import '../../../../app/theme/app_spacing.dart';
 /// A linear progress indicator for the onboarding flow.
 ///
 /// Shows current progress as a filled portion of a horizontal bar.
-/// Uses secondary color for filled portion, light grey for unfilled.
 class OnboardingProgressIndicator extends StatelessWidget {
   /// Creates an onboarding progress indicator.
   ///
@@ -30,7 +29,7 @@ class OnboardingProgressIndicator extends StatelessWidget {
         return Container(
           height: AppSpacing.xs,
           decoration: BoxDecoration(
-            color: AppColors.secondaryLight.withValues(alpha: 0.3),
+            color: AppColors.primaryLight.withValues(alpha: 0.3),
             borderRadius: AppEffects.roundedCircle,
           ),
           child: Align(
@@ -40,7 +39,7 @@ class OnboardingProgressIndicator extends StatelessWidget {
               curve: AppEffects.curveDefault,
               width: filledWidth,
               decoration: BoxDecoration(
-                color: AppColors.secondary,
+                color: AppColors.primary,
                 borderRadius: AppEffects.roundedCircle,
               ),
             ),

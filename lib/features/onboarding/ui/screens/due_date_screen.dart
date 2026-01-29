@@ -173,7 +173,7 @@ class _DueDateScreenState extends ConsumerState<DueDateScreen> {
                   vertical: AppSpacing.paddingMD,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.3),
+                  color: AppColors.primary.withValues(alpha: 0.3),
                   borderRadius: AppEffects.roundedXXL,
                 ),
                 child: Text(
@@ -308,8 +308,8 @@ class _ModeToggle extends StatelessWidget {
                     decoration: BoxDecoration(
                       // Coral when due date, teal when last period
                       color: isDueDateMode
-                          ? AppColors.secondary
-                          : AppColors.primary,
+                          ? AppColors.primary
+                          : AppColors.secondary,
                       shape: BoxShape.circle,
                     ),
                   ),

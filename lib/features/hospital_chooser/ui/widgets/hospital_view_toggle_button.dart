@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 
@@ -28,20 +30,14 @@ class HospitalViewToggleButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.textPrimary,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
+        boxShadow: AppEffects.shadowSM,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.paddingLG,
@@ -51,15 +47,15 @@ class HospitalViewToggleButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  isMapTarget ? Icons.map_outlined : Icons.list,
-                  color: Colors.white,
-                  size: 20,
+                  isMapTarget ? AppIcons.map : AppIcons.overview,
+                  color: AppColors.white,
+                  size: AppSpacing.iconSM,
                 ),
                 const SizedBox(width: AppSpacing.gapSM),
                 Text(
                   isMapTarget ? 'Map View' : 'List View',
                   style: AppTypography.labelMedium.copyWith(
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ),
               ],

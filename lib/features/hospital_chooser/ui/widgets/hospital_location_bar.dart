@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_typography.dart';
 
 /// Location bar showing current postcode with change option.
@@ -28,9 +29,11 @@ class HospitalLocationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.paddingLG,
-        vertical: AppSpacing.paddingSM,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.paddingLG,
+        AppSpacing.paddingXS,
+        AppSpacing.paddingLG,
+        AppSpacing.paddingLG,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -44,27 +47,26 @@ class HospitalLocationBar extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.location_on,
-            color: AppColors.primary,
-            size: 20,
+            AppIcons.homePin,
+            color: AppColors.textPrimary,
+            size: AppSpacing.iconSM,
+            fill: 1.0,
           ),
-          const SizedBox(width: AppSpacing.gapSM),
+          const SizedBox(width: AppSpacing.gapXS),
           Expanded(
             child: isLoading
                 ? const Text('Getting location...')
                 : Text(
                     postcode ?? 'Location not set',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppTypography.bodyMedium,
                   ),
           ),
-          TextButton(
-            onPressed: onChangeTap,
+          GestureDetector(
+            onTap: onChangeTap,
             child: Text(
               'Change',
               style: AppTypography.labelMedium.copyWith(
-                color: AppColors.primary,
+                color: AppColors.primaryDark,
               ),
             ),
           ),

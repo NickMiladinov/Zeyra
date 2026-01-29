@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 
@@ -29,8 +30,8 @@ class HospitalPermissionPrompt extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.location_searching,
-            size: 80,
+            AppIcons.locationSearching,
+            size: AppSpacing.buttonHeightXXXL,
             color: AppColors.primary,
           ),
           const SizedBox(height: AppSpacing.gapXL),

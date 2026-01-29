@@ -20,16 +20,13 @@ class HospitalDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screenPaddingHorizontal,
         AppSpacing.paddingMD,
-        AppSpacing.paddingMD,
-        AppSpacing.paddingMD,
+        AppSpacing.screenPaddingHorizontal,
         AppSpacing.paddingSM,
       ),
       child: Row(
         children: [
-          // Empty space on left for balance
-          const SizedBox(width: AppSpacing.iconLG),
-
           // Centered drag handle
           Expanded(
             child: Center(
@@ -39,26 +36,6 @@ class HospitalDetailHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.backgroundGrey400,
                   borderRadius: BorderRadius.circular(AppEffects.radiusSM),
-                ),
-              ),
-            ),
-          ),
-
-          // Close button on the right
-          GestureDetector(
-            onTap: onClose,
-            child: Container(
-              width: AppSpacing.iconLG,
-              height: AppSpacing.iconLG,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundGrey100,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.close,
-                  color: AppColors.textPrimary,
-                  size: AppSpacing.iconXS,
                 ),
               ),
             ),

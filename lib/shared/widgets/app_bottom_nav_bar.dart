@@ -72,8 +72,8 @@ class AppBottomNavBar extends StatelessWidget {
     required String label,
   }) {
     final bool isActive = currentIndex == index;
-    final Color textColor = isActive ? AppColors.primary : AppColors.textSecondary;
-    final Color iconColor = isActive ? AppColors.primary : AppColors.backgroundGrey500;
+    final Color textColor = isActive ? AppColors.primaryDark : AppColors.textSecondary;
+    final Color iconColor = isActive ? AppColors.primaryDark : AppColors.backgroundGrey500;
 
     return Expanded(
       child: GestureDetector(

@@ -119,7 +119,7 @@ class _BirthDateScreenState extends ConsumerState<BirthDateScreen> {
             child: UnderlinedText(
               text: 'birth date',
               style: baseStyle.copyWith(
-                color: AppColors.secondary,
+                color: AppColors.primary,
               ),
             ),
           ),

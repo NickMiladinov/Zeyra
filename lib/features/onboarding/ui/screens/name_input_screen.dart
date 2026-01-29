@@ -105,9 +105,9 @@ class _NameInputScreenState extends ConsumerState<NameInputScreen> {
               TextField(
                 controller: _nameController,
                 autofocus: true,
-                cursorColor: AppColors.secondary,
+                cursorColor: AppColors.primary,
                 style: AppTypography.displayMedium.copyWith(
-                  color: AppColors.secondaryDark,
+                  color: AppColors.primaryDark,
                   fontWeight: FontWeight.w600,
                   fontSize: 36,
                 ),

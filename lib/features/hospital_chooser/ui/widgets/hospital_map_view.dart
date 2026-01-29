@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/services/location_service.dart' as loc;
@@ -82,6 +84,9 @@ class HospitalMapView extends ConsumerStatefulWidget {
   /// Callback to show postcode sheet.
   final VoidCallback onShowPostcodeSheet;
 
+  /// Callback to center map on user's location.
+  final VoidCallback onCenterLocation;
+
   const HospitalMapView({
     super.key,
     required this.locationState,
@@ -102,6 +107,7 @@ class HospitalMapView extends ConsumerStatefulWidget {
     required this.onListViewTap,
     required this.onRequestPermission,
     required this.onShowPostcodeSheet,
+    required this.onCenterLocation,
   });
 
   @override
@@ -221,8 +227,8 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
         if (widget.locationState.hasLocation)
           Positioned(
             top: AppSpacing.paddingSM,
-            left: AppSpacing.paddingMD,
-            right: AppSpacing.paddingMD,
+            left: AppSpacing.paddingLG,
+            right: AppSpacing.paddingLG,
             child: HospitalSearchBar(
               controller: widget.searchController,
               focusNode: widget.searchFocusNode,
@@ -237,7 +243,7 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
             searchState.isActive &&
             searchState.query.isNotEmpty)
           Positioned(
-            top: 56 + AppSpacing.paddingSM,
+            top: AppSpacing.searchBarHeight + AppSpacing.paddingSM,
             left: 0,
             right: 0,
             bottom: 0,
@@ -253,28 +259,22 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
             searchState.isActive &&
             searchState.query.isNotEmpty)
           Positioned(
-            top: 56 + AppSpacing.paddingSM,
-            left: AppSpacing.paddingMD,
-            right: AppSpacing.paddingMD,
+            top: AppSpacing.searchBarHeight + AppSpacing.paddingSM,
+            left: AppSpacing.paddingLG,
+            right: AppSpacing.paddingLG,
             child: GestureDetector(
               onTap: () {},
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                  boxShadow: AppEffects.shadowMD,
                 ),
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.4,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLG),
                   child: HospitalSearchResults(
                     searchState: searchState,
                     onResultTap: widget.onSearchResultSelected,
@@ -290,9 +290,10 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
             widget.mapState.filters.hasActiveFilters &&
             !searchState.isActive)
           Positioned(
-            top: 70,
-            left: AppSpacing.paddingMD,
-            right: AppSpacing.paddingMD,
+            // Search bar: top paddingSM + height + bottom gap paddingSM
+            top: AppSpacing.searchBarHeight + AppSpacing.paddingSM,
+            left: AppSpacing.paddingLG,
+            right: AppSpacing.paddingLG,
             child: HospitalFilterChips(
               filters: widget.mapState.filters,
               onRemoveFilter: (newFilters) {
@@ -336,18 +337,33 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
             child: const Center(child: _LoadingUnitsIndicator()),
           ),
 
-        // List view toggle button
+        // FAB buttons row (toggle button centered, location FAB right)
         if (widget.locationState.hasLocation &&
             !widget.isLoadingUnits &&
             widget.mapState.hasUnits)
           Positioned(
-            bottom: AppSpacing.paddingXL,
+            bottom: AppSpacing.paddingXXXL,
             left: 0,
             right: 0,
-            child: Center(
-              child: HospitalViewToggleButton(
-                targetView: HospitalViewType.list,
-                onTap: widget.onListViewTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.paddingXL),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Spacer to balance the right FAB and keep toggle centered
+                  SizedBox(width: AppSpacing.buttonHeightLG),
+                  // Toggle button (centered via Expanded)
+                  Expanded(
+                    child: Center(
+                      child: HospitalViewToggleButton(
+                        targetView: HospitalViewType.list,
+                        onTap: widget.onListViewTap,
+                      ),
+                    ),
+                  ),
+                  // Center location FAB (right side)
+                  _CenterLocationFab(onTap: widget.onCenterLocation),
+                ],
               ),
             ),
           ),
@@ -380,9 +396,9 @@ class _PostcodePromptOverlay extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.location_off,
-              size: 64,
-              color: AppColors.textSecondary,
+              AppIcons.locationOff,
+              size: AppSpacing.buttonHeightXXXL,
+              color: AppColors.iconDefault,
             ),
             const SizedBox(height: AppSpacing.gapLG),
             Text(
@@ -443,14 +459,8 @@ class _LoadingUnitsIndicator extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppEffects.radiusXL),
+        boxShadow: AppEffects.shadowSM,
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
@@ -480,12 +490,40 @@ class _ErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.paddingMD),
       decoration: BoxDecoration(
         color: AppColors.error,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppEffects.radiusSM),
       ),
       child: Text(
         message,
         style: AppTypography.bodyMedium.copyWith(
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular FAB to center the map on user's location.
+class _CenterLocationFab extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CenterLocationFab({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: AppSpacing.buttonHeightLG,
+        height: AppSpacing.buttonHeightLG,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle,
+          boxShadow: AppEffects.shadowMD,
+        ),
+        child: Icon(
+          AppIcons.myLocation,
+          color: AppColors.textPrimary,
+          size: AppSpacing.iconSM,
         ),
       ),
     );

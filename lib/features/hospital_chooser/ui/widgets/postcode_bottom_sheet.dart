@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
 
 /// Bottom sheet for entering a UK postcode.
 ///
@@ -82,92 +84,68 @@ class _PostcodeBottomSheetState extends State<PostcodeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    // Add keyboard inset padding to the content
+    final keyboardPadding = MediaQuery.of(context).viewInsets.bottom;
+    
+    return AppBottomSheet(
+      title: 'Set Your Search Area',
+      titleStyle: AppTypography.headlineSmall.copyWith(
+        color: AppColors.textPrimary,
       ),
-      padding: EdgeInsets.only(
-        left: AppSpacing.paddingLG,
-        right: AppSpacing.paddingLG,
-        top: AppSpacing.paddingLG,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.paddingLG,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundGrey200,
-                borderRadius: BorderRadius.circular(2),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: keyboardPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Postcode input
+            TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: 'Enter Your Postcode',
+                errorText: _error,
+                filled: true,
+                fillColor: AppColors.background,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.paddingLG,
+                  vertical: AppSpacing.paddingMD,
+                ),
               ),
+              onSubmitted: (_) => _submit(),
             ),
-          ),
-          const SizedBox(height: AppSpacing.gapLG),
-          
-          // Title
-          Text(
-            'Set Your Search Area',
-            style: AppTypography.headlineSmall.copyWith(
-              color: AppColors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.gapXL),
-          
-          // Postcode input
-          TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              hintText: 'Enter Your Postcode',
-              errorText: _error,
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
+            const SizedBox(height: AppSpacing.gapLG),
+            
+            // Submit button
+            FilledButton(
+              onPressed: _isLoading ? null : _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.paddingMD),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
+                ),
+                disabledBackgroundColor: AppColors.backgroundGrey200,
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.paddingLG,
-                vertical: AppSpacing.paddingMD,
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Show Hospitals'),
             ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: AppSpacing.gapLG),
-          
-          // Submit button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.paddingMD),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              disabledBackgroundColor: AppColors.backgroundGrey200,
-            ),
-            child: _isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Text('Show Hospitals'),
-          ),
-          const SizedBox(height: AppSpacing.gapMD),
-        ],
+          ],
+        ),
       ),
     );
   }

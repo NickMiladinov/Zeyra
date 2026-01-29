@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
@@ -100,7 +101,7 @@ class HospitalContactSection extends StatelessWidget {
               if (hasPhone)
                 Expanded(
                   child: _ActionButton(
-                    icon: Icons.phone_outlined,
+                    icon: AppIcons.phone,
                     label: 'Call Maternity Unit',
                     onTap: _callMaternityUnit,
                     isPrimary: true,
@@ -112,7 +113,7 @@ class HospitalContactSection extends StatelessWidget {
               if (hasLocation)
                 Expanded(
                   child: _ActionButton(
-                    icon: Icons.directions_outlined,
+                    icon: AppIcons.location,
                     label: 'Get Directions',
                     onTap: _getDirections,
                     isPrimary: false,
@@ -127,30 +128,33 @@ class HospitalContactSection extends StatelessWidget {
         if (hasWebsite || hasCqcReport) ...[
           Text(
             'Official Information',
-            style: AppTypography.headlineExtraSmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.headlineSmall,
           ),
-          const SizedBox(height: AppSpacing.gapMD),
+          const SizedBox(height: AppSpacing.gapXL),
 
           // NHS Hospital Page link
           if (hasWebsite) ...[
             _LinkRow(
-              icon: Icons.add_circle_outline,
-              label: 'NHS Hospital Page',
+              icon: AppIcons.add,
+              label: 'Hospital/Maternity Unit Website',
               onTap: _openWebsite,
             ),
-            const SizedBox(height: AppSpacing.gapSM),
+            const SizedBox(height: AppSpacing.gapLG),
           ],
 
           // CQC Report link
           if (hasCqcReport)
+            Container(
+              height: 1,
+              color: AppColors.border,
+            ),
+            const SizedBox(height: AppSpacing.gapLG),
             _LinkRow(
-              icon: Icons.description_outlined,
+              icon: AppIcons.file,
               label: 'Full CQC Report',
               onTap: _openCqcReport,
             ),
+            const SizedBox(height: AppSpacing.gapXL),
         ],
       ],
     );
@@ -174,7 +178,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isPrimary ? AppColors.primary : AppColors.surface,
+      color: isPrimary ? AppColors.secondary : AppColors.surface,
       borderRadius: BorderRadius.circular(AppEffects.radiusLG),
       child: InkWell(
         onTap: onTap,
@@ -187,7 +191,7 @@ class _ActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             border: isPrimary
                 ? null
-                : Border.all(color: AppColors.border, width: AppSpacing.borderWidthThin),
+                : Border.all(color: AppColors.backgroundGrey500, width: AppSpacing.borderWidthThin),
             borderRadius: BorderRadius.circular(AppEffects.radiusLG),
           ),
           child: Row(
@@ -196,7 +200,8 @@ class _ActionButton extends StatelessWidget {
               Icon(
                 icon,
                 size: AppSpacing.iconXS,
-                color: isPrimary ? AppColors.white : AppColors.primary,
+                color: isPrimary ? AppColors.white : AppColors.secondary,
+                fill: isPrimary ? 0.0 : 1.0,
               ),
               const SizedBox(width: AppSpacing.gapSM),
               Flexible(
@@ -204,7 +209,7 @@ class _ActionButton extends StatelessWidget {
                   label,
                   style: AppTypography.labelMedium.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isPrimary ? AppColors.white : AppColors.primary,
+                    color: isPrimary ? AppColors.white : AppColors.textPrimary,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -232,58 +237,46 @@ class _LinkRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppEffects.radiusMD),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.paddingMD),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: AppColors.border,
-              width: AppSpacing.borderWidthThin,
+        child: Row(
+          children: [
+            // Icon in a rounded square
+            Container(
+              width: AppSpacing.iconLG,
+              height: AppSpacing.iconLG,
+              decoration: BoxDecoration(
+                color: AppColors.infoDark,
+                borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  size: AppSpacing.iconSM,
+                  color: AppColors.white,
+                ),
+              ),
             ),
-            borderRadius: BorderRadius.circular(AppEffects.radiusMD),
-          ),
-          child: Row(
-            children: [
-              // Icon in a colored circle
-              Container(
-                width: AppSpacing.iconLG,
-                height: AppSpacing.iconLG,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Icon(
-                    icon,
-                    size: AppSpacing.iconXS,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.gapMD),
+            const SizedBox(width: AppSpacing.gapMD),
 
-              // Label
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+            // Label
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textPrimary,
                 ),
               ),
+            ),
 
-              // External link icon
-              Icon(
-                Icons.open_in_new,
-                size: AppSpacing.iconXS,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
+            // External link icon
+            Icon(
+              AppIcons.newTab,
+              size: AppSpacing.iconXS,
+              color: AppColors.iconDefault,
+            ),
+          ],
         ),
       ),
     );

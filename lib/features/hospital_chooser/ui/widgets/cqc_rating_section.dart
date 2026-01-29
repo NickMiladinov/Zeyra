@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
@@ -27,12 +28,9 @@ class CqcRatingSection extends StatelessWidget {
         // Section header
         Text(
           'Official CQC Ratings',
-          style: AppTypography.headlineExtraSmall.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.headlineSmall,
         ),
-        const SizedBox(height: AppSpacing.gapMD),
+        const SizedBox(height: AppSpacing.gapLG),
 
         // Rating rows - only show if rating is available
         _buildRatingsList(),
@@ -134,9 +132,9 @@ class CqcRatingSection extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.calendar_today_outlined,
+          AppIcons.calendar,
           size: AppSpacing.iconXXS,
-          color: AppColors.textSecondary,
+          color: AppColors.iconDefault,
         ),
         const SizedBox(width: AppSpacing.gapSM),
         Text(
@@ -164,9 +162,9 @@ class _CqcRatingRow extends StatelessWidget {
   Color _getBadgeColor() {
     switch (rating) {
       case CqcRating.outstanding:
-        return AppColors.primary;
+        return AppColors.secondary;
       case CqcRating.good:
-        return AppColors.primary;
+        return AppColors.success;
       case CqcRating.requiresImprovement:
         return AppColors.warning;
       case CqcRating.inadequate:
@@ -180,21 +178,22 @@ class _CqcRatingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.paddingMD,
-        vertical: AppSpacing.paddingSM + 2,
+        horizontal: AppSpacing.paddingLG,
+        vertical: AppSpacing.paddingMD,
       ),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+        border: Border.all(
+          color: AppColors.border,
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.bodyMedium,
           ),
           Container(
             padding: const EdgeInsets.symmetric(
@@ -203,13 +202,13 @@ class _CqcRatingRow extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: _getBadgeColor(),
-              borderRadius: BorderRadius.circular(AppEffects.radiusSM),
+              borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
             ),
             child: Text(
               rating.displayName,
               style: AppTypography.labelSmall.copyWith(
                 color: AppColors.white,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

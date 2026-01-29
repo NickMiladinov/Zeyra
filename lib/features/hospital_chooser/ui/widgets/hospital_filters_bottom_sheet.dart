@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
 
 /// Bottom sheet for filtering hospital results.
 ///
@@ -158,132 +161,125 @@ class _HospitalFiltersBottomSheetState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.paddingLG),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundGrey200,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.gapLG),
-
-          // Header with reset button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Filters',
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              TextButton(
-                onPressed: _resetFilters,
-                child: Text(
-                  'Reset all',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.gapXL),
-
-          // CQC Rating section
-          Text(
-            'CQC Rating',
-            style: AppTypography.labelLarge.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.gapMD),
-
-          // Rating chips grid
-          _buildRatingGrid(),
-          
-          // Distance section (only shown in list view)
-          if (widget.showDistanceFilter) ...[
-            const SizedBox(height: AppSpacing.gapXL),
+    return AppBottomSheet(
+      applyContentPadding: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.paddingXL,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header with reset button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Distance',
-                  style: AppTypography.labelLarge.copyWith(
+                  'Filters',
+                  style: AppTypography.headlineSmall.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(
-                  'Up to ${_formatDistance(_maxDistance)}mi',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.primary,
+                TextButton(
+                  onPressed: _resetFilters,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: Text(
+                    'Reset all',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.gapSM),
+            const SizedBox(height: AppSpacing.gapXL),
+
+            // CQC Rating section
+            Text(
+              'CQC Rating',
+              style: AppTypography.labelLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.gapMD),
+
+            // Rating chips grid
+            _buildRatingGrid(),
             
-            // Distance slider - exponential scale from 0.1 to 50 miles
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: AppColors.backgroundGrey200,
-                thumbColor: Colors.white,
-                overlayColor: AppColors.primary.withValues(alpha: 0.2),
-                trackHeight: 4,
-                thumbShape: const RoundSliderThumbShape(
-                  enabledThumbRadius: 12,
-                  elevation: 2,
+            // Distance section (only shown in list view)
+            if (widget.showDistanceFilter) ...[
+              const SizedBox(height: AppSpacing.gapXL),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Distance',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    'Up to ${_formatDistance(_maxDistance)}mi',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.gapSM),
+              
+              // Distance slider - exponential scale from 0.1 to 50 miles
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: AppColors.primary,
+                  inactiveTrackColor: AppColors.backgroundGrey200,
+                  thumbColor: Colors.white,
+                  overlayColor: AppColors.primary.withValues(alpha: 0.2),
+                  trackHeight: 4,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 12,
+                    elevation: 2,
+                  ),
+                ),
+                child: Slider(
+                  value: _distanceToSlider(_maxDistance),
+                  min: 0.0,
+                  max: 1.0,
+                  onChanged: (value) {
+                    setState(() {
+                      final rawDistance = _sliderToDistance(value);
+                      _maxDistance = _roundDistance(rawDistance);
+                    });
+                  },
                 ),
               ),
-              child: Slider(
-                value: _distanceToSlider(_maxDistance),
-                min: 0.0,
-                max: 1.0,
-                onChanged: (value) {
-                  setState(() {
-                    final rawDistance = _sliderToDistance(value);
-                    _maxDistance = _roundDistance(rawDistance);
-                  });
-                },
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.gapXL),
+            ],
+            const SizedBox(height: AppSpacing.gapXL),
 
-          // Apply button
-          ElevatedButton(
-            onPressed: _applyFilters,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.paddingMD),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            // Apply button
+            FilledButton(
+              onPressed: _applyFilters,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.paddingMD),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
+                ),
               ),
+              child: const Text('Show Hospitals'),
             ),
-            child: const Text('Show Hospitals'),
-          ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
-        ],
+            const SizedBox(height: AppSpacing.gapMD),
+          ],
+        ),
       ),
     );
   }
@@ -353,15 +349,15 @@ class _RatingChip extends StatelessWidget {
   IconData _getIcon() {
     switch (rating) {
       case CqcRating.outstanding:
-        return Icons.star;
+        return AppIcons.starRating;
       case CqcRating.good:
-        return Icons.check;
+        return AppIcons.checkIcon;
       case CqcRating.requiresImprovement:
-        return Icons.info_outline;
+        return AppIcons.infoIcon;
       case CqcRating.inadequate:
-        return Icons.warning_outlined;
+        return AppIcons.warningIcon;
       case CqcRating.notRated:
-        return Icons.help_outline;
+        return AppIcons.help;
     }
   }
 
@@ -376,11 +372,11 @@ class _RatingChip extends StatelessWidget {
           horizontal: AppSpacing.paddingSM,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          color: isSelected ? AppColors.surfaceVariant : AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppEffects.radiusLG),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.backgroundGrey200,
-            width: 1.5,
+            color: isSelected ? AppColors.secondary : AppColors.border,
+            width: AppSpacing.borderWidthThin,
           ),
         ),
         child: Column(
@@ -388,14 +384,14 @@ class _RatingChip extends StatelessWidget {
           children: [
             Icon(
               _getIcon(),
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              size: 24,
+              color: isSelected ? AppColors.textPrimary: AppColors.iconDefault,
+              size: AppSpacing.iconSM,
             ),
             const SizedBox(height: AppSpacing.gapXS),
             Text(
               rating.displayName,
               style: AppTypography.labelSmall.copyWith(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
+                color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,

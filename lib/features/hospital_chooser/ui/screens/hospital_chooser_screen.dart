@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/services/location_service.dart' as loc;
@@ -45,6 +46,10 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Whether showing list view (false = map view).
   bool _isListView = false;
+
+  /// Whether the list view has been initialized (auto-expanded distance once).
+  /// Prevents re-expanding distance filter when switching back to list view.
+  bool _listViewInitialized = false;
 
   /// Set of favorite hospital IDs.
   final Set<String> _favoriteIds = {};
@@ -201,6 +206,23 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         ),
       );
     }
+
+    // Show the detail overlay for the selected unit
+    final locationState = ref.read(hospitalLocationProvider);
+    final distanceMiles = locationState.userLocation != null
+        ? unit.distanceFrom(
+            locationState.userLocation!.latitude,
+            locationState.userLocation!.longitude,
+          )
+        : null;
+
+    showHospitalDetailOverlay(
+      context: context,
+      unit: unit,
+      distanceMiles: distanceMiles,
+      userLat: locationState.userLocation?.latitude,
+      userLng: locationState.userLocation?.longitude,
+    );
   }
 
   /// Show the filters bottom sheet.
@@ -226,6 +248,9 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   }
 
   /// Switch to list view with auto-expanding distance.
+  /// 
+  /// On first visit: auto-expands distance to find at least 10 results.
+  /// On subsequent visits: reloads units from user's location using current filters.
   Future<void> _switchToListView() async {
     final locationState = ref.read(hospitalLocationProvider);
     if (!locationState.hasLocation || locationState.userLocation == null) {
@@ -233,13 +258,22 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       return;
     }
 
-    await ref.read(hospitalMapProvider.notifier).autoExpandDistance(
-          location: loc.LatLng(
-            locationState.userLocation!.latitude,
-            locationState.userLocation!.longitude,
-          ),
-          minResults: 10,
-        );
+    final userLocation = loc.LatLng(
+      locationState.userLocation!.latitude,
+      locationState.userLocation!.longitude,
+    );
+
+    if (!_listViewInitialized) {
+      // First visit: auto-expand distance to find enough results
+      await ref.read(hospitalMapProvider.notifier).autoExpandDistance(
+            location: userLocation,
+            minResults: 10,
+          );
+      _listViewInitialized = true;
+    } else {
+      // Subsequent visits: reload units from user's location with current filters
+      await ref.read(hospitalMapProvider.notifier).loadNearbyUnits(userLocation);
+    }
 
     setState(() => _isListView = true);
   }
@@ -375,6 +409,8 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   }
 
   /// Load units for the current visible map area.
+  /// 
+  /// Uses [loadUnitsForMapViewport] to preserve user's distance filter preference.
   Future<void> _loadUnitsForVisibleArea() async {
     if (_isLoadingUnits) return;
     if (_mapController == null) return;
@@ -396,9 +432,10 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
       final location = loc.LatLng(center.latitude, center.longitude);
 
-      await mapNotifier.loadNearbyUnitsWithRadius(
+      // Use viewport loading to preserve user's filter preferences
+      await mapNotifier.loadUnitsForMapViewport(
         location,
-        radiusMiles: radiusMiles,
+        viewportRadiusMiles: radiusMiles,
       );
 
       logger.debug(
@@ -437,29 +474,43 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
     final locationState = ref.watch(hospitalLocationProvider);
     final mapState = ref.watch(hospitalMapProvider);
+    final searchState = ref.watch(hospitalSearchProvider);
 
     // Listen for location state changes
     ref.listen<HospitalLocationState>(hospitalLocationProvider, (prev, next) {
       _onLocationStateChanged(next);
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          // Location bar
-          HospitalLocationBar(
-            postcode: locationState.userPostcode,
-            isLoading: locationState.isLoading,
-            onChangeTap: _showPostcodeSheet,
-          ),
+    // Check if search is active (overlay visible or input focused)
+    final isSearchActive = searchState.isActive || _searchFocusNode.hasFocus;
 
-          // Main content
-          Expanded(
-            child: _buildContent(locationState, mapState),
-          ),
-        ],
+    return PopScope(
+      // Allow pop only if search is not active
+      canPop: !isSearchActive,
+      onPopInvokedWithResult: (didPop, result) {
+        // If we didn't pop (search was active), dismiss the search overlay
+        if (!didPop) {
+          _dismissSearchOverlay();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: Column(
+          children: [
+            // Location bar
+            HospitalLocationBar(
+              postcode: locationState.userPostcode,
+              isLoading: locationState.isLoading,
+              onChangeTap: _showPostcodeSheet,
+            ),
+
+            // Main content
+            Expanded(
+              child: _buildContent(locationState, mapState),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -488,7 +539,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       backgroundColor: AppColors.surface,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+        icon: const Icon(AppIcons.back, color: AppColors.iconDefault, size: AppSpacing.iconMD,),
         onPressed: () => context.pop(),
       ),
       title: Text(
@@ -590,6 +641,24 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       onListViewTap: _switchToListView,
       onRequestPermission: _requestLocationPermission,
       onShowPostcodeSheet: _showPostcodeSheet,
+      onCenterLocation: _centerOnUserLocation,
+    );
+  }
+
+  /// Center the map on the user's postcode/location.
+  void _centerOnUserLocation() {
+    final locationState = ref.read(hospitalLocationProvider);
+    if (!locationState.hasLocation || locationState.userLocation == null) return;
+    if (_mapController == null) return;
+
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        LatLng(
+          locationState.userLocation!.latitude,
+          locationState.userLocation!.longitude,
+        ),
+        _zoomForRadius(_currentSearchRadius),
+      ),
     );
   }
 }

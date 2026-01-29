@@ -33,10 +33,7 @@ class PlaceRatingSection extends StatelessWidget {
         // Section header
         Text(
           'Patient Environment Ratings (PLACE)',
-          style: AppTypography.headlineExtraSmall.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+          style: AppTypography.headlineSmall,
         ),
         const SizedBox(height: AppSpacing.gapSM),
 
@@ -94,7 +91,7 @@ class _PlaceRatingRow extends StatelessWidget {
   /// Get the color for the progress bar based on percentage.
   Color _getProgressColor() {
     if (percentage >= 90) {
-      return AppColors.primary;
+      return AppColors.secondary;
     } else if (percentage >= 80) {
       return AppColors.success;
     } else if (percentage >= 70) {
@@ -107,10 +104,16 @@ class _PlaceRatingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.paddingMD),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.paddingLG,
+        vertical: AppSpacing.paddingMD,
+      ),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+        borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+        border: Border.all(
+          color: AppColors.border,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,9 +125,7 @@ class _PlaceRatingRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTypography.bodyMedium,
                 ),
               ),
               Text(

@@ -408,11 +408,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
         padding: const EdgeInsets.all(AppSpacing.paddingLG),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.backgroundSecondaryVerySubtle
+              ? AppColors.backgroundPrimaryVerySubtle
               : AppColors.white,
           borderRadius: AppEffects.roundedLG,
           border: Border.all(
-            color: isSelected ? AppColors.secondary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.border,
             width: isSelected
                 ? AppSpacing.borderWidthMedium
                 : AppSpacing.borderWidthThin,
@@ -430,7 +430,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   vertical: AppSpacing.paddingXS,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary,
+                  color: AppColors.primary,
                   borderRadius: AppEffects.roundedCircle,
                 ),
                 child: Text(

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
 
 /// Displays active filter chips that can be removed.
@@ -107,7 +109,7 @@ class _FilterChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
         border: Border.all(color: AppColors.backgroundGrey200),
       ),
       child: Row(
@@ -123,9 +125,9 @@ class _FilterChip extends StatelessWidget {
           GestureDetector(
             onTap: onRemove,
             child: Icon(
-              Icons.close,
-              size: 16,
-              color: AppColors.textSecondary,
+              AppIcons.close,
+              size: AppSpacing.iconXXS,
+              color: AppColors.iconDefault,
             ),
           ),
         ],

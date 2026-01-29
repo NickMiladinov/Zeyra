@@ -136,10 +136,6 @@ class HospitalMarkerCluster {
         icon: isSelected ? selectedIcon : defaultIcon,
         anchor: const Offset(0.5, 1.0),
         onTap: () => onUnitTap(unit),
-        infoWindow: InfoWindow(
-          title: unit.name,
-          snippet: unit.bestAvailableRating.displayName,
-        ),
       );
     }).toSet();
   }
@@ -195,10 +191,6 @@ class HospitalMarkerCluster {
           icon: isSelected ? selectedIcon : defaultIcon,
           anchor: const Offset(0.5, 1.0),
           onTap: () => onUnitTap(unit),
-          infoWindow: InfoWindow(
-            title: unit.name,
-            snippet: unit.bestAvailableRating.displayName,
-          ),
         ));
       } else {
         // Multiple units - show cluster marker
@@ -220,10 +212,6 @@ class HospitalMarkerCluster {
           icon: clusterIcon,
           anchor: const Offset(0.5, 0.5),
           onTap: () => onClusterTap?.call(centerLat, centerLng),
-          infoWindow: InfoWindow(
-            title: '${clusterUnits.length} hospitals',
-            snippet: 'Tap to zoom in',
-          ),
         ));
       }
     }

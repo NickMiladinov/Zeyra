@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
@@ -77,9 +78,6 @@ class HospitalListContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final searchState = ref.watch(hospitalSearchProvider);
 
-    // Calculate the height of the search bar area for positioning
-    const searchBarHeight = 56.0;
-
     return Stack(
       children: [
         // Main list content (always visible)
@@ -88,7 +86,7 @@ class HospitalListContent extends ConsumerWidget {
             // Search bar and filter button
             Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.paddingMD,
+                horizontal: AppSpacing.paddingLG,
                 vertical: AppSpacing.paddingSM,
               ),
               child: HospitalSearchBar(
@@ -104,7 +102,7 @@ class HospitalListContent extends ConsumerWidget {
             if (mapState.filters.hasActiveFilters)
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.paddingMD,
+                  horizontal: AppSpacing.paddingLG,
                 ),
                 child: HospitalFilterChips(
                   filters: mapState.filters,
@@ -144,7 +142,7 @@ class HospitalListContent extends ConsumerWidget {
         // Dismiss layer (below search bar)
         if (searchState.isActive && searchState.query.isNotEmpty)
           Positioned(
-            top: searchBarHeight,
+            top: AppSpacing.searchBarHeight,
             left: 0,
             right: 0,
             bottom: 0,
@@ -158,28 +156,22 @@ class HospitalListContent extends ConsumerWidget {
         // Search results overlay (positioned below search bar)
         if (searchState.isActive && searchState.query.isNotEmpty)
           Positioned(
-            top: searchBarHeight + AppSpacing.paddingSM,
-            left: AppSpacing.paddingMD,
-            right: AppSpacing.paddingMD,
+            top: AppSpacing.searchBarHeight + AppSpacing.paddingSM,
+            left: AppSpacing.paddingLG,
+            right: AppSpacing.paddingLG,
             child: GestureDetector(
               onTap: () {}, // Prevent tap propagation
               child: Container(
                 decoration: BoxDecoration(
                   color: AppColors.background,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                  boxShadow: AppEffects.shadowMD,
                 ),
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.4,
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppEffects.radiusLG),
                   child: HospitalSearchResults(
                     searchState: searchState,
                     onResultTap: onSearchResultSelected,

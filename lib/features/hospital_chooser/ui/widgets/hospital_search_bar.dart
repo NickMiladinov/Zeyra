@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
 
@@ -70,14 +72,8 @@ class _HospitalSearchBarState extends State<HospitalSearchBar> {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+              boxShadow: AppEffects.shadowSM,
             ),
             child: TextField(
               controller: widget.controller,
@@ -92,17 +88,17 @@ class _HospitalSearchBarState extends State<HospitalSearchBar> {
                   color: AppColors.textSecondary,
                 ),
                 prefixIcon: Icon(
-                  Icons.search,
-                  color: AppColors.textSecondary,
-                  size: 20,
+                  AppIcons.search,
+                  color: AppColors.iconDefault,
+                  size: AppSpacing.iconXS,
                 ),
                 // Show clear button when there's text
                 suffixIcon: _hasText
                     ? IconButton(
                         icon: Icon(
-                          Icons.clear,
-                          color: AppColors.textSecondary,
-                          size: 20,
+                          AppIcons.close,
+                          color: AppColors.iconDefault,
+                          size: AppSpacing.iconXS,
                         ),
                         onPressed: widget.onClear,
                       )
@@ -121,28 +117,22 @@ class _HospitalSearchBarState extends State<HospitalSearchBar> {
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(AppEffects.radiusMD),
+            boxShadow: AppEffects.shadowSM,
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
               onTap: widget.onFilterTap,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppEffects.radiusMD),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.paddingMD),
                 child: Icon(
-                  Icons.tune,
+                  AppIcons.filter,
                   color: widget.filters.hasActiveFilters
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
-                  size: 24,
+                      ? AppColors.textPrimary
+                      : AppColors.iconDefault,
+                  size: AppSpacing.iconSM,
                 ),
               ),
             ),

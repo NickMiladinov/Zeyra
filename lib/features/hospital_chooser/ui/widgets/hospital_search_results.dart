@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/hospital_search_result.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
@@ -73,9 +75,9 @@ class HospitalSearchResults extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            Icons.search_off,
-            size: 24,
-            color: AppColors.textSecondary,
+            AppIcons.searchOff,
+            size: AppSpacing.iconSM,
+            color: AppColors.iconDefault,
           ),
           const SizedBox(width: AppSpacing.gapMD),
           Text(
@@ -93,7 +95,7 @@ class HospitalSearchResults extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(
         top: AppSpacing.paddingSM,
-        bottom: AppSpacing.paddingXL,
+        bottom: AppSpacing.paddingLG,
       ),
       children: [
         // Nearby section (Tier 1)
@@ -164,26 +166,21 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTypography.labelLarge.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTypography.labelLarge,
           ),
           const SizedBox(width: AppSpacing.gapXS),
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.paddingXS,
+              horizontal: AppSpacing.paddingSM,
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.backgroundGrey200,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.backgroundGrey100,
+              borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
             ),
             child: Text(
               '$count',
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: AppTypography.labelSmall,
             ),
           ),
         ],
@@ -217,16 +214,16 @@ class _SearchResultItem extends StatelessWidget {
           children: [
             // Hospital icon
             Container(
-              width: 40,
-              height: 40,
+              width: AppSpacing.iconXXL,
+              height: AppSpacing.iconXXL,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppEffects.radiusMD),
               ),
               child: Icon(
-                Icons.local_hospital_outlined,
+                AppIcons.hospital,
                 color: AppColors.primary,
-                size: 20,
+                size: AppSpacing.iconXS,
               ),
             ),
             const SizedBox(width: AppSpacing.gapMD),
@@ -239,7 +236,6 @@ class _SearchResultItem extends StatelessWidget {
                   Text(
                     unit.name,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -285,9 +281,9 @@ class _SearchResultItem extends StatelessWidget {
 
             // Chevron
             Icon(
-              Icons.chevron_right,
-              color: AppColors.textSecondary,
-              size: 20,
+              AppIcons.arrowForward,
+              color: AppColors.iconDefault,
+              size: AppSpacing.iconXS,
             ),
           ],
         ),

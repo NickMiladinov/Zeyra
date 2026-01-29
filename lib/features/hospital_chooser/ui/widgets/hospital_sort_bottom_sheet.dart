@@ -4,6 +4,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../domain/entities/hospital/hospital_filter_criteria.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
 
 /// Bottom sheet for selecting hospital sort order.
 class HospitalSortBottomSheet extends StatelessWidget {
@@ -21,79 +22,49 @@ class HospitalSortBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.paddingLG),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.backgroundGrey200,
-                borderRadius: BorderRadius.circular(2),
-              ),
+    return AppBottomSheet(
+      title: 'Sort by',
+      showCloseButton: true,
+      applyContentPadding: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.paddingXL,
+          0,
+          AppSpacing.paddingXL,
+          AppSpacing.paddingXL,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Sort options
+            _SortOption(
+              title: 'Distance: Nearest to Farthest',
+              isSelected: currentSort == HospitalSortBy.distance,
+              onTap: () {
+                onSortSelected(HospitalSortBy.distance);
+                Navigator.pop(context);
+              },
             ),
-          ),
-          const SizedBox(height: AppSpacing.gapLG),
-
-          // Header with close button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Sort by',
-                style: AppTypography.headlineSmall.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.close),
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.gapMD),
-
-          // Sort options
-          _SortOption(
-            title: 'Distance: Nearest to Farthest',
-            isSelected: currentSort == HospitalSortBy.distance,
-            onTap: () {
-              onSortSelected(HospitalSortBy.distance);
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(height: 1),
-          _SortOption(
-            title: 'CQC Rating: Highest to Lowest',
-            isSelected: currentSort == HospitalSortBy.rating,
-            onTap: () {
-              onSortSelected(HospitalSortBy.rating);
-              Navigator.pop(context);
-            },
-          ),
-          const Divider(height: 1),
-          _SortOption(
-            title: 'Hospital Name: A-Z',
-            isSelected: currentSort == HospitalSortBy.name,
-            onTap: () {
-              onSortSelected(HospitalSortBy.name);
-              Navigator.pop(context);
-            },
-          ),
-
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
-        ],
+            const Divider(height: 1),
+            _SortOption(
+              title: 'CQC Rating: Highest to Lowest',
+              isSelected: currentSort == HospitalSortBy.rating,
+              onTap: () {
+                onSortSelected(HospitalSortBy.rating);
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(height: 1),
+            _SortOption(
+              title: 'Hospital Name: A-Z',
+              isSelected: currentSort == HospitalSortBy.name,
+              onTap: () {
+                onSortSelected(HospitalSortBy.name);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -121,13 +92,13 @@ class _SortOption extends StatelessWidget {
           children: [
             // Radio-style indicator
             Container(
-              width: 24,
-              height: 24,
+              width: AppSpacing.iconSM,
+              height: AppSpacing.iconSM,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected ? AppColors.primary : AppColors.backgroundGrey400,
-                  width: 2,
+                  width: AppSpacing.borderWidthMedium,
                 ),
               ),
               child: isSelected
@@ -147,10 +118,7 @@ class _SortOption extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: AppTypography.bodyLarge.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-                ),
+                style: AppTypography.bodyLarge,
               ),
             ),
           ],

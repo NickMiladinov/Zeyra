@@ -131,6 +131,7 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
   /// Load nearby units with a specific radius.
   ///
   /// Used for auto-expanding radius when not enough units are found.
+  /// Updates the filter criteria to reflect the new radius.
   Future<void> loadNearbyUnitsWithRadius(
     LatLng location, {
     required double radiusMiles,
@@ -157,6 +158,48 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
       state = state.copyWith(
         nearbyUnits: units,
         filters: criteria, // Update filters to reflect current radius
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Load units for the map viewport without updating user's filter criteria.
+  ///
+  /// Used when panning/zooming the map - loads all units visible on screen
+  /// but preserves the user's distance filter preference for list view.
+  Future<void> loadUnitsForMapViewport(
+    LatLng center, {
+    required double viewportRadiusMiles,
+  }) async {
+    final filterUnits = _filterUnits;
+    if (_isLoading || filterUnits == null) return;
+    
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      mapCenter: center,
+    );
+
+    try {
+      // Use a large radius to load all visible units, but don't change user's filter
+      final viewportCriteria = state.filters.copyWith(
+        maxDistanceMiles: viewportRadiusMiles,
+      );
+      
+      final units = await filterUnits.execute(
+        criteria: viewportCriteria,
+        userLat: center.latitude,
+        userLng: center.longitude,
+      );
+
+      // Keep existing filter criteria (user's preference), only update units
+      state = state.copyWith(
+        nearbyUnits: units,
         isLoading: false,
       );
     } catch (e) {

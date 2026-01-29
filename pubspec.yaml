@@ -61,6 +61,7 @@ dependencies:
   google_maps_flutter: ^2.5.0 # Interactive maps
   geolocator: ^14.0.0 # Device location
   http: ^1.2.0 # HTTP client for postcodes.io API
+  url_launcher: ^6.3.1 # Launch URLs, phone numbers, and maps
 
 dev_dependencies:
   flutter_test:

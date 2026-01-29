@@ -41,7 +41,7 @@ class OnboardingPrimaryButton extends StatelessWidget {
       height: AppSpacing.buttonHeightXXL,
       decoration: BoxDecoration(
         color: effectiveEnabled
-            ? AppColors.secondary
+            ? AppColors.primary
             : AppColors.backgroundGrey100,
         borderRadius: AppEffects.roundedCircle,
       ),

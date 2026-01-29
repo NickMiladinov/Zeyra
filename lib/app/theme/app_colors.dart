@@ -8,21 +8,21 @@ class AppColors {
   // ============================================================================
   // PRIMARY COLORS
   // ============================================================================
-  /// Primary brand color
-  static const Color primary = Color(0xff4db6ac);
-  
+  /// Primary color
+  static const Color primary = Color(0xFFFFAB91);
   /// Primary color variants
-  static const Color primaryLight = Color(0xffe6f4f4);
-  static const Color primaryDark = Color(0xFF00897B);
+  static const Color primaryLight = Color(0xFFFFCCBC);
+  static const Color primaryDark = Color(0xFFF48A6A);
   
   // ============================================================================
   // SECONDARY COLORS
   // ============================================================================
-  /// Secondary/accent color
-  static const Color secondary = Color(0xFFFFAB91);
+  /// Secondary brand color
+  static const Color secondary = Color(0xff4db6ac);
+  
   /// Secondary color variants
-  static const Color secondaryLight = Color(0xFFFFCCBC);
-  static const Color secondaryDark = Color(0xFFF48A6A);
+  static const Color secondaryLight = Color(0xffe6f4f4);
+  static const Color secondaryDark = Color(0xFF00897B);
 
   // ============================================================================
   // NEUTRAL/GRAYSCALE
@@ -37,14 +37,14 @@ class AppColors {
   static const Color backgroundGrey400 = Color(0xFFBDBDBD);
   static const Color backgroundGrey500 = Color(0xFF8D8D8D);
   static const Color backgroundGrey600 = Color(0xFF7E7E7E);
-  static const Color backgroundPrimarySubtle = Color(0xFFE0F2F1);
-  static const Color backgroundPrimaryVerySubtle = Color(0xFFF1F9F8);
-  static const Color backgroundSecondarySubtle = Color(0xFFFFECE5);
-  static const Color backgroundSecondaryVerySubtle = Color(0xFFFFEFEB);
+  static const Color backgroundPrimarySubtle = Color(0xFFFFECE5);
+  static const Color backgroundPrimaryVerySubtle = Color(0xFFFFEFEB);
+  static const Color backgroundSecondarySubtle = Color(0xFFE0F2F1);
+  static const Color backgroundSecondaryVerySubtle = Color(0xFFF1F9F8);
 
   /// Overlay colors (20% opacity for subtle backgrounds/inactive states)
-  static const Color primaryOverlay = Color(0x334DB6AC); // Primary with 20% opacity
-  static const Color secondaryOverlay = Color(0x33FFAB91); // Secondary with 20% opacity
+  static const Color primaryOverlay = Color(0x33FFAB91); // Secondary with 20% opacity
+  static const Color secondaryOverlay = Color(0x334DB6AC); // Primary with 20% opacity
   static const Color successOverlay = Color(0x332E7D32); // Success with 20% opacity
 
   
@@ -56,8 +56,9 @@ class AppColors {
   
   /// Border and divider colors
   static const Color border = backgroundGrey100;
-  static const Color borderPrimary = Color.fromARGB(52, 77, 182, 172);
-  static const Color borderSecondary = Color.fromARGB(52, 255, 171, 145);
+  static const Color borderDark = Color(0xFF6B6B6B);
+  static const Color borderPrimary = Color.fromARGB(52, 255, 171, 145);
+  static const Color borderSecondary = Color.fromARGB(52, 77, 182, 172);
   static const Color divider = backgroundGrey100;
 
   // ============================================================================

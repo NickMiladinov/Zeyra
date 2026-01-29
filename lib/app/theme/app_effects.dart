@@ -150,7 +150,7 @@ class AppEffects {
   );
 
   static BorderSide get borderSideFocused => const BorderSide(
-    color: AppColors.primary,
+    color: AppColors.secondary,
     width: AppSpacing.borderWidthMedium,
   );
 

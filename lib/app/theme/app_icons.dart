@@ -342,6 +342,7 @@ class AppIcons {
   static const IconData link = Symbols.link_rounded;
   static const IconData wand = Symbols.wand_stars_rounded;
   static const IconData search = Symbols.search_rounded;
+  static const IconData searchOff = Symbols.search_off_rounded;
   static const IconData filter = Symbols.tune_rounded;
   static const IconData moreVertical = Symbols.more_vert_rounded;
   static const IconData overview = Symbols.format_list_bulleted_rounded;
@@ -395,10 +396,15 @@ class AppIcons {
   
   // Location icons
   static const IconData location = Symbols.location_on_rounded;
+  static const IconData locationOff = Symbols.location_off_rounded;
+  static const IconData locationSearching = Symbols.location_searching_rounded;
   static const IconData hospitalLocation = Symbols.add_location_rounded;
+  static const IconData directions = Symbols.directions_rounded;
+  static const IconData directionsCar = Symbols.directions_car_rounded;
   static const IconData map = Symbols.map_rounded;
   static const IconData homePin = Symbols.home_pin_rounded;
   static const IconData heartPin = Symbols.map_pin_heart_rounded;
+  static const IconData myLocation = Symbols.my_location_rounded;
   
   // User & People icons
   static const IconData person = Symbols.person_rounded;
@@ -407,6 +413,7 @@ class AppIcons {
   static const IconData favorite = Symbols.favorite_rounded;
   static const IconData bookmark = Symbols.bookmark_rounded;
   static const IconData star = Symbols.kid_star_rounded;
+  static const IconData starRating = Symbols.star_rounded;
 
   // Pregnancy & Health specific icons
   static const IconData medical = Symbols.medical_services_rounded;
@@ -436,6 +443,7 @@ class AppIcons {
   static const IconData arrowUp = Symbols.keyboard_arrow_up_rounded;
   static const IconData arrowDown = Symbols.keyboard_arrow_down_rounded;
   static const IconData expandAll = Symbols.expand_all_rounded;
+  static const IconData unfoldMore = Symbols.unfold_more_rounded;
   
   // App-specific custom icons
   static const IconData hospital = Symbols.local_hospital_rounded;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_effects.dart';
+import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/main_providers.dart';
@@ -167,7 +168,7 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
                 // 6. PLACE Ratings section (only if data available)
                 if (widget.unit.hasPlaceData) ...[
                   PlaceRatingSection(unit: widget.unit),
-                  const SizedBox(height: AppSpacing.gapXL),
+                  const SizedBox(height: AppSpacing.gapXXL),
                 ],
 
                 // 7. Contact actions and links
@@ -203,19 +204,6 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
           ),
           textAlign: TextAlign.center,
         ),
-
-        // Provider name (if available)
-        if (widget.unit.providerName != null &&
-            widget.unit.providerName!.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.gapXS),
-          Text(
-            widget.unit.providerName!,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
 
         // NHS badge
         if (widget.unit.isNhs) ...[
@@ -253,13 +241,12 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
               await ref.read(hospitalDetailProvider.notifier).toggleShortlist();
             },
             icon: Icon(
-              detailState.isShortlisted
-                  ? Icons.favorite
-                  : Icons.favorite_border,
+              AppIcons.favorite,
               size: AppSpacing.iconXS,
               color: detailState.isShortlisted
-                  ? AppColors.error
+                  ? AppColors.primaryDark
                   : AppColors.textPrimary,
+              fill: detailState.isShortlisted ? 1.0 : 0.0,
             ),
             label: Text(
               detailState.isShortlisted ? 'Saved' : 'Save to Shortlist',
@@ -274,11 +261,11 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
               ),
               side: BorderSide(
                 color: detailState.isShortlisted
-                    ? AppColors.error
-                    : AppColors.border,
+                    ? AppColors.primaryDark
+                    : AppColors.textPrimary,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
               ),
             ),
           ),
@@ -292,13 +279,13 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
               // TODO: Implement set as my hospital functionality
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.secondary,
               foregroundColor: AppColors.white,
               padding: const EdgeInsets.symmetric(
                 vertical: AppSpacing.paddingMD,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
               ),
               elevation: 0,
             ),
@@ -338,15 +325,14 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.paddingMD),
       decoration: BoxDecoration(
-        color: AppColors.background,
         borderRadius: BorderRadius.circular(AppEffects.radiusMD),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.directions_car_outlined,
-            color: AppColors.textSecondary,
+            AppIcons.directionsCar,
+            color: AppColors.primaryDark,
             size: AppSpacing.iconXS,
           ),
           const SizedBox(width: AppSpacing.gapSM),
@@ -364,8 +350,8 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
                   width: AppSpacing.iconXXS,
                   height: AppSpacing.iconXXS,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.textSecondary,
+                    strokeWidth: AppSpacing.borderWidthMedium,
+                    color: AppColors.iconDefault,
                   ),
                 ),
               ],
