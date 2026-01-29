@@ -506,10 +506,14 @@ async function updateSyncMetadataSuccess(
   status: string,
   count: number
 ): Promise<void> {
+  // Generate a unique id for this sync run (timestamp-based for easy sorting)
+  const syncId = `cqc_maternity_sync_${syncTime.getTime()}`;
+  
   // Insert a new row for each sync run
   const { error: insertError } = await supabase
     .from("sync_metadata")
     .insert({
+      id: syncId, // Required: unique identifier for this sync run
       last_sync_at: syncTime.toISOString(), // Record the sync timestamp on success
       last_sync_status: status,
       last_sync_count: count,
@@ -528,16 +532,21 @@ async function updateSyncMetadataFailure(
   status: string,
   errorMsg: string
 ): Promise<void> {
+  // Generate a unique id for this sync run (timestamp-based for easy sorting)
+  const now = new Date();
+  const syncId = `cqc_maternity_sync_${now.getTime()}`;
+  
   // Insert a new row with null last_sync_at to indicate failure
   // This ensures the next run will use the last successful run's timestamp
   const { error: insertError } = await supabase
     .from("sync_metadata")
     .insert({
+      id: syncId, // Required: unique identifier for this sync run
       last_sync_at: null, // No timestamp update on failure
       last_sync_status: status,
       last_sync_count: 0,
       last_error: errorMsg,
-      updated_at: new Date().toISOString(),
+      updated_at: now.toISOString(),
     });
 
   if (insertError) {
