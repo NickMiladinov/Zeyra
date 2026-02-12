@@ -30,6 +30,7 @@ class HospitalMarkerCluster {
   /// Custom marker icons.
   BitmapDescriptor? defaultMarkerIcon;
   BitmapDescriptor? selectedMarkerIcon;
+  BitmapDescriptor? shortlistedMarkerIcon;
 
   /// Cluster marker icons cache.
   final Map<String, BitmapDescriptor> _clusterIcons = {};
@@ -47,6 +48,7 @@ class HospitalMarkerCluster {
   Future<void> loadCustomMarkers() async {
     defaultMarkerIcon = await CustomMapMarker.getDefaultMarker();
     selectedMarkerIcon = await CustomMapMarker.getSelectedMarker();
+    shortlistedMarkerIcon = await CustomMapMarker.getShortlistedMarker();
   }
 
   /// Load a cluster icon asynchronously.
@@ -82,6 +84,7 @@ class HospitalMarkerCluster {
   Set<Marker> buildMarkers({
     required List<MaternityUnit> units,
     MaternityUnit? selected,
+    Set<String> shortlistedUnitIds = const {},
     required double currentZoom,
     required OnUnitTap onUnitTap,
     OnClusterTap? onClusterTap,
@@ -91,6 +94,8 @@ class HospitalMarkerCluster {
         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
     final selectedIcon = selectedMarkerIcon ??
         BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+    final shortlistedIcon = shortlistedMarkerIcon ??
+        BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose);
 
     // Filter out units without valid coordinates
     final validUnits =
@@ -103,6 +108,8 @@ class HospitalMarkerCluster {
         selected: selected,
         defaultIcon: defaultIcon,
         selectedIcon: selectedIcon,
+        shortlistedIcon: shortlistedIcon,
+        shortlistedUnitIds: shortlistedUnitIds,
         onUnitTap: onUnitTap,
       );
     }
@@ -113,6 +120,8 @@ class HospitalMarkerCluster {
       selected: selected,
       defaultIcon: defaultIcon,
       selectedIcon: selectedIcon,
+      shortlistedIcon: shortlistedIcon,
+      shortlistedUnitIds: shortlistedUnitIds,
       currentZoom: currentZoom,
       onUnitTap: onUnitTap,
       onClusterTap: onClusterTap,
@@ -125,15 +134,18 @@ class HospitalMarkerCluster {
     MaternityUnit? selected,
     required BitmapDescriptor defaultIcon,
     required BitmapDescriptor selectedIcon,
+    required BitmapDescriptor shortlistedIcon,
+    required Set<String> shortlistedUnitIds,
     required OnUnitTap onUnitTap,
   }) {
     return units.map((unit) {
       final isSelected = selected?.id == unit.id;
+      final isShortlisted = shortlistedUnitIds.contains(unit.id);
 
       return Marker(
         markerId: MarkerId(unit.id),
         position: LatLng(unit.latitude!, unit.longitude!),
-        icon: isSelected ? selectedIcon : defaultIcon,
+        icon: isShortlisted ? shortlistedIcon : (isSelected ? selectedIcon : defaultIcon),
         anchor: const Offset(0.5, 1.0),
         onTap: () => onUnitTap(unit),
       );
@@ -146,6 +158,8 @@ class HospitalMarkerCluster {
     MaternityUnit? selected,
     required BitmapDescriptor defaultIcon,
     required BitmapDescriptor selectedIcon,
+    required BitmapDescriptor shortlistedIcon,
+    required Set<String> shortlistedUnitIds,
     required double currentZoom,
     required OnUnitTap onUnitTap,
     OnClusterTap? onClusterTap,
@@ -184,11 +198,12 @@ class HospitalMarkerCluster {
         // Single unit - show normal marker
         final unit = clusterUnits.first;
         final isSelected = selected?.id == unit.id;
+        final isShortlisted = shortlistedUnitIds.contains(unit.id);
 
         markers.add(Marker(
           markerId: MarkerId(unit.id),
           position: LatLng(unit.latitude!, unit.longitude!),
-          icon: isSelected ? selectedIcon : defaultIcon,
+          icon: isShortlisted ? shortlistedIcon : (isSelected ? selectedIcon : defaultIcon),
           anchor: const Offset(0.5, 1.0),
           onTap: () => onUnitTap(unit),
         ));

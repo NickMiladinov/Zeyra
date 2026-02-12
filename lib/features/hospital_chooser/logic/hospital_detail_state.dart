@@ -62,6 +62,7 @@ class HospitalDetailState {
 class HospitalDetailNotifier extends StateNotifier<HospitalDetailState> {
   final GetUnitDetailUseCase _getDetail;
   final ManageShortlistUseCase _manageShortlist;
+  int _shortlistStatusRequestId = 0;
 
   HospitalDetailNotifier({
     required GetUnitDetailUseCase getDetail,
@@ -132,8 +133,11 @@ class HospitalDetailNotifier extends StateNotifier<HospitalDetailState> {
   }
 
   Future<void> _checkShortlistStatus(String unitId) async {
+    final requestId = ++_shortlistStatusRequestId;
     try {
       final isShortlisted = await _manageShortlist.isShortlisted(unitId);
+      if (requestId != _shortlistStatusRequestId) return;
+      if (state.unit?.id != unitId) return;
       state = state.copyWith(isShortlisted: isShortlisted);
     } catch (_) {
       // Silently ignore
@@ -143,6 +147,10 @@ class HospitalDetailNotifier extends StateNotifier<HospitalDetailState> {
   /// Toggle shortlist status.
   Future<bool> toggleShortlist() async {
     if (state.unit == null) return false;
+
+    // Invalidate pending status checks so stale async responses
+    // cannot overwrite an explicit user tap result.
+    _shortlistStatusRequestId++;
 
     try {
       final result = await _manageShortlist.toggleShortlist(state.unit!.id);

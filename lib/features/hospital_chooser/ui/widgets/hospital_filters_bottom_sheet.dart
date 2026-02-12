@@ -372,10 +372,10 @@ class _RatingChip extends StatelessWidget {
           horizontal: AppSpacing.paddingSM,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.surfaceVariant : AppColors.surfaceVariant,
+          color: isSelected ? AppColors.surface : AppColors.surface,
           borderRadius: BorderRadius.circular(AppEffects.radiusLG),
           border: Border.all(
-            color: isSelected ? AppColors.secondary : AppColors.border,
+            color: isSelected ? AppColors.primary : AppColors.border,
             width: AppSpacing.borderWidthThin,
           ),
         ),

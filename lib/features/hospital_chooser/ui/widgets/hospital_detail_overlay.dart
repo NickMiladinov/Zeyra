@@ -10,6 +10,7 @@ import '../../../../core/di/main_providers.dart';
 import '../../../../core/services/drive_time_service.dart';
 import '../../../../domain/entities/hospital/maternity_unit.dart';
 import '../../logic/hospital_detail_state.dart';
+import '../../logic/hospital_shortlist_state.dart';
 import 'cqc_rating_section.dart';
 import 'hospital_contact_section.dart';
 import 'hospital_detail_header.dart';
@@ -66,23 +67,32 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
   /// Whether drive time is loading.
   bool _isLoadingDriveTime = false;
 
+  /// Whether final hospital selection action is in progress.
+  bool _isSettingFinalChoice = false;
+  bool _hasInitializedDetailState = false;
+
   @override
   void initState() {
     super.initState();
     _fetchDriveTime();
-    _initializeDetailState();
   }
 
   /// Initialize the detail state notifier.
   void _initializeDetailState() {
     // Set the unit in detail state for shortlist management
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(hospitalDetailProvider.notifier).setUnit(
-            widget.unit,
-            userLat: widget.userLat,
-            userLng: widget.userLng,
-          );
-    });
+    ref
+        .read(hospitalDetailProvider.notifier)
+        .setUnit(
+          widget.unit,
+          userLat: widget.userLat,
+          userLng: widget.userLng,
+        );
+  }
+
+  bool _areDetailDependenciesReady() {
+    final getDetailAsync = ref.read(getUnitDetailUseCaseProvider);
+    final manageShortlistAsync = ref.read(manageShortlistUseCaseProvider);
+    return getDetailAsync.hasValue && manageShortlistAsync.hasValue;
   }
 
   /// Fetch drive time from the API.
@@ -115,9 +125,138 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
     }
   }
 
+  Future<void> _toggleShortlist() async {
+    final wasShortlisted = ref.read(hospitalDetailProvider).isShortlisted;
+    final isShortlisted = await ref
+        .read(hospitalDetailProvider.notifier)
+        .toggleShortlist();
+    await ref.read(hospitalShortlistProvider.notifier).refresh();
+
+    // toggleShortlist() returns the new shortlist state, not a success flag.
+    // A successful "remove" returns false, so we validate by state change.
+    final didChange = isShortlisted != wasShortlisted;
+    if (!didChange && mounted) {
+      _showMessage('Unable to update shortlist. Please try again.');
+    }
+  }
+
+  Future<void> _setAsMyHospital() async {
+    if (_isSettingFinalChoice) return;
+
+    setState(() {
+      _isSettingFinalChoice = true;
+    });
+
+    try {
+      final detailNotifier = ref.read(hospitalDetailProvider.notifier);
+      var isShortlisted = ref.read(hospitalDetailProvider).isShortlisted;
+
+      // A hospital must exist in shortlist before it can be selected as final.
+      if (!isShortlisted) {
+        isShortlisted = await detailNotifier.toggleShortlist();
+      }
+
+      if (!isShortlisted) {
+        _showMessage('Unable to shortlist this hospital. Please try again.');
+        return;
+      }
+
+      final shortlistNotifier = ref.read(hospitalShortlistProvider.notifier);
+      await shortlistNotifier.refresh();
+
+      final shortlistState = ref.read(hospitalShortlistProvider);
+      final shortlistId = _findShortlistIdForUnit(
+        shortlistState,
+        widget.unit.id,
+      );
+
+      if (shortlistId == null) {
+        _showMessage('Unable to find this hospital in your shortlist.');
+        return;
+      }
+
+      final selected = await shortlistNotifier.selectFinalChoice(shortlistId);
+      if (!selected) {
+        _showMessage('Unable to set final choice. Please try again.');
+        return;
+      }
+
+      _showMessage('Hospital set as your final choice.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSettingFinalChoice = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _clearFinalChoice() async {
+    if (_isSettingFinalChoice) return;
+
+    setState(() {
+      _isSettingFinalChoice = true;
+    });
+
+    try {
+      final success = await ref
+          .read(hospitalShortlistProvider.notifier)
+          .clearSelection();
+      if (!success) {
+        _showMessage('Unable to clear final choice. Please try again.');
+        return;
+      }
+
+      _showMessage('Final choice cleared.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSettingFinalChoice = false;
+        });
+      }
+    }
+  }
+
+  String? _findShortlistIdForUnit(
+    HospitalShortlistState state,
+    String maternityUnitId,
+  ) {
+    for (final entry in state.shortlistedUnits) {
+      if (entry.unit.id == maternityUnitId) {
+        return entry.shortlist.id;
+      }
+    }
+    return null;
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    final detailState = ref.watch(hospitalDetailProvider);
+    final getDetailAsync = ref.watch(getUnitDetailUseCaseProvider);
+    final manageShortlistAsync = ref.watch(manageShortlistUseCaseProvider);
+    final isDetailReady = getDetailAsync.hasValue && manageShortlistAsync.hasValue;
+
+    if (isDetailReady && !_hasInitializedDetailState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _hasInitializedDetailState) return;
+        if (!_areDetailDependenciesReady()) return;
+        _initializeDetailState();
+        _hasInitializedDetailState = true;
+      });
+    }
+
+    final detailState = isDetailReady
+        ? ref.watch(hospitalDetailProvider)
+        : const HospitalDetailState();
+    final shortlistState = ref.watch(hospitalShortlistProvider);
+    final isCurrentUnitFinalChoice =
+        shortlistState.selectedHospital?.unit.id == widget.unit.id;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return Container(
@@ -150,7 +289,11 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
                 const SizedBox(height: AppSpacing.gapLG),
 
                 // 2. Action buttons
-                _buildActionButtons(detailState),
+                _buildActionButtons(
+                  detailState,
+                  isEnabled: isDetailReady && _hasInitializedDetailState,
+                  isCurrentUnitFinalChoice: isCurrentUnitFinalChoice,
+                ),
                 const SizedBox(height: AppSpacing.gapLG),
 
                 // 3. Distance and travel
@@ -231,15 +374,17 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
   }
 
   /// Build the action buttons row.
-  Widget _buildActionButtons(HospitalDetailState detailState) {
+  Widget _buildActionButtons(
+    HospitalDetailState detailState, {
+    required bool isEnabled,
+    required bool isCurrentUnitFinalChoice,
+  }) {
     return Row(
       children: [
         // Save to Shortlist button
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () async {
-              await ref.read(hospitalDetailProvider.notifier).toggleShortlist();
-            },
+            onPressed: isEnabled ? _toggleShortlist : null,
             icon: Icon(
               AppIcons.favorite,
               size: AppSpacing.iconXS,
@@ -275,11 +420,15 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
         // Set as My Hospital button
         Expanded(
           child: ElevatedButton(
-            onPressed: () {
-              // TODO: Implement set as my hospital functionality
-            },
+            onPressed: !isEnabled || _isSettingFinalChoice
+                ? null
+                : (isCurrentUnitFinalChoice
+                      ? _clearFinalChoice
+                      : _setAsMyHospital),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.secondary,
+              backgroundColor: isCurrentUnitFinalChoice
+                  ? AppColors.error
+                  : AppColors.secondary,
               foregroundColor: AppColors.white,
               padding: const EdgeInsets.symmetric(
                 vertical: AppSpacing.paddingMD,
@@ -289,13 +438,24 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
               ),
               elevation: 0,
             ),
-            child: Text(
-              'Set as My Hospital',
-              style: AppTypography.labelMedium.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.white,
-              ),
-            ),
+            child: _isSettingFinalChoice
+                ? SizedBox(
+                    width: AppSpacing.iconXXS,
+                    height: AppSpacing.iconXXS,
+                    child: const CircularProgressIndicator(
+                      strokeWidth: AppSpacing.borderWidthThin,
+                      color: AppColors.white,
+                    ),
+                  )
+                : Text(
+                    isCurrentUnitFinalChoice
+                        ? 'Clear Final Choice'
+                        : 'Set as My Hospital',
+                    style: AppTypography.labelMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.white,
+                    ),
+                  ),
           ),
         ),
       ],

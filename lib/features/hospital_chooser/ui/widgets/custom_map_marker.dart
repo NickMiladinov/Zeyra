@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_icons.dart';
 
 /// Utility class for creating custom map markers.
 class CustomMapMarker {
@@ -12,6 +13,7 @@ class CustomMapMarker {
   /// Cache for generated marker icons.
   static BitmapDescriptor? _defaultMarker;
   static BitmapDescriptor? _selectedMarker;
+  static BitmapDescriptor? _shortlistedMarker;
   static final Map<int, BitmapDescriptor> _clusterMarkerCache = {};
 
   /// Get the default hospital marker (coral with white plus).
@@ -19,7 +21,7 @@ class CustomMapMarker {
     _defaultMarker ??= await _createMarker(
       backgroundColor: AppColors.primary, // Coral/peach color
       iconColor: Colors.white,
-      isSelected: false,
+      markerSymbol: _MarkerSymbol.plus,
     );
     return _defaultMarker!;
   }
@@ -29,23 +31,34 @@ class CustomMapMarker {
     _selectedMarker ??= await _createMarker(
       backgroundColor: AppColors.primary, // Teal when selected
       iconColor: Colors.white,
-      isSelected: true,
+      markerSymbol: _MarkerSymbol.plus,
     );
     return _selectedMarker!;
+  }
+
+  /// Get the shortlisted hospital marker (coral with white heart).
+  static Future<BitmapDescriptor> getShortlistedMarker() async {
+    _shortlistedMarker ??= await _createMarker(
+      backgroundColor: AppColors.primary,
+      iconColor: Colors.white,
+      markerSymbol: _MarkerSymbol.heart,
+    );
+    return _shortlistedMarker!;
   }
 
   /// Create a custom marker with the given colors.
   static Future<BitmapDescriptor> _createMarker({
     required Color backgroundColor,
     required Color iconColor,
-    required bool isSelected,
+    required _MarkerSymbol markerSymbol,
   }) async {
     // Marker dimensions - smaller for better map visibility
     const double width = 48;
     const double height = 60;
     const double pinWidth = 36;
     const double pinHeight = 36;
-    const double pointerHeight = 12;
+    const double pointerHeight = 8;
+    const double topInset = 3;
     const double iconSize = 16;
 
     final pictureRecorder = ui.PictureRecorder();
@@ -54,23 +67,16 @@ class CustomMapMarker {
     // Center position
     const double centerX = width / 2;
 
-    // Draw drop shadow
     final shadowPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.2)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-
-    // Shadow path (slightly offset)
-    final shadowPath = Path();
-    shadowPath.addOval(Rect.fromCenter(
-      center: const Offset(centerX + 1, pinHeight / 2 + 2),
-      width: pinWidth,
-      height: pinHeight,
-    ));
-    // Shadow pointer
-    shadowPath.moveTo(centerX - 8 + 1, pinHeight / 2 + pinHeight / 3);
-    shadowPath.lineTo(centerX + 1, pinHeight + pointerHeight + 1);
-    shadowPath.lineTo(centerX + 8 + 1, pinHeight / 2 + pinHeight / 3);
-    shadowPath.close();
+    final shadowPath = _buildPinPath(
+      centerX: centerX + 1,
+      topY: topInset,
+      bodyWidth: pinWidth,
+      bodyHeight: pinHeight,
+      tipY: topInset + pinHeight + pointerHeight + 1,
+    );
     canvas.drawPath(shadowPath, shadowPaint);
 
     // Draw the main pin body (circle)
@@ -78,44 +84,67 @@ class CustomMapMarker {
       ..color = backgroundColor
       ..style = PaintingStyle.fill;
 
-    // Pin circle
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: const Offset(centerX, pinHeight / 2),
-        width: pinWidth,
-        height: pinHeight,
-      ),
-      paint,
+    final pinPath = _buildPinPath(
+      centerX: centerX,
+      topY: topInset,
+      bodyWidth: pinWidth,
+      bodyHeight: pinHeight,
+      tipY: topInset + pinHeight + pointerHeight,
     );
+    canvas.drawPath(pinPath, paint);
 
-    // Draw the pointer triangle at the bottom
-    final pointerPath = Path();
-    pointerPath.moveTo(centerX - 8, pinHeight / 2 + pinHeight / 3);
-    pointerPath.lineTo(centerX, pinHeight + pointerHeight);
-    pointerPath.lineTo(centerX + 8, pinHeight / 2 + pinHeight / 3);
-    pointerPath.close();
-    canvas.drawPath(pointerPath, paint);
+    final pinCenterY = topInset + (pinHeight / 2);
 
-    // Draw the plus icon
-    final iconPaint = Paint()
-      ..color = iconColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round;
+    if (markerSymbol == _MarkerSymbol.plus) {
+      final iconPaint = Paint()
+        ..color = iconColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round;
 
-    // Horizontal line of plus
-    canvas.drawLine(
-      Offset(centerX - iconSize / 2, pinHeight / 2),
-      Offset(centerX + iconSize / 2, pinHeight / 2),
-      iconPaint,
-    );
+      // Horizontal line of plus
+      canvas.drawLine(
+        Offset(centerX - iconSize / 2, pinCenterY),
+        Offset(centerX + iconSize / 2, pinCenterY),
+        iconPaint,
+      );
 
-    // Vertical line of plus
-    canvas.drawLine(
-      Offset(centerX, pinHeight / 2 - iconSize / 2),
-      Offset(centerX, pinHeight / 2 + iconSize / 2),
-      iconPaint,
-    );
+      // Vertical line of plus
+      canvas.drawLine(
+        Offset(centerX, pinCenterY - iconSize / 2),
+        Offset(centerX, pinCenterY + iconSize / 2),
+        iconPaint,
+      );
+    } else {
+      // Render the real icon glyph so marker iconography matches app UI icons.
+      final heartIcon = AppIcons.favorite;
+      final heartTextPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(heartIcon.codePoint),
+          style: TextStyle(
+            color: iconColor,
+            fontSize: 20,
+            fontFamily: heartIcon.fontFamily,
+            package: heartIcon.fontPackage,
+            // Material Symbols variable font settings for filled heart.
+            fontVariations: const [
+              ui.FontVariation('FILL', 1),
+              ui.FontVariation('wght', 400),
+              ui.FontVariation('opsz', 24),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      heartTextPainter.paint(
+        canvas,
+        Offset(
+          centerX - heartTextPainter.width / 2,
+          pinCenterY - heartTextPainter.height / 2,
+        ),
+      );
+    }
 
     // Convert to image
     final picture = pictureRecorder.endRecording();
@@ -127,6 +156,61 @@ class CustomMapMarker {
     }
 
     return BitmapDescriptor.bytes(bytes.buffer.asUint8List());
+  }
+
+  /// Build a smooth map-pin silhouette similar to Material map pin shape.
+  static Path _buildPinPath({
+    required double centerX,
+    required double topY,
+    required double bodyWidth,
+    required double bodyHeight,
+    required double tipY,
+  }) {
+    final halfWidth = bodyWidth / 2;
+    final leftX = centerX - halfWidth;
+    final rightX = centerX + halfWidth;
+    final centerY = topY + (bodyHeight / 2);
+    final bottomShoulderY = topY + bodyHeight * 0.74;
+
+    return Path()
+      ..moveTo(centerX, topY)
+      // Top circular dome (left half)
+      ..cubicTo(
+        centerX - halfWidth,
+        topY,
+        leftX,
+        centerY - halfWidth * 0.35,
+        leftX,
+        centerY,
+      )
+      // Left side tapering into tip
+      ..cubicTo(
+        leftX,
+        bottomShoulderY,
+        centerX - halfWidth * 0.45,
+        tipY - bodyHeight * 0.22,
+        centerX,
+        tipY,
+      )
+      // Right side tapering from tip
+      ..cubicTo(
+        centerX + halfWidth * 0.45,
+        tipY - bodyHeight * 0.22,
+        rightX,
+        bottomShoulderY,
+        rightX,
+        centerY,
+      )
+      // Top circular dome (right half)
+      ..cubicTo(
+        rightX,
+        centerY - halfWidth * 0.35,
+        centerX + halfWidth,
+        topY,
+        centerX,
+        topY,
+      )
+      ..close();
   }
 
   /// Get a cluster marker with the count displayed.
@@ -204,6 +288,9 @@ class CustomMapMarker {
   static void clearCache() {
     _defaultMarker = null;
     _selectedMarker = null;
+    _shortlistedMarker = null;
     _clusterMarkerCache.clear();
   }
 }
+
+enum _MarkerSymbol { plus, heart }

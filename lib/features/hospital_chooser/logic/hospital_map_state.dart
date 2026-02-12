@@ -24,6 +24,9 @@ class HospitalMapState {
   /// Map center coordinates.
   final LatLng? mapCenter;
 
+  /// Last known map zoom level.
+  final double? mapZoom;
+
   /// Whether data is loading.
   final bool isLoading;
 
@@ -35,6 +38,7 @@ class HospitalMapState {
     this.selectedUnit,
     this.filters = HospitalFilterCriteria.defaults,
     this.mapCenter,
+    this.mapZoom,
     this.isLoading = false,
     this.error,
   });
@@ -50,6 +54,7 @@ class HospitalMapState {
     MaternityUnit? selectedUnit,
     HospitalFilterCriteria? filters,
     LatLng? mapCenter,
+    double? mapZoom,
     bool? isLoading,
     String? error,
   }) {
@@ -58,6 +63,7 @@ class HospitalMapState {
       selectedUnit: selectedUnit ?? this.selectedUnit,
       filters: filters ?? this.filters,
       mapCenter: mapCenter ?? this.mapCenter,
+      mapZoom: mapZoom ?? this.mapZoom,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -70,6 +76,7 @@ class HospitalMapState {
       selectedUnit: null,
       filters: filters,
       mapCenter: mapCenter,
+      mapZoom: mapZoom,
       isLoading: isLoading,
       error: error,
     );
@@ -260,6 +267,18 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
   void clearSelection() {
     if (_isLoading) return;
     state = state.clearSelection();
+  }
+
+  /// Persist the latest map viewport for restoring map session state.
+  void updateViewport({
+    required LatLng center,
+    required double zoom,
+  }) {
+    if (_isLoading) return;
+    state = state.copyWith(
+      mapCenter: center,
+      mapZoom: zoom,
+    );
   }
 
   /// Refresh the current data.

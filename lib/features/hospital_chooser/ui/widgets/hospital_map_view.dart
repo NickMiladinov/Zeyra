@@ -36,6 +36,9 @@ class HospitalMapView extends ConsumerStatefulWidget {
   /// Current map state with nearby units.
   final HospitalMapState mapState;
 
+  /// IDs of hospitals currently shortlisted by the user.
+  final Set<String> shortlistedUnitIds;
+
   /// Whether to show permission prompt overlay.
   final bool showPermissionPrompt;
 
@@ -91,6 +94,7 @@ class HospitalMapView extends ConsumerStatefulWidget {
     super.key,
     required this.locationState,
     required this.mapState,
+    required this.shortlistedUnitIds,
     required this.showPermissionPrompt,
     required this.isWaitingForLocation,
     required this.isLoadingUnits,
@@ -118,11 +122,16 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
   /// Marker cluster utility.
   late final HospitalMarkerCluster _markerCluster;
 
+  /// Local map controller used for cluster tap camera animations.
+  GoogleMapController? _mapController;
+
   /// Current zoom level (updated on camera move).
   double _currentZoom = 12.0;
 
   /// Default location (Central London - Trafalgar Square area).
   static const LatLng _defaultLondonLocation = LatLng(51.5074, -0.1278);
+  static const double _clusterTapZoomDelta = 1.0;
+  static const double _maxZoomLevel = 20.0;
 
   @override
   void initState() {
@@ -163,8 +172,13 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
 
   /// Handle cluster tap (zoom in).
   void _onClusterTap(double centerLat, double centerLng) {
-    // Cluster tap is handled via info window currently
-    // Could animate camera to zoom in on the cluster
+    if (_mapController == null) return;
+
+    final targetZoom =
+        (_currentZoom + _clusterTapZoomDelta).clamp(0.0, _maxZoomLevel).toDouble();
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngZoom(LatLng(centerLat, centerLng), targetZoom),
+    );
   }
 
   @override
@@ -188,6 +202,7 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
     final markers = _markerCluster.buildMarkers(
       units: widget.mapState.nearbyUnits,
       selected: widget.mapState.selectedUnit,
+      shortlistedUnitIds: widget.shortlistedUnitIds,
       currentZoom: _currentZoom,
       onUnitTap: _onUnitTap,
       onClusterTap: _onClusterTap,
@@ -198,7 +213,10 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
         // Google Map (always visible)
         GoogleMap(
           initialCameraPosition: initialPosition,
-          onMapCreated: widget.onMapCreated,
+          onMapCreated: (controller) {
+            _mapController = controller;
+            widget.onMapCreated(controller);
+          },
           onCameraMove: (position) {
             _currentZoom = position.zoom;
             widget.onCameraMove(position);

@@ -10,18 +10,24 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/di/main_providers.dart';
 import '../../../../core/services/location_service.dart' as loc;
 import '../../../../domain/entities/hospital/maternity_unit.dart';
 import '../../../../main.dart' show logger;
 import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_map_state.dart';
 import '../../logic/hospital_search_state.dart';
+import '../../logic/hospital_shortlist_state.dart';
 import '../widgets/hospital_detail_overlay.dart';
 import '../widgets/hospital_filters_bottom_sheet.dart';
 import '../widgets/hospital_list_content.dart';
 import '../widgets/hospital_location_bar.dart';
 import '../widgets/hospital_map_view.dart';
 import '../widgets/postcode_bottom_sheet.dart';
+
+part 'hospital_chooser_screen_location_flow.dart';
+part 'hospital_chooser_screen_map_strategy.dart';
+part 'hospital_chooser_screen_search_orchestration.dart';
 
 /// Hospital Chooser screen with map view of nearby maternity units.
 ///
@@ -51,9 +57,6 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   /// Prevents re-expanding distance filter when switching back to list view.
   bool _listViewInitialized = false;
 
-  /// Set of favorite hospital IDs.
-  final Set<String> _favoriteIds = {};
-
   /// Debounce timer for camera movement.
   Timer? _cameraIdleTimer;
 
@@ -70,7 +73,15 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   CameraPosition? _lastCameraPosition;
 
   /// Radius expansion steps in miles.
-  static const List<double> _radiusSteps = [1.0, 2.0, 3.0, 5.0, 10.0, 15.0, 25.0];
+  static const List<double> _radiusSteps = [
+    1.0,
+    2.0,
+    3.0,
+    5.0,
+    10.0,
+    15.0,
+    25.0,
+  ];
 
   /// Minimum number of units before auto-expanding radius.
   static const int _minUnitsThreshold = 5;
@@ -91,77 +102,40 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Set up listener for search text changes with debouncing.
   void _setupSearchListener() {
-    _searchController.addListener(_onSearchChanged);
-    _searchFocusNode.addListener(_onSearchFocusChanged);
+    _setupSearchListenerImpl();
   }
 
   /// Handle search text changes with debouncing.
   void _onSearchChanged() {
-    final query = _searchController.text.trim();
-
-    // If query becomes empty, clear search immediately
-    if (query.isEmpty) {
-      _searchDebounceTimer?.cancel();
-      ref.read(hospitalSearchProvider.notifier).clearSearch();
-      return;
-    }
-
-    // Set active immediately when typing
-    ref.read(hospitalSearchProvider.notifier).setActive(true);
-
-    // Debounce the actual search
-    _searchDebounceTimer?.cancel();
-    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-
-      final locationState = ref.read(hospitalLocationProvider);
-      final mapState = ref.read(hospitalMapProvider);
-
-      if (!locationState.hasLocation || locationState.userLocation == null) {
-        return;
-      }
-
-      ref.read(hospitalSearchProvider.notifier).search(
-            query: query,
-            nearbyUnits: mapState.nearbyUnits,
-            userLocation: locationState.userLocation!,
-          );
-    });
+    _onSearchChangedImpl();
   }
 
   /// Handle search focus changes.
   void _onSearchFocusChanged() {
-    if (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty) {
-      ref.read(hospitalSearchProvider.notifier).setActive(true);
-    } else if (!_searchFocusNode.hasFocus) {
-      Future.delayed(const Duration(milliseconds: 200), () {
-        if (mounted && !_searchFocusNode.hasFocus) {
-          ref.read(hospitalSearchProvider.notifier).setActive(false);
-        }
-      });
-    }
+    _onSearchFocusChangedImpl();
   }
 
   /// Check if we should request permission on initial load.
   void _checkInitialPermissionState() {
-    final locationReady = ref.read(hospitalLocationReadyProvider);
-    if (!locationReady) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (mounted) _checkInitialPermissionState();
-      });
-      return;
-    }
+    _checkInitialPermissionStateImpl();
+  }
 
-    final locationState = ref.read(hospitalLocationProvider);
+  /// Marks that this session has requested location permission.
+  void _markPermissionRequested() {
+    setState(() => _hasRequestedPermission = true);
+  }
 
-    if (!locationState.hasLocation &&
-        locationState.canRequestPermission &&
-        !_hasRequestedPermission &&
-        locationState.isInitialized &&
-        !locationState.isLoading) {
-      logger.debug('Auto-requesting location permission on first visit');
-      _requestLocationPermission();
-    }
+  /// Updates loading state for map unit fetching.
+  void _setUnitsLoading(bool isLoading) {
+    setState(() => _isLoadingUnits = isLoading);
+  }
+
+  /// Marks initial map load as completed and clears loading state.
+  void _finishInitialUnitsLoad() {
+    setState(() {
+      _isLoadingUnits = false;
+      _hasCompletedInitialLoad = true;
+    });
   }
 
   @override
@@ -178,15 +152,12 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Clear search and hide overlay.
   void _clearSearch() {
-    _searchController.clear();
-    _searchFocusNode.unfocus();
-    ref.read(hospitalSearchProvider.notifier).clearSearch();
+    _clearSearchImpl();
   }
 
   /// Dismiss the search overlay without clearing the text.
   void _dismissSearchOverlay() {
-    _searchFocusNode.unfocus();
-    ref.read(hospitalSearchProvider.notifier).setActive(false);
+    _dismissSearchOverlayImpl();
   }
 
   /// Handle when a search result is selected.
@@ -241,14 +212,17 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         showDistanceFilter: showDistanceFilter,
         onApply: (newFilters) async {
           final mapNotifier = ref.read(hospitalMapProvider.notifier);
-          await mapNotifier.applyFilters(newFilters, sortLocation: sortLocation);
+          await mapNotifier.applyFilters(
+            newFilters,
+            sortLocation: sortLocation,
+          );
         },
       ),
     );
   }
 
   /// Switch to list view with auto-expanding distance.
-  /// 
+  ///
   /// On first visit: auto-expands distance to find at least 10 results.
   /// On subsequent visits: reloads units from user's location using current filters.
   Future<void> _switchToListView() async {
@@ -265,14 +239,15 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
     if (!_listViewInitialized) {
       // First visit: auto-expand distance to find enough results
-      await ref.read(hospitalMapProvider.notifier).autoExpandDistance(
-            location: userLocation,
-            minResults: 10,
-          );
+      await ref
+          .read(hospitalMapProvider.notifier)
+          .autoExpandDistance(location: userLocation, minResults: 10);
       _listViewInitialized = true;
     } else {
       // Subsequent visits: reload units from user's location with current filters
-      await ref.read(hospitalMapProvider.notifier).loadNearbyUnits(userLocation);
+      await ref
+          .read(hospitalMapProvider.notifier)
+          .loadNearbyUnits(userLocation);
     }
 
     setState(() => _isListView = true);
@@ -280,127 +255,57 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Handle location state changes and load units when ready.
   void _onLocationStateChanged(HospitalLocationState locationState) {
-    if (!locationState.isInitialized || locationState.isLoading) return;
-
-    if (locationState.hasLocation && !_isLoadingUnits) {
-      _loadUnitsWithAutoExpand(locationState.userLocation!);
-    } else if (locationState.wasPermissionPermanentlyDenied &&
-        !locationState.hasLocation) {
-      _showPostcodeSheet();
-    } else if (locationState.wasPermissionDenied &&
-        !locationState.hasLocation &&
-        _hasRequestedPermission) {
-      _showPostcodeSheet();
-    }
+    _onLocationStateChangedImpl(locationState);
   }
 
   /// Request location permission and handle the result.
   Future<void> _requestLocationPermission() async {
-    setState(() => _hasRequestedPermission = true);
-
-    final notifier = ref.read(hospitalLocationProvider.notifier);
-    final granted = await notifier.requestPermission();
-
-    if (!granted && mounted) {
-      _showPostcodeSheet();
-    }
+    await _requestLocationPermissionImpl();
   }
 
   /// Show the postcode input bottom sheet.
   void _showPostcodeSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => PostcodeBottomSheet(
-        onPostcodeSubmitted: (postcode) async {
-          Navigator.pop(context);
-          final notifier = ref.read(hospitalLocationProvider.notifier);
-          final success = await notifier.setPostcode(postcode);
-          if (!success && mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Invalid postcode. Please try again.')),
-            );
-          }
-        },
-      ),
-    );
+    _showPostcodeSheetImpl();
   }
 
   /// Calculate appropriate zoom level for a given radius in miles.
   double _zoomForRadius(double radiusMiles) {
-    if (radiusMiles <= 0.5) return 15.0;
-    if (radiusMiles <= 1.0) return 14.0;
-    if (radiusMiles <= 2.0) return 13.0;
-    if (radiusMiles <= 3.0) return 12.5;
-    if (radiusMiles <= 5.0) return 12.0;
-    if (radiusMiles <= 10.0) return 11.0;
-    if (radiusMiles <= 15.0) return 10.5;
-    if (radiusMiles <= 25.0) return 10.0;
-    return 9.0;
+    return _zoomForRadiusImpl(radiusMiles);
   }
 
   /// Calculate radius in miles from visible map bounds.
   double _radiusFromBounds(LatLngBounds bounds) {
-    final latDiff = (bounds.northeast.latitude - bounds.southwest.latitude).abs();
-    final lngDiff = (bounds.northeast.longitude - bounds.southwest.longitude).abs();
-
-    final centerLat = (bounds.northeast.latitude + bounds.southwest.latitude) / 2;
-    final cosLat = math.cos(centerLat * math.pi / 180);
-
-    final latMiles = latDiff * 69.0;
-    final lngMiles = lngDiff * 69.0 * cosLat;
-
-    final diagonal = math.sqrt(latMiles * latMiles + lngMiles * lngMiles);
-    return (diagonal / 2) * 1.2;
+    return _radiusFromBoundsImpl(bounds);
   }
 
   /// Load units with auto-expanding radius until we have enough.
-  Future<void> _loadUnitsWithAutoExpand(loc.LatLng location) async {
-    if (_isLoadingUnits) return;
-    setState(() => _isLoadingUnits = true);
-
-    final mapNotifier = ref.read(hospitalMapProvider.notifier);
-    double finalRadius = _radiusSteps.first;
-
-    try {
-      for (final radius in _radiusSteps) {
-        logger.debug('Loading units within $radius miles');
-        finalRadius = radius;
-
-        await mapNotifier.loadNearbyUnitsWithRadius(
-          location,
-          radiusMiles: radius,
-        );
-
-        final state = ref.read(hospitalMapProvider);
-
-        if (state.nearbyUnits.length >= _minUnitsThreshold) {
-          logger.info('Found ${state.nearbyUnits.length} units within $radius miles');
-          break;
-        }
-
-        if (radius == _radiusSteps.last) {
-          logger.info('Max radius reached, found ${state.nearbyUnits.length} units');
-        }
-      }
-
-      _currentSearchRadius = finalRadius;
-      _animateToLocation(location, radiusMiles: finalRadius);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoadingUnits = false;
-          _hasCompletedInitialLoad = true;
-        });
-      }
-    }
+  Future<void> _loadUnitsWithAutoExpand(
+    loc.LatLng location, {
+    bool animateToLocation = true,
+  }) async {
+    await _loadUnitsWithAutoExpandImpl(
+      location,
+      animateToLocation: animateToLocation,
+    );
   }
 
   /// Handle camera movement - reload units when user pans/zooms.
   void _onCameraIdle() {
     if (!_hasCompletedInitialLoad) return;
     if (_isLoadingUnits) return;
+
+    final cameraPosition = _lastCameraPosition;
+    if (cameraPosition != null) {
+      ref
+          .read(hospitalMapProvider.notifier)
+          .updateViewport(
+            center: loc.LatLng(
+              cameraPosition.target.latitude,
+              cameraPosition.target.longitude,
+            ),
+            zoom: cameraPosition.zoom,
+          );
+    }
 
     _cameraIdleTimer?.cancel();
     _cameraIdleTimer = Timer(const Duration(milliseconds: 500), () {
@@ -409,44 +314,10 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   }
 
   /// Load units for the current visible map area.
-  /// 
+  ///
   /// Uses [loadUnitsForMapViewport] to preserve user's distance filter preference.
   Future<void> _loadUnitsForVisibleArea() async {
-    if (_isLoadingUnits) return;
-    if (_mapController == null) return;
-
-    setState(() => _isLoadingUnits = true);
-
-    final mapNotifier = ref.read(hospitalMapProvider.notifier);
-
-    try {
-      final bounds = await _mapController!.getVisibleRegion();
-
-      final center = LatLng(
-        (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
-        (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
-      );
-
-      final radiusMiles = _radiusFromBounds(bounds);
-      _currentSearchRadius = radiusMiles;
-
-      final location = loc.LatLng(center.latitude, center.longitude);
-
-      // Use viewport loading to preserve user's filter preferences
-      await mapNotifier.loadUnitsForMapViewport(
-        location,
-        viewportRadiusMiles: radiusMiles,
-      );
-
-      logger.debug(
-        'Reloaded units for visible area: center=${center.latitude}, ${center.longitude}, '
-        'radius=${_currentSearchRadius.toStringAsFixed(1)} miles',
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingUnits = false);
-      }
-    }
+    await _loadUnitsForVisibleAreaImpl();
   }
 
   /// Animate map camera to the given location.
@@ -466,15 +337,22 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
     // Check if providers are ready
     final locationReady = ref.watch(hospitalLocationReadyProvider);
     final mapReady = ref.watch(hospitalMapReadyProvider);
+    final shortlistReady =
+        ref.watch(manageShortlistUseCaseProvider).hasValue &&
+        ref.watch(selectFinalHospitalUseCaseProvider).hasValue;
 
     // Show loading screen while dependencies are initializing
-    if (!locationReady || !mapReady) {
+    if (!locationReady || !mapReady || !shortlistReady) {
       return _buildLoadingScreen();
     }
 
     final locationState = ref.watch(hospitalLocationProvider);
     final mapState = ref.watch(hospitalMapProvider);
     final searchState = ref.watch(hospitalSearchProvider);
+    final shortlistState = ref.watch(hospitalShortlistProvider);
+    final favoriteIds = shortlistState.shortlistedUnits
+        .map((entry) => entry.unit.id)
+        .toSet();
 
     // Listen for location state changes
     ref.listen<HospitalLocationState>(hospitalLocationProvider, (prev, next) {
@@ -507,7 +385,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
             // Main content
             Expanded(
-              child: _buildContent(locationState, mapState),
+              child: _buildContent(locationState, mapState, favoriteIds),
             ),
           ],
         ),
@@ -539,7 +417,11 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       backgroundColor: AppColors.surface,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(AppIcons.back, color: AppColors.iconDefault, size: AppSpacing.iconMD,),
+        icon: const Icon(
+          AppIcons.back,
+          color: AppColors.iconDefault,
+          size: AppSpacing.iconMD,
+        ),
         onPressed: () => context.pop(),
       ),
       title: Text(
@@ -556,15 +438,18 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   Widget _buildContent(
     HospitalLocationState locationState,
     HospitalMapState mapState,
+    Set<String> favoriteIds,
   ) {
     // Determine overlay states
-    final showPermissionPrompt = !locationState.hasLocation &&
+    final showPermissionPrompt =
+        !locationState.hasLocation &&
         locationState.canRequestPermission &&
         !_hasRequestedPermission &&
         !locationState.isLoading &&
         locationState.isInitialized;
 
-    final isWaitingForLocation = !locationState.hasLocation &&
+    final isWaitingForLocation =
+        !locationState.hasLocation &&
         locationState.isInitialized &&
         !locationState.isLoading;
 
@@ -574,7 +459,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         locationState: locationState,
         mapState: mapState,
         isLoadingUnits: _isLoadingUnits,
-        favoriteIds: _favoriteIds,
+        favoriteIds: favoriteIds,
         searchController: _searchController,
         searchFocusNode: _searchFocusNode,
         onFilterTap: () => _showFiltersSheet(
@@ -603,13 +488,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
           );
         },
         onFavoriteTap: (unit) {
-          setState(() {
-            if (_favoriteIds.contains(unit.id)) {
-              _favoriteIds.remove(unit.id);
-            } else {
-              _favoriteIds.add(unit.id);
-            }
-          });
+          ref.read(hospitalShortlistProvider.notifier).toggleShortlist(unit.id);
         },
         onMapViewTap: () {
           setState(() => _isListView = false);
@@ -617,16 +496,28 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       );
     }
 
+    final persistedCameraPosition = _lastCameraPosition ??
+        (mapState.mapCenter != null && mapState.mapZoom != null
+            ? CameraPosition(
+                target: LatLng(
+                  mapState.mapCenter!.latitude,
+                  mapState.mapCenter!.longitude,
+                ),
+                zoom: mapState.mapZoom!,
+              )
+            : null);
+
     // Otherwise show map view
     return HospitalMapView(
       locationState: locationState,
       mapState: mapState,
+      shortlistedUnitIds: favoriteIds,
       showPermissionPrompt: showPermissionPrompt,
       isWaitingForLocation: isWaitingForLocation,
       isLoadingUnits: _isLoadingUnits,
       searchController: _searchController,
       searchFocusNode: _searchFocusNode,
-      lastCameraPosition: _lastCameraPosition,
+      lastCameraPosition: persistedCameraPosition,
       onMapCreated: (controller) {
         _mapController = controller;
       },
@@ -647,18 +538,6 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
   /// Center the map on the user's postcode/location.
   void _centerOnUserLocation() {
-    final locationState = ref.read(hospitalLocationProvider);
-    if (!locationState.hasLocation || locationState.userLocation == null) return;
-    if (_mapController == null) return;
-
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngZoom(
-        LatLng(
-          locationState.userLocation!.latitude,
-          locationState.userLocation!.longitude,
-        ),
-        _zoomForRadius(_currentSearchRadius),
-      ),
-    );
+    _centerOnUserLocationImpl();
   }
 }
