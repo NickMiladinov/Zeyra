@@ -38,7 +38,7 @@ class AppColors {
   static const Color backgroundGrey500 = Color(0xFF8D8D8D);
   static const Color backgroundGrey600 = Color(0xFF7E7E7E);
   static const Color backgroundPrimarySubtle = Color(0xFFFFECE5);
-  static const Color backgroundPrimaryVerySubtle = Color(0xFFFFEFEB);
+  static const Color backgroundPrimaryVerySubtle = Color(0xFFFFF7F5);
   static const Color backgroundSecondarySubtle = Color(0xFFE0F2F1);
   static const Color backgroundSecondaryVerySubtle = Color(0xFFF1F9F8);
 
@@ -57,7 +57,7 @@ class AppColors {
   /// Border and divider colors
   static const Color border = backgroundGrey100;
   static const Color borderDark = Color(0xFF6B6B6B);
-  static const Color borderPrimary = Color.fromARGB(52, 255, 171, 145);
+  static const Color borderPrimary = Color.fromARGB(100, 255, 171, 145);
   static const Color borderSecondary = Color.fromARGB(52, 77, 182, 172);
   static const Color divider = backgroundGrey100;
 

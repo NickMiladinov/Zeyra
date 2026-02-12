@@ -57,7 +57,7 @@ class KickCounterBanner extends ConsumerWidget {
           color: AppColors.backgroundPrimaryVerySubtle,
           borderRadius: AppEffects.roundedCircle,
           border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.2),
+            color: AppColors.primary.withValues(alpha: 0.5),
             width: AppSpacing.borderWidthThin,
           ),
           boxShadow: AppEffects.shadowLG,
@@ -112,7 +112,7 @@ class KickCounterBanner extends ConsumerWidget {
             Icon(
               AppIcons.arrowUp,
               size: AppSpacing.iconLG,
-              color: AppColors.primary,
+              color: AppColors.primaryDark,
             ),
           ],
         ),

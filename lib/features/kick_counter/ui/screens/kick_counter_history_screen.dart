@@ -304,7 +304,7 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
               child: FloatingActionButton.extended(
                 heroTag: 'kick_counter_start_tracking_fab',
                 onPressed: () => context.push(ToolRoutes.kickCounterActive),
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.secondary,
                 elevation: AppSpacing.elevationSM,
                 extendedPadding: const EdgeInsets.only(
                   left: AppSpacing.paddingMD,
@@ -334,8 +334,9 @@ class _KickCounterHistoryScreenState extends ConsumerState<KickCounterHistoryScr
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.paddingLG),
         decoration: BoxDecoration(
-          color: AppColors.primaryLight,
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.6)),
         ),
         child: Row(
           children: [
@@ -517,7 +518,7 @@ class _SessionHistoryItem extends StatelessWidget {
                       width: AppSpacing.xxxl,
                       height: AppSpacing.xxxl,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
+                        color: AppColors.primary.withValues(alpha: 0.2),
                         borderRadius: AppEffects.roundedCircle,
                       ),
                       child: Icon(AppIcons.favorite, fill: 1, color: AppColors.primary, size: AppSpacing.iconSM),

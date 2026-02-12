@@ -277,8 +277,9 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.paddingLG),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
+                      color: AppColors.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppEffects.radiusLG),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.6)),
                     ),
                     child: Row(
                       children: [
@@ -338,7 +339,7 @@ class _LabourOverviewScreenState extends ConsumerState<LabourOverviewScreen> {
               child: FloatingActionButton.extended(
                 heroTag: 'contraction_timer_start_fab',
                 onPressed: () => context.push(ToolRoutes.contractionTimerActive),
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.secondary,
                 elevation: AppSpacing.elevationSM,
                 extendedPadding: const EdgeInsets.only(
                   left: AppSpacing.paddingMD,

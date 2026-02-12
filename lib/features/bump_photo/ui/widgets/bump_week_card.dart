@@ -37,7 +37,7 @@ class BumpWeekCard extends StatelessWidget {
         bottom: AppSpacing.gapXL,
       ),
       decoration: BoxDecoration(
-        color: showHighlightedStyle ? AppColors.primaryLight : AppColors.surface,
+        color: showHighlightedStyle ? AppColors.backgroundPrimaryVerySubtle : AppColors.surface,
         borderRadius: AppEffects.roundedXL,
         boxShadow: AppEffects.shadowSM,
         border: showHighlightedStyle
@@ -88,8 +88,8 @@ class BumpWeekCard extends StatelessWidget {
           ),
           child: Icon(
             AppIcons.add,
-            color: AppColors.primary,
-            size: AppSpacing.iconSM,
+            color: AppColors.primaryDark,
+            size: AppSpacing.iconMD,
           ),
         ),
         const SizedBox(width: AppSpacing.gapLG),
@@ -148,7 +148,7 @@ class BumpWeekCard extends StatelessWidget {
       ),
       child: Icon(
         AppIcons.camera,
-        color: AppColors.primary,
+        color: AppColors.primaryDark,
         size: AppSpacing.iconSM,
       ),
     );

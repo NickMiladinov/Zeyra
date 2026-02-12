@@ -162,7 +162,7 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppEffects.radiusMD),
               border: Border.all(
-                color: AppColors.primary,
+                color: AppColors.secondary,
                 width: AppSpacing.borderWidthThin,
               ),
             ),
@@ -174,7 +174,7 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
                     Icon(
                       AppIcons.infoIcon,
                       size: AppSpacing.iconSM,
-                      color: AppColors.primary,
+                      color: AppColors.secondary,
                     ),
                     const SizedBox(width: AppSpacing.gapSM),
                     Expanded(
@@ -210,16 +210,16 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
                       Text(
                         'Learn more about the 5-1-1 rule',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.secondary,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppColors.primary,
+                          decorationColor: AppColors.secondary,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.gapXS),
                       Icon(
                         AppIcons.arrowForward,
                         size: AppSpacing.iconXS,
-                        color: AppColors.primary,
+                        color: AppColors.secondary,
                       ),
                     ],
                   ),

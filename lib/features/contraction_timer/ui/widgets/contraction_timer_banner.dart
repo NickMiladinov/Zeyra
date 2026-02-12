@@ -109,10 +109,10 @@ class _ContractionTimerBannerState extends ConsumerState<ContractionTimerBanner>
         : AppColors.backgroundPrimaryVerySubtle;
     final borderColor = isActiveContraction
         ? AppColors.secondary.withValues(alpha: 0.2)
-        : AppColors.primary.withValues(alpha: 0.2);
+        : AppColors.primary.withValues(alpha: 0.5);
     final accentColor = isActiveContraction
         ? AppColors.secondary
-        : AppColors.primary;
+        : AppColors.primaryDark;
 
     return GestureDetector(
       onTap: widget.onTap,

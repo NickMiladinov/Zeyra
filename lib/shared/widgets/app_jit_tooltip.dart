@@ -396,7 +396,7 @@ class _HighlightGlowPainter extends CustomPainter {
       Radius.circular(borderRadius + 6),
     );
     final outerGlowPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.15)
+      ..color = AppColors.secondary.withValues(alpha: 0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
@@ -410,7 +410,7 @@ class _HighlightGlowPainter extends CustomPainter {
       Radius.circular(borderRadius + 3),
     );
     final middleGlowPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.3)
+      ..color = AppColors.secondary.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 5
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
@@ -424,7 +424,7 @@ class _HighlightGlowPainter extends CustomPainter {
       Radius.circular(borderRadius + 1),
     );
     final innerGlowPaint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.5)
+      ..color = AppColors.secondary.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);

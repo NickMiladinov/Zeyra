@@ -219,7 +219,7 @@ class _KickActiveSessionScreenState extends ConsumerState<KickActiveSessionScree
         child: Icon(
           AppIcons.add, 
           size: AppSpacing.iconXXL, 
-          color: isPaused ? AppColors.primary.withValues(alpha: 0.5) : AppColors.primary,
+          color: isPaused ? AppColors.secondary.withValues(alpha: 0.5) : AppColors.secondary,
         ),
       ),
     );
@@ -246,19 +246,19 @@ class _KickActiveSessionScreenState extends ConsumerState<KickActiveSessionScree
       SnackBar(
         content: Row(
           children: [
-            Icon(AppIcons.infoIcon, color: AppColors.white, size: AppSpacing.iconSM),
+            Icon(AppIcons.infoIcon, color: AppColors.textPrimary, size: AppSpacing.iconSM),
             const SizedBox(width: AppSpacing.gapSM),
             Expanded(
               child: Text(
                 'Session is paused. Resume to record movements.',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.white),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textPrimary),
               ),
             ),
           ],
         ),
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.primaryLight,
         shape: RoundedRectangleBorder(borderRadius: AppEffects.roundedMD),
         margin: const EdgeInsets.only(
           bottom: AppSpacing.gapXXXL,

@@ -65,12 +65,12 @@ class Rule511Progress extends StatelessWidget {
       decoration: BoxDecoration(
         color: isAlert 
             ? AppColors.error.withValues(alpha: 0.4)
-            : AppColors.primary.withValues(alpha: 0.25),
+            : AppColors.secondary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(AppEffects.radiusXL),
         border: Border.all(
           color: isAlert 
               ? AppColors.error
-              : AppColors.primary.withValues(alpha: 0.4),
+              : AppColors.secondary.withValues(alpha: 0.4),
           width: AppSpacing.borderWidthThin,
         ),
       ),
@@ -83,13 +83,13 @@ class Rule511Progress extends StatelessWidget {
               Icon(
                 isAlert ? AppIcons.warningIcon : AppIcons.infoIcon,
                 size: AppSpacing.iconSM,
-                color: isAlert ? AppColors.error : AppColors.primary,
+                color: isAlert ? AppColors.error : AppColors.secondary,
               ),
               const SizedBox(width: AppSpacing.gapSM),
               Text(
                 'Progress Tracking',
                 style: AppTypography.labelLarge.copyWith(
-                  color: isAlert ? AppColors.error : AppColors.primary,
+                  color: isAlert ? AppColors.error : AppColors.secondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -177,7 +177,7 @@ class _ProgressIndicator extends StatelessWidget {
                   progress: progress.clamp(0.0, 1.0),
                   ringColor: AppColors.white.withValues(alpha: 0.4),
                   progressColor: isComplete
-                      ? AppColors.primary
+                      ? AppColors.secondary
                       : AppColors.white,
                   strokeWidth: _strokeWidth,
                 ),
@@ -187,7 +187,7 @@ class _ProgressIndicator extends StatelessWidget {
                 width: _size - (_strokeWidth * 4),
                 height: _size - (_strokeWidth * 4),
                 decoration: BoxDecoration(
-                  color: isComplete ? AppColors.primary : AppColors.white.withValues(alpha: 0.6),
+                  color: isComplete ? AppColors.secondary : AppColors.white.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -195,7 +195,7 @@ class _ProgressIndicator extends StatelessWidget {
                     isComplete ? AppIcons.checkIcon : icon,
                     size: AppSpacing.iconXS,
                     color:
-                        isComplete ? AppColors.white : AppColors.primary,
+                        isComplete ? AppColors.white : AppColors.secondary,
                   ),
                 ),
               ),

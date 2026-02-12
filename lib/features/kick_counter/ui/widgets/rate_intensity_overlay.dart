@@ -65,8 +65,8 @@ class _RateIntensityContent extends StatelessWidget {
         _IntensityButton(
           intensity: MovementStrength.weak,
           label: 'Mild',
-          color: AppColors.primary.withValues(alpha: 0.1), // Light teal
-          textColor: AppColors.primary,
+          color: AppColors.secondary.withValues(alpha: 0.1), // Light teal
+          textColor: AppColors.secondary,
           onTap: () => Navigator.of(context).pop(MovementStrength.weak),
         ),
         const SizedBox(height: AppSpacing.gapMD),
@@ -74,8 +74,8 @@ class _RateIntensityContent extends StatelessWidget {
         _IntensityButton(
           intensity: MovementStrength.moderate,
           label: 'Moderate',
-          color: AppColors.secondary.withValues(alpha: 0.1), // Light peach
-          textColor: AppColors.secondary,
+          color: AppColors.primary.withValues(alpha: 0.1), // Light peach
+          textColor: AppColors.primaryDark,
           onTap: () => Navigator.of(context).pop(MovementStrength.moderate),
         ),
         const SizedBox(height: AppSpacing.gapMD),
