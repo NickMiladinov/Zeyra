@@ -21,14 +21,14 @@ class UnderlinedText extends StatelessWidget {
   /// The text style to apply.
   final TextStyle style;
 
-  /// The color of the underline. Defaults to secondary color.
+  /// The color of the underline..
   final Color? underlineColor;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _WavyUnderlinePainter(
-        color: underlineColor ?? AppColors.secondary,
+        color: underlineColor ?? AppColors.primary,
       ),
       child: Padding(
         // Add bottom padding to make room for the underline

@@ -155,10 +155,10 @@ class _PhotoCropScreenState extends ConsumerState<PhotoCropScreen> {
                       padding: const EdgeInsets.all(AppSpacing.paddingMD),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary.withValues(alpha: 0.1)
+                            ? AppColors.secondary.withValues(alpha: 0.1)
                             : AppColors.background,
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.border,
+                          color: isSelected ? AppColors.secondary : AppColors.border,
                           width: isSelected ? 2 : 1,
                         ),
                         borderRadius: AppEffects.roundedLG,
@@ -168,14 +168,14 @@ class _PhotoCropScreenState extends ConsumerState<PhotoCropScreen> {
                         children: [
                           Icon(
                             preset.icon,
-                            color: isSelected ? AppColors.primary : AppColors.iconDefault,
+                            color: isSelected ? AppColors.secondary : AppColors.iconDefault,
                             size: 32,
                           ),
                           const SizedBox(height: AppSpacing.gapXS),
                           Text(
                             preset.label,
                             style: AppTypography.bodyMedium.copyWith(
-                              color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                              color: isSelected ? AppColors.secondary : AppColors.textPrimary,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                             ),
                           ),
@@ -290,7 +290,7 @@ class _PhotoCropScreenState extends ConsumerState<PhotoCropScreen> {
               child: Text(
                 'Done',
                 style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.secondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

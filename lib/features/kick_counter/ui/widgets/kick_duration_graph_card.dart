@@ -300,10 +300,10 @@ class KickDurationGraphCard extends ConsumerWidget {
               final barHeight = durationsInMinutes[index];
               
               // Determine bar color: 
-              // - All bars are primary (green) when < 7 sessions (no threshold available)
-              // - Green (primary) if below or at threshold (safe range)
+              // - All bars are secondary (green) when < 7 sessions (no threshold available)
+              // - Green (secondary) if below or at threshold (safe range)
               // - Coral/warning color if above threshold (outlier)
-              Color barColor = AppColors.primary;
+              Color barColor = AppColors.secondary;
               if (analytics.hasEnoughDataForAnalytics) {
                 // Use outlier flag (which is based on upper threshold)
                 if (sessionAnalytic.isOutlier) {
@@ -335,7 +335,7 @@ class KickDurationGraphCard extends ConsumerWidget {
                     HorizontalRangeAnnotation(
                       y1: 0,
                       y2: thresholdInMinutes,
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: AppColors.secondary.withValues(alpha: 0.15),
                     ),
                   ],
                 )
@@ -355,7 +355,7 @@ class KickDurationGraphCard extends ConsumerWidget {
                     // Position label on left if rightmost bars overlap, else right
                     HorizontalLine(
                       y: thresholdInMinutes,
-                      color: AppColors.primary,
+                      color: AppColors.secondary,
                       strokeWidth: 1,
                       dashArray: [4, 4],
                       label: HorizontalLineLabel(
@@ -365,7 +365,7 @@ class KickDurationGraphCard extends ConsumerWidget {
                             ? const EdgeInsets.only(right: AppSpacing.paddingSM, bottom: AppSpacing.paddingXS)
                             : const EdgeInsets.only(left: AppSpacing.paddingSM, bottom: AppSpacing.paddingXS),
                         style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.secondary,
                           fontWeight: FontWeight.w600,
                           backgroundColor: AppColors.surface,
                         ),
@@ -386,7 +386,7 @@ class _LegendBoxPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.3)
+      ..color = AppColors.secondary.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
     
     // Draw filled box
@@ -398,7 +398,7 @@ class _LegendBoxPainter extends CustomPainter {
     
     // Draw dashed line on top
     final dashedPaint = Paint()
-      ..color = AppColors.primary
+      ..color = AppColors.secondary
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     

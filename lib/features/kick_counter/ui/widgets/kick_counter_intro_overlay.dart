@@ -154,7 +154,7 @@ class _BenefitItem extends StatelessWidget {
           child: Icon(
             AppIcons.checkIcon,
             size: AppSpacing.iconXS,
-            color: AppColors.primary,
+            color: AppColors.primaryDark,
           ),
         ),
         const SizedBox(width: AppSpacing.gapMD),

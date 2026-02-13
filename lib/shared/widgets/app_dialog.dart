@@ -93,7 +93,7 @@ class AppDialog extends StatelessWidget {
           child: Text(
             primaryActionLabel,
             style: AppTypography.labelLarge.copyWith(
-              color: isPrimaryDestructive ? AppColors.error : AppColors.primary,
+              color: isPrimaryDestructive ? AppColors.error : AppColors.secondary,
             ),
           ),
         ),

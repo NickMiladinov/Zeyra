@@ -14,6 +14,14 @@ class AppConstants {
   static String revenueCatApiKeyIOS = '';
   static String revenueCatApiKeyAndroid = '';
 
+  // Google Maps Configuration
+  // Platform-specific API keys for Google Maps
+  static String googleMapsApiKeyIOS = '';
+  static String googleMapsApiKeyAndroid = '';
+  
+  // Google Distance Matrix API key (separate key without app restrictions)
+  static String googleDistanceMatrixApiKey = '';
+
   // Private constructor to prevent instantiation
   AppConstants._();
 
@@ -27,6 +35,13 @@ class AppConstants {
       // RevenueCat API keys (can be the same for testing)
       revenueCatApiKeyIOS = dotenv.env['REVENUECAT_API_KEY_IOS'] ?? '';
       revenueCatApiKeyAndroid = dotenv.env['REVENUECAT_API_KEY_ANDROID'] ?? '';
+      
+      // Google Maps API keys
+      googleMapsApiKeyIOS = dotenv.env['GOOGLE_MAPS_API_KEY_IOS'] ?? '';
+      googleMapsApiKeyAndroid = dotenv.env['GOOGLE_MAPS_API_KEY_ANDROID'] ?? '';
+      
+      // Google Distance Matrix API key (separate unrestricted key)
+      googleDistanceMatrixApiKey = dotenv.env['GOOGLE_DISTANCE_MATRIX_API_KEY'] ?? '';
 
       // Note: Logging now handled by centralized logging service
       // Will be initialized after this method completes

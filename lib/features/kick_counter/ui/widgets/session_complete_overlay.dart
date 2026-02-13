@@ -229,6 +229,7 @@ class _SessionCompleteOverlayState extends State<SessionCompleteOverlay> {
                 horizontal: AppSpacing.paddingXXL,
                 vertical: AppSpacing.paddingMD, // Reduced from paddingLG
               ),
+              backgroundColor: AppColors.secondary,
             ),
             child: const Text('Save to Diary'),
           ),

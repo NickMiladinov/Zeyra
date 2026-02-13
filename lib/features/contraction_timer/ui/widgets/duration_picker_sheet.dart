@@ -173,7 +173,7 @@ class _DurationPickerContentState extends State<_DurationPickerContent> {
           child: ElevatedButton(
             onPressed: _handleOk,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.secondary,
               foregroundColor: AppColors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(

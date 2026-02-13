@@ -24,6 +24,7 @@ class UserProfileMapper {
       lastAccessedAt:
           DateTime.fromMillisecondsSinceEpoch(dto.lastAccessedAtMillis),
       schemaVersion: dto.schemaVersion,
+      postcode: dto.postcode,
     );
   }
 
@@ -44,6 +45,7 @@ class UserProfileMapper {
       encryptionKeyId: domain.encryptionKeyId,
       lastAccessedAtMillis: domain.lastAccessedAt.millisecondsSinceEpoch,
       schemaVersion: domain.schemaVersion,
+      postcode: domain.postcode,
     );
   }
 }

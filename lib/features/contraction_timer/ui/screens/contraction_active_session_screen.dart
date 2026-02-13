@@ -158,7 +158,7 @@ class _ContractionActiveSessionScreenState
               child: Text(
                 'OK',
                 style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.secondary,
                 ),
               ),
             ),
@@ -564,7 +564,7 @@ class _ContractionActiveSessionScreenState
                                               ? _handleFinishSession
                                               : null,
                                           color: AppColors.white,
-                                          iconColor: AppColors.primary,
+                                          iconColor: AppColors.secondary,
                                           fill: 1.0,
                                         ),
                                       ],

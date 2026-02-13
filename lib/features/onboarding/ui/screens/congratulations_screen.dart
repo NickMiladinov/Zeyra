@@ -61,7 +61,7 @@ class CongratulationsScreen extends ConsumerWidget {
                   UnderlinedText(
                     text: 'Congratulations, $name!',
                     style: AppTypography.headlineLarge.copyWith(
-                      color: AppColors.secondary,
+                      color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -91,7 +91,7 @@ class CongratulationsScreen extends ConsumerWidget {
               Text(
                 '$week',
                 style: AppTypography.displayLarge.copyWith(
-                  color: AppColors.secondaryDark,
+                  color: AppColors.primaryDark,
                   fontWeight: FontWeight.w400,
                   fontSize: 72,
                   height: 1.0,

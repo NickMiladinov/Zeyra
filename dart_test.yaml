@@ -22,6 +22,11 @@ presets:
     paths:
       - test/runners/onboarding/all_test.dart
 
+  # Run all hospital chooser tests
+  hospital_chooser:
+    paths:
+      - test/runners/hospital_chooser/all_test.dart
+
   # Run only unit tests (fast, no integration/performance)
   unit:
     paths:
@@ -70,6 +75,9 @@ tags:
 
   onboarding:
     # Onboarding feature tests
+
+  hospital_chooser:
+    # Hospital chooser feature tests
 
   widgets:
     # Widget tests (UI component tests)

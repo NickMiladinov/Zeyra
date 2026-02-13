@@ -238,9 +238,9 @@ class _NHSLinkPlaceholder extends StatelessWidget {
           child: Text(
             title,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.primary,
+              color: AppColors.secondary,
               decoration: TextDecoration.underline,
-              decorationColor: AppColors.primary,
+              decorationColor: AppColors.secondary,
             ),
           ),
         ),
@@ -248,7 +248,7 @@ class _NHSLinkPlaceholder extends StatelessWidget {
         Icon(
           AppIcons.newTab,
           size: AppSpacing.iconSM,
-          color: AppColors.primary,
+          color: AppColors.secondary,
         ),
       ],
     );

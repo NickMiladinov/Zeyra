@@ -12,6 +12,11 @@
 devtools_options.yaml
 .claude/
 .vscode/
+.cursor/mcp.json
+
+# API Keys and Secrets
+ios/Flutter/Secrets.xcconfig
+android/local.properties
 
 # Flutter repo-specific
 /bin/cache/

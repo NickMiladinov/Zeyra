@@ -28,14 +28,17 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
   /// Load the active pregnancy
   Future<void> _loadActivePregnancy() async {
+    if (!mounted) return;
     state = const AsyncValue.loading();
 
     try {
       final getActivePregnancyUseCase = await _ref.read(getActivePregnancyUseCaseProvider.future);
       final pregnancy = await getActivePregnancyUseCase.execute();
+      if (!mounted) return;
       state = AsyncValue.data(pregnancy);
     } catch (e) {
       // No active pregnancy is not an error - just null data
+      if (!mounted) return;
       state = const AsyncValue.data(null);
     }
   }
@@ -48,6 +51,7 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
     required DateTime startDate,
     required DateTime dueDate,
   }) async {
+    if (!mounted) return;
     state = const AsyncValue.loading();
 
     try {
@@ -58,9 +62,11 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
       // TEMPORARY: Ensure user profile exists (for foreign key constraint)
       final getUserProfileUseCase = await _ref.read(getUserProfileUseCaseProvider.future);
+      if (!mounted) return;
       var profile = await getUserProfileUseCase.execute();
 
       if (profile == null) {
+        if (!mounted) return;
         // User profile doesn't exist, create it with temporary placeholder values
         final createUserProfileUseCase = await _ref.read(createUserProfileUseCaseProvider.future);
         profile = await createUserProfileUseCase.execute(
@@ -74,6 +80,7 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
         );
       }
 
+      if (!mounted) return;
       final userProfileId = profile.id;
 
       final createUseCase = await _ref.read(createPregnancyUseCaseProvider.future);
@@ -85,8 +92,10 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
         selectedHospitalId: null,
       );
 
+      if (!mounted) return;
       state = AsyncValue.data(created);
     } catch (e, stack) {
+      if (!mounted) return;
       state = AsyncValue.error(e, stack);
       // Rethrow to let UI handle the error
       rethrow;
@@ -108,13 +117,16 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
   /// Update pregnancy start date (auto-calculates due date)
   Future<void> updateStartDate(String pregnancyId, DateTime newStartDate) async {
+    if (!mounted) return;
     state = const AsyncValue.loading();
 
     try {
       final updateUseCase = await _ref.read(updatePregnancyStartDateUseCaseProvider.future);
       final updated = await updateUseCase.execute(pregnancyId, newStartDate);
+      if (!mounted) return;
       state = AsyncValue.data(updated);
     } catch (e, stack) {
+      if (!mounted) return;
       state = AsyncValue.error(e, stack);
       rethrow;
     }
@@ -122,13 +134,16 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
   /// Update pregnancy due date (auto-calculates start date)
   Future<void> updateDueDate(String pregnancyId, DateTime newDueDate) async {
+    if (!mounted) return;
     state = const AsyncValue.loading();
 
     try {
       final updateUseCase = await _ref.read(updatePregnancyDueDateUseCaseProvider.future);
       final updated = await updateUseCase.execute(pregnancyId, newDueDate);
+      if (!mounted) return;
       state = AsyncValue.data(updated);
     } catch (e, stack) {
+      if (!mounted) return;
       state = AsyncValue.error(e, stack);
       rethrow;
     }
@@ -136,13 +151,16 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
   /// Delete a pregnancy
   Future<void> deletePregnancy(String pregnancyId) async {
+    if (!mounted) return;
     state = const AsyncValue.loading();
 
     try {
       final deleteUseCase = await _ref.read(deletePregnancyUseCaseProvider.future);
       await deleteUseCase.execute(pregnancyId);
+      if (!mounted) return;
       state = const AsyncValue.data(null);
     } catch (e, stack) {
+      if (!mounted) return;
       state = AsyncValue.error(e, stack);
       rethrow;
     }
@@ -150,6 +168,7 @@ class PregnancyDataNotifier extends StateNotifier<AsyncValue<Pregnancy?>> {
 
   /// Refresh the active pregnancy
   Future<void> refresh() async {
+    if (!mounted) return;
     await _loadActivePregnancy();
   }
 }

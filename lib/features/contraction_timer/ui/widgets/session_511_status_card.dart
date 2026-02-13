@@ -117,7 +117,7 @@ class Session511StatusCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: isAlert 
                   ? AppColors.errorLight.withValues(alpha: 0.1)
-                  : AppColors.primaryLight,
+                  : AppColors.secondaryLight,
               borderRadius: BorderRadius.circular(AppEffects.radiusMD),
             ),
             child: Text(
@@ -152,9 +152,9 @@ class _ChecklistItem extends StatelessWidget {
           width: AppSpacing.iconSM,
           height: AppSpacing.iconSM,
           decoration: BoxDecoration(
-            color: isChecked ? AppColors.primary : AppColors.transparent,
+            color: isChecked ? AppColors.secondary : AppColors.transparent,
             border: Border.all(
-              color: isChecked ? AppColors.primary : AppColors.border,
+              color: isChecked ? AppColors.secondary : AppColors.border,
               width: AppSpacing.borderWidthMedium,
             ),
             borderRadius: BorderRadius.circular(AppEffects.radiusSM),

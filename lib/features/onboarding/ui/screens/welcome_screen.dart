@@ -46,7 +46,7 @@ class WelcomeScreen extends ConsumerWidget {
             UnderlinedText(
               text: "Hi, I'm Zeyra",
               style: AppTypography.displayMedium.copyWith(
-                color: AppColors.secondary,
+                color: AppColors.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),

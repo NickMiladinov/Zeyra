@@ -48,6 +48,9 @@ class UserProfiles extends Table {
   /// Database schema version
   IntColumn get schemaVersion => integer()();
 
+  /// User's postcode for hospital search (optional)
+  TextColumn get postcode => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }

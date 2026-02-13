@@ -106,7 +106,7 @@ class NotificationsScreen extends ConsumerWidget {
             baseline: TextBaseline.alphabetic,
             child: UnderlinedText(
               text: 'loop',
-              style: baseStyle.copyWith(color: AppColors.secondary),
+              style: baseStyle.copyWith(color: AppColors.primary),
             ),
           ),
         ],

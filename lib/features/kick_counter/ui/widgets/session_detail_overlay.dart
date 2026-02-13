@@ -319,7 +319,7 @@ class _SessionDetailOverlayState extends State<SessionDetailOverlay> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text('Save', style: AppTypography.labelLarge.copyWith(color: AppColors.primary)),
+            child: Text('Save', style: AppTypography.labelLarge.copyWith(color: AppColors.secondary)),
           ),
         ],
       ),

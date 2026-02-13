@@ -286,7 +286,7 @@ class _EditContractionContentState extends State<_EditContractionContent> {
           child: ElevatedButton(
             onPressed: _handleSave,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.secondary,
               foregroundColor: AppColors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(
@@ -325,9 +325,9 @@ class _AnimatedIntensitySelector extends StatelessWidget {
   Color _getBackgroundColor(ContractionIntensity intensity) {
     switch (intensity) {
       case ContractionIntensity.mild:
-        return AppColors.primary;
-      case ContractionIntensity.moderate:
         return AppColors.secondary;
+      case ContractionIntensity.moderate:
+        return AppColors.primary;
       case ContractionIntensity.strong:
         return AppColors.error;
     }

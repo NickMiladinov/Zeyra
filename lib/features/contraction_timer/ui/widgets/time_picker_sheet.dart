@@ -133,7 +133,7 @@ class _TimePickerContentState extends State<_TimePickerContent> {
               child: Text(
                 'OK',
                 style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.secondary,
                 ),
               ),
             ),
@@ -257,7 +257,7 @@ class _TimePickerContentState extends State<_TimePickerContent> {
           child: ElevatedButton(
             onPressed: _handleOk,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.secondary,
               foregroundColor: AppColors.white,
               elevation: 0,
               padding: const EdgeInsets.symmetric(

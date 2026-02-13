@@ -136,7 +136,8 @@ abstract class ToolRoutes {
   static const String contractionTimerActive = '/contraction-timer-active';
 
   /// Contraction timer information/help screen (nested but pushed to root navigator).
-  static const String contractionTimerInfo = '/main/tools/contraction-timer/info';
+  static const String contractionTimerInfo =
+      '/main/tools/contraction-timer/info';
 
   /// Contraction session detail screen with session ID parameter.
   /// Use [contractionSessionDetailPath] to generate the full path with ID.
@@ -146,6 +147,14 @@ abstract class ToolRoutes {
   /// Generate the contraction session detail path for a specific session.
   static String contractionSessionDetailPath(String id) =>
       '/main/tools/contraction-timer/session/$id';
+
+  // Hospital Chooser
+  /// Hospital chooser workspace screen (shortlist + final choice).
+  static const String hospitalChooser = '/main/tools/hospital-chooser';
+
+  /// Hospital chooser explore screen (map/list browser).
+  static const String hospitalChooserExplore =
+      '/main/tools/hospital-chooser/explore';
 }
 
 /// Route paths for the "More" tab screens.

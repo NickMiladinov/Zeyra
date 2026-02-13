@@ -95,6 +95,9 @@ final savedOnboardingStepProvider = FutureProvider<int>((ref) async {
 /// - Creates Pregnancy entity
 /// - Links RevenueCat customer
 /// - Marks onboarding as complete
+///
+/// Note: Background data pre-loading (maternity units) is handled by HomeScreen
+/// on mount to avoid Riverpod ref lifecycle issues with async callbacks.
 final onboardingServiceProvider = FutureProvider<OnboardingService>((ref) async {
   final createUserProfile = await ref.watch(createUserProfileUseCaseProvider.future);
   final createPregnancy = await ref.watch(createPregnancyUseCaseProvider.future);
@@ -108,5 +111,7 @@ final onboardingServiceProvider = FutureProvider<OnboardingService>((ref) async 
     paymentService: paymentService,
     authNotifier: authNotifier,
     logger: logger,
+    // No onComplete callback - HomeScreen handles data sync on mount
+    // to avoid Riverpod ref lifecycle issues with async callbacks.
   );
 });

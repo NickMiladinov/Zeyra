@@ -290,8 +290,8 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      Color(0x0D4DB6AC), // rgba(77, 182, 172, 0.05)
-                      Color(0x1A4DB6AC), // rgba(77, 182, 172, 0.1)
+                      Color(0x0DFFAB91), // rgba(255, 171, 145, 0.05) - primary
+                      Color(0x1AFFAB91), // rgba(255, 171, 145, 0.1) - primary
                     ],
                   ),
                   borderRadius: AppEffects.roundedXL,
@@ -313,7 +313,7 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
                             width: 48,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
+                              color: AppColors.backgroundPrimarySubtle,
                               borderRadius: AppEffects.roundedCircle,
                             ),
                             child: Icon(
@@ -380,7 +380,7 @@ class _BumpPhotoEditScreenState extends ConsumerState<BumpPhotoEditScreen> {
             focusedBorder: OutlineInputBorder(
               borderRadius: AppEffects.roundedXL,
               borderSide: const BorderSide(
-                color: AppColors.primary,
+                color: AppColors.secondary,
                 width: AppSpacing.borderWidthMedium,
               ),
             ),
