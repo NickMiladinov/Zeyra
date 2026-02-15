@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 
 import '../../../core/di/main_providers.dart';
 import '../../../domain/repositories/hospital_shortlist_repository.dart';
@@ -202,7 +203,8 @@ final hospitalShortlistProvider =
   final manageShortlistAsync = ref.watch(manageShortlistUseCaseProvider);
   final selectFinalAsync = ref.watch(selectFinalHospitalUseCaseProvider);
 
-  if (!manageShortlistAsync.hasValue || !selectFinalAsync.hasValue) {
+  if (manageShortlistAsync.asData?.value == null ||
+      selectFinalAsync.asData?.value == null) {
     throw StateError(
       'hospitalShortlistProvider accessed before dependencies are ready.',
     );

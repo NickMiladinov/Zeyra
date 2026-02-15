@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_icons.dart';
+import '../../../../app/theme/app_effects.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../shared/widgets/app_bottom_sheet.dart';
 
 /// Permission prompt widget for requesting location access.
 ///
@@ -24,58 +25,56 @@ class HospitalPermissionPrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.paddingXL),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            AppIcons.locationSearching,
-            size: AppSpacing.buttonHeightXXXL,
-            color: AppColors.primary,
-          ),
-          const SizedBox(height: AppSpacing.gapXL),
-          Text(
-            'Find Hospitals Near You',
-            style: AppTypography.headlineMedium.copyWith(
-              color: AppColors.textPrimary,
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: AppBottomSheet(
+        isDismissible: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Find Hospitals Near You',
+              style: AppTypography.headlineMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.gapMD),
-          Text(
-            'Allow location access to find maternity units nearby, or enter your postcode manually.',
-            style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
+            const SizedBox(height: AppSpacing.gapMD),
+            Text(
+              'Allow location access to find maternity units nearby, or enter your postcode manually.',
+              style: AppTypography.bodyLarge.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.gapXL),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
+            const SizedBox(height: AppSpacing.gapXL),
+            FilledButton(
               onPressed: onAllowTap,
-              style: ElevatedButton.styleFrom(
+              style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(
                   vertical: AppSpacing.paddingMD,
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppEffects.radiusCircle),
+                ),
               ),
               child: const Text('Allow Location Access'),
             ),
-          ),
-          const SizedBox(height: AppSpacing.gapMD),
-          TextButton(
-            onPressed: onManualTap,
-            child: Text(
-              'Enter Postcode Manually',
-              style: AppTypography.labelLarge.copyWith(
-                color: AppColors.primary,
+            const SizedBox(height: AppSpacing.gapMD),
+            TextButton(
+              onPressed: onManualTap,
+              child: Text(
+                'Enter Postcode Manually',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.primary,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

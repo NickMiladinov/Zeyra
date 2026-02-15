@@ -323,11 +323,15 @@ class _HospitalMapViewState extends ConsumerState<HospitalMapView> {
         // Permission prompt overlay
         if (widget.showPermissionPrompt)
           Positioned.fill(
-            child: Container(
-              color: Colors.white.withValues(alpha: 0.9),
-              child: HospitalPermissionPrompt(
-                onAllowTap: widget.onRequestPermission,
-                onManualTap: widget.onShowPostcodeSheet,
+            child: GestureDetector(
+              onTap: () {},
+              behavior: HitTestBehavior.opaque,
+              child: ColoredBox(
+                color: AppColors.overlayLight,
+                child: HospitalPermissionPrompt(
+                  onAllowTap: widget.onRequestPermission,
+                  onManualTap: widget.onShowPostcodeSheet,
+                ),
               ),
             ),
           ),

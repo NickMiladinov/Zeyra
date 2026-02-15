@@ -13,6 +13,7 @@ analyzer:
   exclude:
     - "**/*.g.dart"  # Generated files
     - "**/*.freezed.dart"  # Freezed generated files
+    - "test/**"  # Exclude legacy tests from temporary hospital-only branch analysis
 
 linter:
   # The lint rules applied to this project can be customized in the

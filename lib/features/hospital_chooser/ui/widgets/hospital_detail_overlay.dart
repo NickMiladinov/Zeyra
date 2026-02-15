@@ -92,7 +92,8 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
   bool _areDetailDependenciesReady() {
     final getDetailAsync = ref.read(getUnitDetailUseCaseProvider);
     final manageShortlistAsync = ref.read(manageShortlistUseCaseProvider);
-    return getDetailAsync.hasValue && manageShortlistAsync.hasValue;
+    return getDetailAsync.asData?.value != null &&
+        manageShortlistAsync.asData?.value != null;
   }
 
   /// Fetch drive time from the API.
@@ -240,7 +241,8 @@ class _HospitalDetailOverlayState extends ConsumerState<HospitalDetailOverlay> {
   Widget build(BuildContext context) {
     final getDetailAsync = ref.watch(getUnitDetailUseCaseProvider);
     final manageShortlistAsync = ref.watch(manageShortlistUseCaseProvider);
-    final isDetailReady = getDetailAsync.hasValue && manageShortlistAsync.hasValue;
+    final isDetailReady = getDetailAsync.asData?.value != null &&
+        manageShortlistAsync.asData?.value != null;
 
     if (isDetailReady && !_hasInitializedDetailState) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

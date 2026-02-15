@@ -10,10 +10,9 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/di/main_providers.dart';
 import '../../../../domain/repositories/hospital_shortlist_repository.dart';
+import '../../logic/hospital_location_state.dart';
 import '../../logic/hospital_shortlist_state.dart';
-import '../../logic/hospital_shortlist_workspace_ui_state.dart';
 import '../widgets/hospital_detail_overlay.dart';
-import '../widgets/hospital_shortlist_checklist_section.dart';
 import '../widgets/hospital_shortlist_explore_card.dart';
 import '../widgets/hospital_shortlist_final_choice_section.dart';
 import '../widgets/hospital_shortlist_section.dart';
@@ -27,34 +26,20 @@ class HospitalShortlistScreen extends ConsumerWidget {
     final manageShortlistAsync = ref.watch(manageShortlistUseCaseProvider);
     final selectFinalAsync = ref.watch(selectFinalHospitalUseCaseProvider);
 
-    if (!manageShortlistAsync.hasValue || !selectFinalAsync.hasValue) {
+    if (manageShortlistAsync.asData?.value == null ||
+        selectFinalAsync.asData?.value == null) {
       return _buildLoadingScaffold(context);
     }
 
     final shortlistState = ref.watch(hospitalShortlistProvider);
-    final workspaceUiState = ref.watch(hospitalShortlistWorkspaceUiProvider);
-    final workspaceUiNotifier = ref.read(
-      hospitalShortlistWorkspaceUiProvider.notifier,
-    );
-
-    final hasShortlist = shortlistState.shortlistedUnits.isNotEmpty;
     final hasFinalChoice = shortlistState.selectedHospital != null;
-    final hasCompletedFinalChoiceStep =
-        hasFinalChoice || workspaceUiState.hasMarkedFinalChoiceStep;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: AppSpacing.elevationNone,
-        leading: IconButton(
-          icon: const Icon(
-            AppIcons.back,
-            color: AppColors.iconDefault,
-            size: AppSpacing.iconMD,
-          ),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'My Hospital Workspace',
           style: AppTypography.headlineSmall.copyWith(
@@ -62,6 +47,16 @@ class HospitalShortlistScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              AppIcons.profile,
+              color: AppColors.iconDefault,
+              size: AppSpacing.iconMD,
+            ),
+            onPressed: () => context.push(ToolRoutes.account),
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(hospitalShortlistProvider.notifier).refresh(),
@@ -78,26 +73,6 @@ class HospitalShortlistScreen extends ConsumerWidget {
               onExploreTap: () => _openExploreHospitals(context),
             ),
             const SizedBox(height: AppSpacing.gapXL),
-            HospitalShortlistChecklistSection(
-              hasShortlist: hasShortlist,
-              hasFinalChoice: hasFinalChoice,
-              hasVisitedOrContactedTopChoices:
-                  workspaceUiState.hasVisitedOrContactedTopChoices,
-              hasMarkedFinalChoiceStep: hasCompletedFinalChoiceStep,
-              hasRegisteredWithChosenHospital:
-                  workspaceUiState.hasRegisteredWithChosenHospital,
-              onCreateShortlistTap: hasShortlist
-                  ? null
-                  : () => _openExploreHospitals(context),
-              onVisitedOrContactedTap:
-                  workspaceUiNotifier.toggleVisitedOrContactedTopChoices,
-              onFinalChoiceStepTap: hasFinalChoice
-                  ? null
-                  : workspaceUiNotifier.toggleFinalChoiceStep,
-              onRegisteredTap:
-                  workspaceUiNotifier.toggleRegisteredWithChosenHospital,
-            ),
-            const SizedBox(height: AppSpacing.gapXL),
             HospitalShortlistFinalChoiceSection(
               selectedHospital: shortlistState.selectedHospital,
               onClearSelectionTap: hasFinalChoice
@@ -105,19 +80,16 @@ class HospitalShortlistScreen extends ConsumerWidget {
                   : null,
               onFinalChoiceTap: hasFinalChoice
                   ? (shortlistWithUnit) =>
-                        _openHospitalDetails(context, shortlistWithUnit)
+                        _openHospitalDetails(context, ref, shortlistWithUnit)
                   : null,
             ),
             const SizedBox(height: AppSpacing.gapXL),
             HospitalShortlistSection(
               shortlistedUnits: shortlistState.shortlistedUnits,
-              selectingShortlistId: workspaceUiState.selectingShortlistId,
-              selectedShortlistId:
-                  shortlistState.selectedHospital?.shortlist.id,
-              onSetFinalChoiceTap: (shortlistWithUnit) =>
-                  _setFinalChoice(context, ref, shortlistWithUnit),
               onHospitalTap: (shortlistWithUnit) =>
-                  _openHospitalDetails(context, shortlistWithUnit),
+                  _openHospitalDetails(context, ref, shortlistWithUnit),
+              onShortlistTap: (shortlistWithUnit) =>
+                  _toggleShortlist(context, ref, shortlistWithUnit),
               onExploreHospitalsTap: () => _openExploreHospitals(context),
             ),
             if (shortlistState.isLoading) ...[
@@ -140,14 +112,7 @@ class HospitalShortlistScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: AppSpacing.elevationNone,
-        leading: IconButton(
-          icon: const Icon(
-            AppIcons.back,
-            color: AppColors.iconDefault,
-            size: AppSpacing.iconMD,
-          ),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'My Hospital Workspace',
           style: AppTypography.headlineSmall.copyWith(
@@ -155,6 +120,16 @@ class HospitalShortlistScreen extends ConsumerWidget {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              AppIcons.profile,
+              color: AppColors.iconDefault,
+              size: AppSpacing.iconMD,
+            ),
+            onPressed: () => context.push(ToolRoutes.account),
+          ),
+        ],
       ),
       body: const Center(child: CircularProgressIndicator()),
     );
@@ -162,30 +137,6 @@ class HospitalShortlistScreen extends ConsumerWidget {
 
   void _openExploreHospitals(BuildContext context) {
     context.push(ToolRoutes.hospitalChooserExplore);
-  }
-
-  Future<void> _setFinalChoice(
-    BuildContext context,
-    WidgetRef ref,
-    ShortlistWithUnit shortlistWithUnit,
-  ) async {
-    final workspaceUiNotifier = ref.read(
-      hospitalShortlistWorkspaceUiProvider.notifier,
-    );
-    final workspaceUiState = ref.read(hospitalShortlistWorkspaceUiProvider);
-    if (workspaceUiState.selectingShortlistId != null) return;
-
-    workspaceUiNotifier.startSelectingShortlist(shortlistWithUnit.shortlist.id);
-
-    final success = await ref
-        .read(hospitalShortlistProvider.notifier)
-        .selectFinalChoice(shortlistWithUnit.shortlist.id);
-
-    workspaceUiNotifier.finishSelectingShortlist();
-
-    if (!success && context.mounted) {
-      _showMessage(context, 'Unable to set final choice. Please try again.');
-    }
   }
 
   Future<void> _clearSelection(BuildContext context, WidgetRef ref) async {
@@ -197,6 +148,19 @@ class HospitalShortlistScreen extends ConsumerWidget {
     }
   }
 
+  Future<void> _toggleShortlist(
+    BuildContext context,
+    WidgetRef ref,
+    ShortlistWithUnit shortlistWithUnit,
+  ) async {
+    final success = await ref
+        .read(hospitalShortlistProvider.notifier)
+        .removeFromShortlist(shortlistWithUnit.unit.id);
+    if (!success && context.mounted) {
+      _showMessage(context, 'Unable to update shortlist. Please try again.');
+    }
+  }
+
   void _showMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(
       context,
@@ -205,9 +169,24 @@ class HospitalShortlistScreen extends ConsumerWidget {
 
   void _openHospitalDetails(
     BuildContext context,
+    WidgetRef ref,
     ShortlistWithUnit shortlistWithUnit,
   ) {
-    showHospitalDetailOverlay(context: context, unit: shortlistWithUnit.unit);
+    final locationState = ref.read(hospitalLocationProvider);
+    final distanceMiles = locationState.userLocation != null
+        ? shortlistWithUnit.unit.distanceFrom(
+            locationState.userLocation!.latitude,
+            locationState.userLocation!.longitude,
+          )
+        : null;
+
+    showHospitalDetailOverlay(
+      context: context,
+      unit: shortlistWithUnit.unit,
+      distanceMiles: distanceMiles,
+      userLat: locationState.userLocation?.latitude,
+      userLng: locationState.userLocation?.longitude,
+    );
   }
 }
 

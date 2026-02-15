@@ -20,15 +20,14 @@ class OnboardingState {
   });
 
   /// Create initial state with empty onboarding data.
-  factory OnboardingState.initial() => OnboardingState(
-        data: OnboardingData.empty(),
-      );
+  factory OnboardingState.initial() =>
+      OnboardingState(data: OnboardingData.empty());
 
-  /// Current step index (0-10).
+  /// Current step index (0-2).
   int get currentStep => data.currentStep;
 
   /// Total number of onboarding steps.
-  static const int totalSteps = 11;
+  static const int totalSteps = 3;
 
   /// Progress percentage (0.0 - 1.0).
   double get progress => currentStep / (totalSteps - 1);

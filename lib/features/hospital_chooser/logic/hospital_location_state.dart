@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 
 import '../../../core/di/main_providers.dart';
 import '../../../core/services/location_service.dart';
@@ -372,7 +373,8 @@ class HospitalLocationNotifier extends StateNotifier<HospitalLocationState> {
 final hospitalLocationReadyProvider = Provider<bool>((ref) {
   final getUserProfileAsync = ref.watch(getUserProfileUseCaseProvider);
   final updateUserProfileAsync = ref.watch(updateUserProfileUseCaseProvider);
-  return getUserProfileAsync.hasValue && updateUserProfileAsync.hasValue;
+  return getUserProfileAsync.asData?.value != null &&
+      updateUserProfileAsync.asData?.value != null;
 });
 
 /// Provider for hospital location state.
@@ -386,7 +388,8 @@ final hospitalLocationProvider =
 
   // If dependencies aren't ready, return a notifier with loading state
   // This prevents throwing during initial widget build
-  if (!getUserProfileAsync.hasValue || !updateUserProfileAsync.hasValue) {
+  if (getUserProfileAsync.asData?.value == null ||
+      updateUserProfileAsync.asData?.value == null) {
     return HospitalLocationNotifier._loading();
   }
 

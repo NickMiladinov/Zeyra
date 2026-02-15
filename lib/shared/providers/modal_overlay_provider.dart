@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateProvider;
 
 /// Tracks the number of active modal overlays (bottom sheets, full-screen modals, etc.).
 /// 

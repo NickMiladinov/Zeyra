@@ -68,7 +68,10 @@ class OnboardingScaffold extends StatelessWidget {
                       ),
                     )
                   else
-                    const SizedBox(width: AppSpacing.iconLG, height: AppSpacing.iconLG),
+                    const SizedBox(
+                      width: AppSpacing.iconLG,
+                      height: AppSpacing.iconLG,
+                    ),
 
                   const SizedBox(width: AppSpacing.gapMD),
 
@@ -77,7 +80,10 @@ class OnboardingScaffold extends StatelessWidget {
                     child: OnboardingProgressIndicator(progress: progress),
                   ),
                   const SizedBox(width: AppSpacing.gapMD),
-                  const SizedBox(width: AppSpacing.iconLG, height: AppSpacing.iconLG),
+                  const SizedBox(
+                    width: AppSpacing.iconLG,
+                    height: AppSpacing.iconLG,
+                  ),
                 ],
               ),
             ),
@@ -104,11 +110,17 @@ class OnboardingScaffold extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (bottomAction != null) bottomAction!,
-                    if (secondaryAction != null) ...[
-                      const SizedBox(height: AppSpacing.gapLG),
-                      secondaryAction!,
-                    ],
+                    ...?switch (bottomAction) {
+                      final action? => [action],
+                      null => null,
+                    },
+                    ...?switch (secondaryAction) {
+                      final action? => [
+                        const SizedBox(height: AppSpacing.gapLG),
+                        action,
+                      ],
+                      null => null,
+                    },
                   ],
                 ),
               ),

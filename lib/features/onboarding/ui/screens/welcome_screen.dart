@@ -55,7 +55,7 @@ class WelcomeScreen extends ConsumerWidget {
 
             // Subtitle
             Text(
-              "I'm here to guide you through your  pregnancy journey.",
+              "I'm here to help you with your pregnancy journey.",
               style: AppTypography.headlineLarge,
             ),
 
@@ -80,7 +80,7 @@ class WelcomeScreen extends ConsumerWidget {
           onPressed: () async {
             await notifier.nextStep();
             if (context.mounted) {
-              context.go(OnboardingRoutes.name);
+              context.go(OnboardingRoutes.valueProp3);
             }
           },
         ),

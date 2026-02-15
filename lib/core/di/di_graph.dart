@@ -9,8 +9,7 @@
 /// 3. Logging (depends on Sentry)
 /// 4. Database encryption service (for SQLCipher key management)
 /// 5. Supabase (backend & auth)
-/// 6. SharedPreferences → TooltipPreferencesService
-/// 7. RevenueCat (payments) - depends on logging
+/// 6. SharedPreferences -> TooltipPreferencesService
 ///
 /// **Note:** The encrypted database is initialized lazily when a user logs in,
 /// not during app startup. See `main_providers.dart` for database provider.
@@ -25,7 +24,6 @@ import '../constants/app_constants.dart';
 import '../monitoring/logging_service.dart';
 import '../monitoring/sentry_service.dart';
 import '../services/database_encryption_service.dart';
-import '../services/payment_service.dart';
 import '../services/tooltip_preferences_service.dart';
 import '../../main.dart' show logger;
 
@@ -34,12 +32,13 @@ class DIGraph {
   static SentryService? _sentryService;
   static DatabaseEncryptionService? _databaseEncryptionService;
   static TooltipPreferencesService? _tooltipPreferencesService;
-  static PaymentService? _paymentService;
 
   /// Get the initialized Sentry service.
   static SentryService get sentryService {
     if (_sentryService == null) {
-      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+      throw StateError(
+        'DIGraph not initialized. Call DIGraph.initialize() first.',
+      );
     }
     return _sentryService!;
   }
@@ -49,7 +48,9 @@ class DIGraph {
   /// Manages SQLCipher encryption keys per user.
   static DatabaseEncryptionService get databaseEncryptionService {
     if (_databaseEncryptionService == null) {
-      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+      throw StateError(
+        'DIGraph not initialized. Call DIGraph.initialize() first.',
+      );
     }
     return _databaseEncryptionService!;
   }
@@ -57,19 +58,11 @@ class DIGraph {
   /// Get the initialized tooltip preferences service.
   static TooltipPreferencesService get tooltipPreferencesService {
     if (_tooltipPreferencesService == null) {
-      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
+      throw StateError(
+        'DIGraph not initialized. Call DIGraph.initialize() first.',
+      );
     }
     return _tooltipPreferencesService!;
-  }
-
-  /// Get the initialized payment service.
-  ///
-  /// Wraps RevenueCat SDK for subscription and payment management.
-  static PaymentService get paymentService {
-    if (_paymentService == null) {
-      throw StateError('DIGraph not initialized. Call DIGraph.initialize() first.');
-    }
-    return _paymentService!;
   }
 
   /// Check if Supabase is properly initialized and available.
@@ -126,9 +119,7 @@ class DIGraph {
           autoRefreshToken: true,
         ),
         // Configure realtime client options for better resilience
-        realtimeClientOptions: const RealtimeClientOptions(
-          eventsPerSecond: 2,
-        ),
+        realtimeClientOptions: const RealtimeClientOptions(eventsPerSecond: 2),
       );
       logger.info('Supabase initialized');
     } catch (e, stackTrace) {
@@ -154,25 +145,6 @@ class DIGraph {
         stackTrace: stackTrace,
       );
       // Non-critical - app can continue without tooltip tracking
-    }
-
-    // 8. Initialize RevenueCat for payments
-    // Note: RevenueCat handles its own customer state management
-    try {
-      _paymentService = PaymentService(logger);
-      await _paymentService!.initialize(
-        iosApiKey: AppConstants.revenueCatApiKeyIOS,
-        androidApiKey: AppConstants.revenueCatApiKeyAndroid,
-      );
-      logger.info('Payment service initialized');
-    } catch (e, stackTrace) {
-      logger.error(
-        'Failed to initialize payment service',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      // Non-critical - app can continue without payments
-      // PaymentService handles graceful degradation internally
     }
 
     logger.info('DIGraph initialization complete');

@@ -25,6 +25,12 @@ class HospitalListCard extends StatelessWidget {
   /// Callback when the favorite button is tapped.
   final VoidCallback? onFavoriteTap;
 
+  /// Optional outer margin for card placement.
+  final EdgeInsetsGeometry? margin;
+
+  /// Whether to show the unit address line.
+  final bool showAddress;
+
   const HospitalListCard({
     super.key,
     required this.unit,
@@ -32,15 +38,22 @@ class HospitalListCard extends StatelessWidget {
     this.isFavorite = false,
     this.onTap,
     this.onFavoriteTap,
+    this.margin,
+    this.showAddress = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final addressText = unit.formattedAddress.isNotEmpty
+        ? unit.formattedAddress
+        : (unit.townCity ?? unit.postcode ?? 'Address unavailable');
+
     return Card(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.paddingLG,
-        vertical: AppSpacing.paddingXS,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppSpacing.paddingLG,
+            vertical: AppSpacing.paddingXS,
+          ),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppEffects.radiusLG),
@@ -83,6 +96,18 @@ class HospitalListCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.gapSM),
+
+              if (showAddress) ...[
+                Text(
+                  addressText,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.gapSM),
+              ],
 
               // Distance and rating badge row
               Row(

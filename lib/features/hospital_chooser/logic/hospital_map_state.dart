@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 
 import '../../../core/di/main_providers.dart';
 import '../../../core/services/location_service.dart';
@@ -352,7 +353,7 @@ class HospitalMapNotifier extends StateNotifier<HospitalMapState> {
 /// Provider that indicates whether hospital map dependencies are ready.
 final hospitalMapReadyProvider = Provider<bool>((ref) {
   final filterUnitsAsync = ref.watch(filterUnitsUseCaseProvider);
-  return filterUnitsAsync.hasValue;
+  return filterUnitsAsync.asData?.value != null;
 });
 
 /// Provider for hospital map state.
@@ -363,7 +364,7 @@ final hospitalMapProvider =
   final filterUnitsAsync = ref.watch(filterUnitsUseCaseProvider);
 
   // If dependencies aren't ready, return a notifier with loading state
-  if (!filterUnitsAsync.hasValue) {
+  if (filterUnitsAsync.asData?.value == null) {
     return HospitalMapNotifier._loading();
   }
 

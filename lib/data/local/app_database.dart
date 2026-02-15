@@ -7,22 +7,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlcipher_flutter_libs/sqlcipher_flutter_libs.dart';
 import 'package:sqlite3/open.dart';
 
-import 'daos/bump_photo_dao.dart';
-import 'daos/contraction_timer_dao.dart';
 import 'daos/hospital_shortlist_dao.dart';
-import 'daos/kick_counter_dao.dart';
 import 'daos/maternity_unit_dao.dart';
 import 'daos/pregnancy_dao.dart';
 import 'daos/sync_metadata_dao.dart';
 import 'daos/user_profile_dao.dart';
-import 'models/bump_photo_table.dart';
-import 'models/contraction_session_table.dart';
-import 'models/contraction_table.dart';
 import 'models/hospital_shortlist_table.dart';
-import 'models/kick_session_table.dart';
-import 'models/kick_table.dart';
 import 'models/maternity_unit_table.dart';
-import 'models/pause_event_table.dart';
 import 'models/pregnancy_table.dart';
 import 'models/sync_metadata_table.dart';
 import 'models/user_profile_table.dart';
@@ -48,18 +39,6 @@ part 'app_database.g.dart';
     UserProfiles,
     Pregnancies,
 
-    // Kick counter feature
-    KickSessions,
-    Kicks,
-    PauseEvents,
-
-    // Contraction timer feature
-    ContractionSessions,
-    Contractions,
-
-    // Bump photo feature
-    BumpPhotos,
-
     // Hospital chooser feature
     MaternityUnits,
     HospitalShortlists,
@@ -69,15 +48,6 @@ part 'app_database.g.dart';
     // User & Pregnancy DAOs
     UserProfileDao,
     PregnancyDao,
-
-    // Kick counter DAO
-    KickCounterDao,
-
-    // Contraction timer DAO
-    ContractionTimerDao,
-
-    // Bump photo DAO
-    BumpPhotoDao,
 
     // Hospital chooser DAOs
     MaternityUnitDao,
@@ -90,10 +60,8 @@ class AppDatabase extends _$AppDatabase {
   ///
   /// [userId] - The Supabase auth ID (used in filename)
   /// [encryptionKey] - The hex-encoded 256-bit encryption key
-  AppDatabase.encrypted({
-    required String userId,
-    required String encryptionKey,
-  }) : super(_openEncryptedConnection(userId, encryptionKey));
+  AppDatabase.encrypted({required String userId, required String encryptionKey})
+    : super(_openEncryptedConnection(userId, encryptionKey));
 
   // For testing with in-memory database (unencrypted)
   AppDatabase.forTesting(super.executor);
@@ -103,18 +71,16 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (Migrator m) async {
-          // Create all tables from scratch
-          await m.createAll();
-        },
-        onUpgrade: (Migrator m, int from, int to) async {
-
-        },
-        beforeOpen: (details) async {
-          // Enable foreign key constraints
-          await customStatement('PRAGMA foreign_keys = ON');
-        },
-      );
+    onCreate: (Migrator m) async {
+      // Create all tables from scratch
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {},
+    beforeOpen: (details) async {
+      // Enable foreign key constraints
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   /// Verify that SQLCipher is active and properly configured.
   ///
@@ -127,6 +93,18 @@ class AppDatabase extends _$AppDatabase {
     } catch (e) {
       return null;
     }
+  }
+
+  /// Verify SQLCipher and throw when encryption isn't active.
+  ///
+  /// Use this during startup to fail fast if the database key/file is invalid.
+  Future<String> requireSqlCipherActive() async {
+    final result = await customSelect('PRAGMA cipher_version').getSingle();
+    final version = result.data['cipher_version'] as String?;
+    if (version == null || version.isEmpty) {
+      throw StateError('SQLCipher is not active for this database connection.');
+    }
+    return version;
   }
 }
 
@@ -149,6 +127,24 @@ Future<void> _setupSqlCipher() async {
   _sqlCipherSetupComplete = true;
 }
 
+/// Returns the per-user encrypted database file.
+Future<File> getDatabaseFileForUser(String userId) async {
+  final dbFolder = await getApplicationDocumentsDirectory();
+  return File(p.join(dbFolder.path, 'zeyra_$userId.db'));
+}
+
+/// Deletes the per-user database file if it exists.
+///
+/// Returns true when a file existed and was deleted.
+Future<bool> deleteDatabaseFileForUser(String userId) async {
+  final file = await getDatabaseFileForUser(userId);
+  if (await file.exists()) {
+    await file.delete();
+    return true;
+  }
+  return false;
+}
+
 /// Opens an encrypted SQLCipher database connection.
 ///
 /// [userId] - Used to create per-user database file: `zeyra_<userId>.db`
@@ -164,8 +160,7 @@ LazyDatabase _openEncryptedConnection(String userId, String encryptionKey) {
     await _setupSqlCipher();
 
     // Get database file path
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'zeyra_$userId.db'));
+    final file = await getDatabaseFileForUser(userId);
 
     return NativeDatabase(
       file,

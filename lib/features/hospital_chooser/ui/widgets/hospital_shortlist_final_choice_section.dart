@@ -13,12 +13,18 @@ class HospitalShortlistFinalChoiceSection extends StatelessWidget {
   final ShortlistWithUnit? selectedHospital;
   final VoidCallback? onClearSelectionTap;
   final void Function(ShortlistWithUnit shortlistWithUnit)? onFinalChoiceTap;
+  final bool compact;
+  final bool showClearAction;
+  final String title;
 
   const HospitalShortlistFinalChoiceSection({
     super.key,
     required this.selectedHospital,
     required this.onClearSelectionTap,
     required this.onFinalChoiceTap,
+    this.compact = false,
+    this.showClearAction = true,
+    this.title = 'Your Final Choice',
   });
 
   @override
@@ -26,10 +32,15 @@ class HospitalShortlistFinalChoiceSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Your Final Choice', style: AppTypography.headlineSmall),
-        const SizedBox(height: AppSpacing.gapMD),
+        Text(
+          title,
+          style: compact
+              ? AppTypography.headlineExtraSmall
+              : AppTypography.headlineSmall,
+        ),
+        SizedBox(height: compact ? AppSpacing.gapSM : AppSpacing.gapMD),
         if (selectedHospital == null)
-          const _EmptyFinalChoiceCard()
+          _EmptyFinalChoiceCard(compact: compact)
         else
           HospitalSelectedFinalChoiceCard(
             shortlistWithUnit: selectedHospital!,
@@ -37,6 +48,8 @@ class HospitalShortlistFinalChoiceSection extends StatelessWidget {
                 ? () => onFinalChoiceTap!(selectedHospital!)
                 : null,
             onClearSelectionTap: onClearSelectionTap,
+            compact: compact,
+            showClearAction: showClearAction,
           ),
       ],
     );
@@ -44,13 +57,15 @@ class HospitalShortlistFinalChoiceSection extends StatelessWidget {
 }
 
 class _EmptyFinalChoiceCard extends StatelessWidget {
-  const _EmptyFinalChoiceCard();
+  const _EmptyFinalChoiceCard({required this.compact});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.paddingLG),
+      padding: EdgeInsets.all(compact ? AppSpacing.paddingMD : AppSpacing.paddingLG),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: AppEffects.roundedXL,
@@ -64,12 +79,14 @@ class _EmptyFinalChoiceCard extends StatelessWidget {
           Icon(
             AppIcons.hospital,
             color: AppColors.infoDark,
-            size: AppSpacing.buttonHeightLG,
+            size: compact ? AppSpacing.iconLG : AppSpacing.buttonHeightLG,
           ),
-          const SizedBox(height: AppSpacing.gapSM),
+          SizedBox(height: compact ? AppSpacing.gapXS : AppSpacing.gapSM),
           Text(
             'Make your final choice',
-            style: AppTypography.headlineExtraSmall,
+            style: compact
+                ? AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600)
+                : AppTypography.headlineExtraSmall,
             textAlign: TextAlign.center,
           ),
         ],
@@ -83,12 +100,16 @@ class HospitalSelectedFinalChoiceCard extends StatelessWidget {
   final ShortlistWithUnit shortlistWithUnit;
   final VoidCallback? onTap;
   final VoidCallback? onClearSelectionTap;
+  final bool compact;
+  final bool showClearAction;
 
   const HospitalSelectedFinalChoiceCard({
     super.key,
     required this.shortlistWithUnit,
     required this.onTap,
     required this.onClearSelectionTap,
+    this.compact = false,
+    this.showClearAction = true,
   });
 
   @override
@@ -98,7 +119,7 @@ class HospitalSelectedFinalChoiceCard extends StatelessWidget {
       borderRadius: AppEffects.roundedXL,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.paddingLG),
+        padding: EdgeInsets.all(compact ? AppSpacing.paddingMD : AppSpacing.paddingLG),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: AppEffects.roundedXL,
@@ -115,7 +136,9 @@ class HospitalSelectedFinalChoiceCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     shortlistWithUnit.unit.name,
-                    style: AppTypography.headlineExtraSmall,
+                    style: compact
+                        ? AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w600)
+                        : AppTypography.headlineExtraSmall,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -126,7 +149,7 @@ class HospitalSelectedFinalChoiceCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.gapSM),
+            SizedBox(height: compact ? AppSpacing.gapXS : AppSpacing.gapSM),
             Text(
               shortlistWithUnit.unit.formattedAddress.isEmpty
                   ? 'Address unavailable'
@@ -135,33 +158,35 @@ class HospitalSelectedFinalChoiceCard extends StatelessWidget {
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: AppSpacing.gapSM),
-            TextButton(
-              onPressed: onClearSelectionTap,
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                alignment: Alignment.centerLeft,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    AppIcons.delete,
-                    size: AppSpacing.iconXS,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(width: AppSpacing.gapXS),
-                  Text(
-                    'Clear final choice',
-                    style: AppTypography.labelMedium.copyWith(
+            if (showClearAction) ...[
+              SizedBox(height: compact ? AppSpacing.gapXS : AppSpacing.gapSM),
+              TextButton(
+                onPressed: onClearSelectionTap,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  alignment: Alignment.centerLeft,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      AppIcons.delete,
+                      size: AppSpacing.iconXS,
                       color: AppColors.error,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: AppSpacing.gapXS),
+                    Text(
+                      'Clear final choice',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

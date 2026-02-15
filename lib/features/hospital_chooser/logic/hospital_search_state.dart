@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart' show StateNotifier, StateNotifierProvider;
 
 import '../../../core/di/main_providers.dart';
 import '../../../core/services/hospital_search_service.dart';
@@ -186,7 +187,7 @@ final hospitalSearchServiceProvider =
 /// Provider that indicates whether hospital search dependencies are ready.
 final hospitalSearchReadyProvider = Provider<bool>((ref) {
   final searchServiceAsync = ref.watch(hospitalSearchServiceProvider);
-  return searchServiceAsync.hasValue;
+  return searchServiceAsync.asData?.value != null;
 });
 
 /// Provider for hospital search state.
@@ -195,7 +196,7 @@ final hospitalSearchProvider =
   final searchServiceAsync = ref.watch(hospitalSearchServiceProvider);
 
   // If dependencies aren't ready, return a loading notifier
-  if (!searchServiceAsync.hasValue) {
+  if (searchServiceAsync.asData?.value == null) {
     return HospitalSearchNotifier._loading();
   }
 

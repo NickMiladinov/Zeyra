@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../../../app/router/routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_icons.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -49,6 +50,7 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
   bool _hasRequestedPermission = false;
   bool _isLoadingUnits = false;
   bool _hasCompletedInitialLoad = false;
+  bool _hasTriggeredMaternitySync = false;
 
   /// Whether showing list view (false = map view).
   bool _isListView = false;
@@ -96,8 +98,29 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
 
     // Check permission status after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerMaternityUnitSyncIfNeeded();
       _checkInitialPermissionState();
     });
+  }
+
+  void _triggerMaternityUnitSyncIfNeeded() {
+    if (_hasTriggeredMaternitySync) return;
+    _hasTriggeredMaternitySync = true;
+
+    unawaited(
+      ref
+          .read(maternityUnitSyncServiceProvider.future)
+          .then((service) async {
+            await service.initialize();
+          })
+          .catchError((Object error, StackTrace stackTrace) {
+            logger.warning(
+              'Failed to trigger maternity unit sync on HospitalChooserScreen mount',
+              error: error,
+              stackTrace: stackTrace,
+            );
+          }),
+    );
   }
 
   /// Set up listener for search text changes with debouncing.
@@ -338,8 +361,8 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
     final locationReady = ref.watch(hospitalLocationReadyProvider);
     final mapReady = ref.watch(hospitalMapReadyProvider);
     final shortlistReady =
-        ref.watch(manageShortlistUseCaseProvider).hasValue &&
-        ref.watch(selectFinalHospitalUseCaseProvider).hasValue;
+        ref.watch(manageShortlistUseCaseProvider).asData?.value != null &&
+        ref.watch(selectFinalHospitalUseCaseProvider).asData?.value != null;
 
     // Show loading screen while dependencies are initializing
     if (!locationReady || !mapReady || !shortlistReady) {
@@ -418,11 +441,18 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(
-          AppIcons.back,
-          color: AppColors.iconDefault,
+          AppIcons.favorite,
+          color: AppColors.primary,
           size: AppSpacing.iconMD,
+          fill: 1,
         ),
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+            return;
+          }
+          context.go(ToolRoutes.hospitalChooser);
+        },
       ),
       title: Text(
         'Find a Hospital',
@@ -431,6 +461,16 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
         ),
       ),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: const Icon(
+            AppIcons.profile,
+            color: AppColors.iconDefault,
+            size: AppSpacing.iconMD,
+          ),
+          onPressed: () => context.push(ToolRoutes.account),
+        ),
+      ],
     );
   }
 
@@ -496,7 +536,8 @@ class _HospitalChooserScreenState extends ConsumerState<HospitalChooserScreen> {
       );
     }
 
-    final persistedCameraPosition = _lastCameraPosition ??
+    final persistedCameraPosition =
+        _lastCameraPosition ??
         (mapState.mapCenter != null && mapState.mapZoom != null
             ? CameraPosition(
                 target: LatLng(

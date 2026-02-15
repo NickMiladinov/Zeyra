@@ -17,15 +17,15 @@ presets:
     paths:
       - test/runners/bump_photo/bump_photo_all_test.dart
 
-  # Run all onboarding tests
-  onboarding:
-    paths:
-      - test/runners/onboarding/all_test.dart
-
   # Run all hospital chooser tests
   hospital_chooser:
     paths:
       - test/runners/hospital_chooser/all_test.dart
+
+  # Run all account tests
+  account:
+    paths:
+      - test/runners/account/all_test.dart
 
   # Run only unit tests (fast, no integration/performance)
   unit:
@@ -78,6 +78,9 @@ tags:
 
   hospital_chooser:
     # Hospital chooser feature tests
+
+  account:
+    # Account feature tests
 
   widgets:
     # Widget tests (UI component tests)

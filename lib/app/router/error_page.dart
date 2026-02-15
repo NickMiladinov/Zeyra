@@ -9,7 +9,7 @@ import 'routes.dart';
 /// Error page displayed when navigation fails or route is not found.
 ///
 /// Provides a user-friendly error message and a button to return to the
-/// home screen.
+/// hospital map flow.
 class ErrorPage extends StatelessWidget {
   /// The error that caused this page to be displayed.
   final Exception? error;
@@ -50,7 +50,7 @@ class ErrorPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.gapXL),
                 ElevatedButton(
-                  onPressed: () => context.go(MainRoutes.today),
+                  onPressed: () => context.go(ToolRoutes.hospitalChooserExplore),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: AppColors.white,
@@ -60,7 +60,7 @@ class ErrorPage extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'Go to Home',
+                    'Go to Hospital Map',
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.white,
                     ),

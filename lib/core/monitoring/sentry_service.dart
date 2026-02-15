@@ -5,13 +5,13 @@ import 'log_level.dart' as app_log;
 import 'pii_scrubber.dart';
 
 /// Sentry service for remote error tracking and monitoring.
-/// 
+///
 /// Wraps Sentry Flutter SDK with:
 /// - PII scrubbing before transmission
 /// - Environment-aware configuration
 /// - Breadcrumb management
 /// - Custom context tagging
-/// 
+///
 /// **Initialization:** This service is initialized in `DIGraph.initialize()` during app startup.
 /// Access via `sentryServiceProvider` or `DIGraph.sentryService`.
 class SentryService {
@@ -30,13 +30,13 @@ class SentryService {
   bool get isInitialized => _isInitialized;
 
   /// Initializes Sentry with the provided DSN.
-  /// 
+  ///
   /// Should be called in main() before runApp().
-  /// 
+  ///
   /// [dsn] - Sentry project DSN from environment variables
   /// [environment] - 'development', 'staging', or 'production'
   /// [release] - App version for release tracking
-  /// 
+  ///
   /// Returns true if initialization succeeded.
   Future<bool> initialize({
     required String dsn,
@@ -53,64 +53,64 @@ class SentryService {
     }
 
     try {
-      await SentryFlutter.init(
-        (options) {
-          options.dsn = dsn;
-          options.environment = environment;
-          options.release = release;
-          
-          // Performance monitoring
-          options.tracesSampleRate = kDebugMode ? 1.0 : 0.1;
-          
-          // Enable automatic breadcrumbs
-          options.enableAutoSessionTracking = true;
-          
-          // Attach screenshots on errors (useful for UI issues)
-          options.attachScreenshot = true;
-          options.screenshotQuality = SentryScreenshotQuality.medium;
-          
-          // Attach view hierarchy
-          options.attachViewHierarchy = true;
-          
-          // Debug output in development
-          options.debug = kDebugMode;
-          
-          // Sample rate for error events
-          options.sampleRate = 1.0; // Send all errors
-          
-          // Before send callback - scrub PII
-          options.beforeSend = (event, hint) => _beforeSend(event, hint: hint);
-          
-          // Before breadcrumb callback - scrub PII
-          // Note: Using inline function to match Sentry's expected signature
-          options.beforeBreadcrumb = (breadcrumb, hint) {
-            if (!_isInitialized || breadcrumb == null) return breadcrumb;
-            
-            // Scrub message
-            final scrubbedMessage = breadcrumb.message != null
-                ? PiiScrubber.scrubMessage(breadcrumb.message!)
-                : null;
+      await SentryFlutter.init((options) {
+        options.dsn = dsn;
+        options.environment = environment;
+        options.release = release;
 
-            // Scrub data
-            final scrubbedData = breadcrumb.data != null
-                ? PiiScrubber.scrubData(Map<String, dynamic>.from(breadcrumb.data!))
-                : null;
+        // Performance monitoring
+        options.tracesSampleRate = kDebugMode ? 1.0 : 0.1;
 
-            return breadcrumb.copyWith(
-              message: scrubbedMessage,
-              data: scrubbedData,
-            );
-          };
-        },
-      );
+        // Enable automatic breadcrumbs
+        options.enableAutoSessionTracking = true;
+
+        // Attach screenshots on errors (useful for UI issues)
+        options.attachScreenshot = true;
+        options.screenshotQuality = SentryScreenshotQuality.medium;
+
+        // Attach view hierarchy
+        options.attachViewHierarchy = true;
+
+        // Debug output in development
+        options.debug = kDebugMode;
+
+        // Sample rate for error events
+        options.sampleRate = 1.0; // Send all errors
+
+        // Before send callback - scrub PII
+        options.beforeSend = (event, hint) => _beforeSend(event, hint: hint);
+
+        // Before breadcrumb callback - scrub PII
+        // Note: Using inline function to match Sentry's expected signature
+        options.beforeBreadcrumb = (breadcrumb, hint) {
+          if (!_isInitialized || breadcrumb == null) return breadcrumb;
+
+          // Scrub message
+          final scrubbedMessage = breadcrumb.message != null
+              ? PiiScrubber.scrubMessage(breadcrumb.message!)
+              : null;
+
+          // Scrub data
+          final scrubbedData = breadcrumb.data != null
+              ? PiiScrubber.scrubData(
+                  Map<String, dynamic>.from(breadcrumb.data!),
+                )
+              : null;
+
+          // Sentry SDK now supports mutating breadcrumb fields directly.
+          breadcrumb.message = scrubbedMessage;
+          breadcrumb.data = scrubbedData;
+          return breadcrumb;
+        };
+      });
 
       _isInitialized = true;
-      
+
       if (kDebugMode) {
         // ignore: avoid_print
         print('✅ Sentry initialized successfully');
       }
-      
+
       return true;
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -127,24 +127,16 @@ class SentryService {
 
     // Scrub PII from exception message
     if (event.exceptions != null && event.exceptions!.isNotEmpty) {
-      final scrubbedExceptions = event.exceptions!.map((exception) {
-        return exception.copyWith(
-          value: PiiScrubber.scrubMessage(exception.value ?? ''),
-        );
-      }).toList();
-      
-      event = event.copyWith(exceptions: scrubbedExceptions);
+      for (final exception in event.exceptions!) {
+        exception.value = PiiScrubber.scrubMessage(exception.value ?? '');
+      }
     }
 
     // Scrub PII from message
     if (event.message != null) {
       final formatted = event.message?.formatted;
       if (formatted != null) {
-        event = event.copyWith(
-          message: SentryMessage(
-            PiiScrubber.scrubMessage(formatted),
-          ),
-        );
+        event.message = SentryMessage(PiiScrubber.scrubMessage(formatted));
       }
     }
 
@@ -162,7 +154,7 @@ class SentryService {
     });
 
     if (contextsChanged) {
-      event = event.copyWith(contexts: Contexts.fromJson(contexts));
+      event.contexts = Contexts.fromJson(contexts);
     }
 
     return event;
@@ -229,19 +221,18 @@ class SentryService {
   }
 
   /// Sets user context (use with caution - no PII).
-  /// 
+  ///
   /// Only use anonymized user identifiers, never email/name.
-  void setUser({
-    String? id,
-    Map<String, dynamic>? data,
-  }) {
+  void setUser({String? id, Map<String, dynamic>? data}) {
     if (!_isInitialized) return;
 
     Sentry.configureScope((scope) {
-      scope.setUser(SentryUser(
-        id: id != null ? PiiScrubber.scrubMessage(id) : null,
-        data: data != null ? PiiScrubber.scrubData(data) : null,
-      ));
+      scope.setUser(
+        SentryUser(
+          id: id != null ? PiiScrubber.scrubMessage(id) : null,
+          data: data != null ? PiiScrubber.scrubData(data) : null,
+        ),
+      );
     });
   }
 
@@ -290,7 +281,7 @@ class SentryService {
   }
 
   /// Closes Sentry client.
-  /// 
+  ///
   /// Should be called on app termination.
   Future<void> close() async {
     if (!_isInitialized) return;
@@ -298,4 +289,3 @@ class SentryService {
     _isInitialized = false;
   }
 }
-

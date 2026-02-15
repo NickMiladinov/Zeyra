@@ -31,12 +31,7 @@ class DatabaseEncryptionService {
   DatabaseEncryptionService({
     FlutterSecureStorage? secureStorage,
     Random? secureRandom,
-  })  : _secureStorage = secureStorage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(
-                encryptedSharedPreferences: true,
-              ),
-            ),
+  })  : _secureStorage = secureStorage ?? const FlutterSecureStorage(),
         _secureRandom = secureRandom ?? Random.secure();
 
   /// Get or create the encryption key for a user.

@@ -47,8 +47,6 @@ class MockMaternityUnitRemoteSource extends Mock
 /// Mock for LocationService.
 class MockLocationService extends Mock implements LocationService {}
 
-// Note: MockLoggingService is defined in onboarding_fakes.dart
-
 /// Mock for GetNearbyUnitsUseCase.
 class MockGetNearbyUnitsUseCase extends Mock implements GetNearbyUnitsUseCase {}
 

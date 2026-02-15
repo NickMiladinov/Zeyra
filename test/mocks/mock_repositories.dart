@@ -38,8 +38,8 @@ export 'fake_data/pregnancy_fakes.dart'
 // Bump Photo Feature Mocks
 export 'fake_data/bump_photo_fakes.dart';
 
-// Onboarding Feature Mocks
-export 'fake_data/onboarding_fakes.dart';
-
 // Hospital Chooser Feature Mocks
 export 'fake_data/hospital_chooser_fakes.dart';
+
+// Account Feature Mocks
+export 'fake_data/account_fakes.dart';

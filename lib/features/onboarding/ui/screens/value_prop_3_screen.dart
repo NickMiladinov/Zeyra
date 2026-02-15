@@ -9,7 +9,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../logic/onboarding_providers.dart';
 import '../widgets/onboarding_widgets.dart';
 
-/// Screen 7: Value Proposition 3 - Track Your Journey.
+/// Screen 2: Value Proposition - Find Your Perfect Place.
 ///
 /// Features:
 /// - Mascot with tracking/timeline visuals
@@ -33,15 +33,14 @@ class ValueProp3Screen extends ConsumerWidget {
         body: Center(child: Text('Error: $error')),
       ),
       data: (notifier) {
-        // Calculate progress: screen 7 of 11 (index 6)
-        const progress = 6 / 10;
+        const progress = 0.5;
 
         return OnboardingScaffold(
           progress: progress,
           onBack: () async {
             await notifier.previousStep();
             if (context.mounted) {
-              context.go(OnboardingRoutes.valueProp2);
+              context.go(OnboardingRoutes.welcome);
             }
           },
           body: Column(
@@ -95,7 +94,7 @@ class ValueProp3Screen extends ConsumerWidget {
             onPressed: () async {
               await notifier.nextStep();
               if (context.mounted) {
-                context.go(OnboardingRoutes.birthDate);
+                context.go(OnboardingRoutes.auth);
               }
             },
           ),
