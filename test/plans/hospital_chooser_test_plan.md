@@ -11,6 +11,31 @@ This document outlines all tests for the Hospital Chooser feature. The feature a
 
 ---
 
+## Critical Integration Coverage (Release Gate)
+
+### Implemented Critical Integration File
+
+| Test Level | File | Scope | Status |
+|------------|------|-------|--------|
+| **Integration - Critical Path** | `test/integration/user_flows/hospital_chooser/hospital_workspace_flow_test.dart` | Workspace data load, account nav, explore nav, clear-selection failure feedback | ✅ |
+
+### Critical Cases Covered
+
+- Workspace renders shortlist data from mocked use cases.
+- Account icon routes to account screen.
+- Explore CTA routes to explore flow.
+- Failed final-choice clear action shows user-facing snackbar feedback.
+
+### Run Commands
+
+```bash
+flutter test test/integration/user_flows/hospital_chooser/hospital_workspace_flow_test.dart
+flutter test test/runners/hospital_chooser/all_test.dart
+flutter test --tags critical_path
+```
+
+---
+
 ## Test Coverage Summary
 
 ### Implemented Tests
