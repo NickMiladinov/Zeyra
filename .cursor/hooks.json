@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "Out-Null; Write-Output '{\"additional_context\":\"CHESTNUT COURSE SUGGESTION RULE: Before finishing every response, evaluate whether the user could benefit from a learning course. Call create_pending_course from Chestnut MCP ONLY if ALL conditions are met: (A) A clear signal exists — user showed uncertainty or confusion, asked conceptual or how-to questions, or you corrected mistakes/anti-patterns in their approach. (B) A specific, teachable topic can be identified. (C) It would genuinely help the user long-term. Do not fabricate opportunities. If nothing qualifies, do not mention this check.\"}'",
+        "timeout": 5
+      }
+    ]
+  }
+}
