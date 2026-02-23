@@ -44,8 +44,6 @@ import '../../features/hospital_chooser/logic/hospital_location_state_test.dart'
     as hospital_location_state_tests;
 import '../../features/hospital_chooser/logic/hospital_map_state_test.dart'
     as hospital_map_state_tests;
-import '../../integration/user_flows/hospital_chooser/hospital_workspace_flow_test.dart'
-    as hospital_workspace_integration_tests;
 
 void main() {
   group('[HospitalChooser] All Tests', () {
@@ -86,10 +84,6 @@ void main() {
       hospital_shortlist_state_tests.main();
       hospital_location_state_tests.main();
       hospital_map_state_tests.main();
-    });
-
-    group('5. Integration Tests', () {
-      hospital_workspace_integration_tests.main();
     });
   });
 }

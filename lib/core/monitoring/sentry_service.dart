@@ -68,6 +68,9 @@ class SentryService {
         options.attachScreenshot = true;
         options.screenshotQuality = SentryScreenshotQuality.medium;
 
+        // Attach view hierarchy
+        options.attachViewHierarchy = true;
+
         // Debug output in development
         options.debug = kDebugMode;
 

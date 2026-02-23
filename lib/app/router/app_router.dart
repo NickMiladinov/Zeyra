@@ -25,98 +25,6 @@ import 'routes.dart';
 /// This allows routes to be logically nested but rendered full-screen.
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
-@visibleForTesting
-String? resolveAppRedirect({
-  required bool onboardingStepLoaded,
-  required bool deviceOnboardedLoaded,
-  required bool isLoggedIn,
-  required bool hasCompletedOnboarding,
-  required bool deviceOnboarded,
-  required int savedStep,
-  required String matchedLocation,
-  required VoidCallback onInvalidateDatabase,
-  required void Function(String message) onDebugLog,
-}) {
-  // Wait for async SharedPreferences data to load before making routing decisions.
-  // The notifyListeners() calls in the async load methods will re-trigger
-  // redirect evaluation once the data is ready.
-  if (!onboardingStepLoaded || !deviceOnboardedLoaded) {
-    onDebugLog(
-      'Router redirect: Waiting for async initialization to complete',
-    );
-    return null; // Defer redirect until data is loaded
-  }
-
-  final isAuthRoute =
-      matchedLocation == AuthRoutes.auth ||
-      matchedLocation == OnboardingRoutes.auth;
-  final isOnboardingRoute = matchedLocation.startsWith(OnboardingRoutes.base);
-  final isLegalRoute =
-      matchedLocation == LegalRoutes.termsOfService ||
-      matchedLocation == LegalRoutes.privacyPolicy;
-  final isAccountRoute =
-      matchedLocation == ToolRoutes.account ||
-      matchedLocation == ToolRoutes.accountDetails ||
-      matchedLocation == ToolRoutes.accountSupport ||
-      matchedLocation == ToolRoutes.dataSourceDisclaimer;
-  final isHospitalRoute =
-      matchedLocation == ToolRoutes.hospitalChooser ||
-      matchedLocation == ToolRoutes.hospitalChooserExplore;
-
-  // Helper to get the correct onboarding route based on saved progress
-  String getOnboardingRoute() {
-    if (savedStep > 0) {
-      final route = OnboardingRoutes.getRouteForStep(savedStep);
-      onDebugLog(
-        'Router redirect: Resuming onboarding at step $savedStep ($route)',
-      );
-      return route;
-    }
-    return OnboardingRoutes.welcome;
-  }
-
-  // Not logged in - check if device has been onboarded before
-  if (!isLoggedIn && !isOnboardingRoute && !isAuthRoute && !isLegalRoute) {
-    if (deviceOnboarded) {
-      // Device was onboarded before - go to auth screen
-      onDebugLog(
-        'Router redirect: Not authenticated, device onboarded, redirecting to auth',
-      );
-      return AuthRoutes.auth;
-    } else {
-      // Fresh device - go to onboarding
-      onDebugLog(
-        'Router redirect: Not authenticated, new device, redirecting to onboarding',
-      );
-      return getOnboardingRoute();
-    }
-  }
-
-  // Logged in but onboarding not complete → redirect to onboarding
-  if (isLoggedIn && !hasCompletedOnboarding && !isOnboardingRoute) {
-    onDebugLog(
-      'Router redirect: Onboarding not complete, redirecting to onboarding',
-    );
-    return getOnboardingRoute();
-  }
-
-  // Logged in + onboarding complete should stay on hospital flow only.
-  if (isLoggedIn &&
-      hasCompletedOnboarding &&
-      !isHospitalRoute &&
-      !isAccountRoute &&
-      !isLegalRoute) {
-    // Invalidate database provider BEFORE redirecting to avoid stale instances.
-    onInvalidateDatabase();
-    onDebugLog(
-      'Router redirect: Onboarding complete, redirecting to hospital map',
-    );
-    return ToolRoutes.hospitalChooserExplore;
-  }
-
-  return null; // No redirect needed
-}
-
 /// Provider for the [GoRouter] instance.
 ///
 /// This router handles all navigation in the app, including:
@@ -134,17 +42,93 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     observers: [TalkerRouteObserver(logger.talker)],
     errorBuilder: (context, state) => ErrorPage(error: state.error),
-    redirect: (context, state) => resolveAppRedirect(
-      onboardingStepLoaded: authNotifier.onboardingStepLoaded,
-      deviceOnboardedLoaded: authNotifier.deviceOnboardedLoaded,
-      isLoggedIn: authNotifier.isAuthenticated,
-      hasCompletedOnboarding: authNotifier.hasCompletedOnboarding,
-      deviceOnboarded: authNotifier.deviceOnboarded,
-      savedStep: authNotifier.savedOnboardingStep,
-      matchedLocation: state.matchedLocation,
-      onInvalidateDatabase: () => ref.invalidate(appDatabaseProvider),
-      onDebugLog: logger.debug,
-    ),
+    redirect: (context, state) {
+      // Wait for async SharedPreferences data to load before making routing decisions.
+      // The notifyListeners() calls in the async load methods will re-trigger
+      // redirect evaluation once the data is ready.
+      if (!authNotifier.onboardingStepLoaded ||
+          !authNotifier.deviceOnboardedLoaded) {
+        logger.debug(
+          'Router redirect: Waiting for async initialization to complete',
+        );
+        return null; // Defer redirect until data is loaded
+      }
+
+      final isLoggedIn = authNotifier.isAuthenticated;
+      final hasCompletedOnboarding = authNotifier.hasCompletedOnboarding;
+      final deviceOnboarded = authNotifier.deviceOnboarded;
+      final savedStep = authNotifier.savedOnboardingStep;
+      final isAuthRoute =
+          state.matchedLocation == AuthRoutes.auth ||
+          state.matchedLocation == OnboardingRoutes.auth;
+      final isOnboardingRoute = state.matchedLocation.startsWith(
+        OnboardingRoutes.base,
+      );
+      final isLegalRoute =
+          state.matchedLocation == LegalRoutes.termsOfService ||
+          state.matchedLocation == LegalRoutes.privacyPolicy;
+      final isAccountRoute =
+          state.matchedLocation == ToolRoutes.account ||
+          state.matchedLocation == ToolRoutes.accountDetails ||
+          state.matchedLocation == ToolRoutes.accountSupport ||
+          state.matchedLocation == ToolRoutes.dataSourceDisclaimer;
+      final isHospitalRoute =
+          state.matchedLocation == ToolRoutes.hospitalChooser ||
+          state.matchedLocation == ToolRoutes.hospitalChooserExplore;
+
+      // Helper to get the correct onboarding route based on saved progress
+      String getOnboardingRoute() {
+        if (savedStep > 0) {
+          final route = OnboardingRoutes.getRouteForStep(savedStep);
+          logger.debug(
+            'Router redirect: Resuming onboarding at step $savedStep ($route)',
+          );
+          return route;
+        }
+        return OnboardingRoutes.welcome;
+      }
+
+      // Not logged in - check if device has been onboarded before
+      if (!isLoggedIn && !isOnboardingRoute && !isAuthRoute && !isLegalRoute) {
+        if (deviceOnboarded) {
+          // Device was onboarded before - go to auth screen
+          logger.debug(
+            'Router redirect: Not authenticated, device onboarded, redirecting to auth',
+          );
+          return AuthRoutes.auth;
+        } else {
+          // Fresh device - go to onboarding
+          logger.debug(
+            'Router redirect: Not authenticated, new device, redirecting to onboarding',
+          );
+          return getOnboardingRoute();
+        }
+      }
+
+      // Logged in but onboarding not complete → redirect to onboarding
+      if (isLoggedIn && !hasCompletedOnboarding && !isOnboardingRoute) {
+        logger.debug(
+          'Router redirect: Onboarding not complete, redirecting to onboarding',
+        );
+        return getOnboardingRoute();
+      }
+
+      // Logged in + onboarding complete should stay on hospital flow only.
+      if (isLoggedIn &&
+          hasCompletedOnboarding &&
+          !isHospitalRoute &&
+          !isAccountRoute &&
+          !isLegalRoute) {
+        // Invalidate database provider BEFORE redirecting to avoid stale instances.
+        ref.invalidate(appDatabaseProvider);
+        logger.debug(
+          'Router redirect: Onboarding complete, redirecting to hospital map',
+        );
+        return ToolRoutes.hospitalChooserExplore;
+      }
+
+      return null; // No redirect needed
+    },
     routes: [
       // Auth route (OAuth only - Apple + Google)
       // Used for "I already have an account" flow

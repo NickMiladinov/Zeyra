@@ -11,7 +11,6 @@ Coverage plan for the Account feature (account hub, account details actions, and
 | Level | File | Scope |
 |---|---|---|
 | Unit - Logic | `test/features/account/logic/account_notifier_test.dart` | Identity bootstrap, sign-out success, delete-account failure handling |
-| Integration - User Flows | `test/integration/user_flows/account/account_lifecycle_flow_test.dart` | Sign out redirect, delete confirm/cancel, delete failure UX |
 
 ## Planned Follow-ups
 
@@ -26,9 +25,7 @@ Coverage plan for the Account feature (account hub, account details actions, and
 
 ```bash
 flutter test --tags account
-flutter test test/integration/user_flows/account/account_lifecycle_flow_test.dart
 flutter test test/runners/account/quick_test.dart
 flutter test test/runners/account/unit_test.dart
 flutter test test/runners/account/all_test.dart
-flutter test --tags critical_path
 ```

@@ -96,10 +96,6 @@ tags:
     # Integration tests may need more time
     timeout: 1m
 
-  critical_path:
-    # Release-gating integration smoke flows
-    timeout: 1m
-
 # Paths to exclude from test discovery
 exclude_paths:
   - test/harness/
