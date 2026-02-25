@@ -5,6 +5,31 @@ This document outlines all tests for the go_router-based navigation system. The 
 
 ---
 
+## Critical Integration Coverage (Release Gate)
+
+### Implemented Critical Integration File
+
+| Test Level | File | Scope | Status |
+|------------|------|-------|--------|
+| **Integration - Critical Path** | `test/integration/user_flows/router/critical_auth_routing_flow_test.dart` | Auth/onboarding redirect gating and allowed route pass-throughs | ✅ |
+
+### Critical Cases Covered
+
+- New device + unauthenticated user redirects to onboarding start.
+- Previously onboarded device + unauthenticated user redirects to auth.
+- Authenticated + onboarding complete user is redirected away from restricted routes to hospital explore.
+- Legal and account routes remain reachable after onboarding completion.
+
+### Run Commands
+
+```bash
+flutter test test/integration/user_flows/router/critical_auth_routing_flow_test.dart
+flutter test test/runners/router/all_test.dart
+flutter test --tags critical_path
+```
+
+---
+
 ## Test Coverage Summary
 
 | Test Level | File | Test Groups | Total Tests |
